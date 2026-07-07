@@ -1,0 +1,64 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+import { hubStates, stateName, stateSlug } from '../../lib/states';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('clinics');
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+
+const allClinics = await getCollection('clinics');
+const stateCode = d.state.toUpperCase();
+const sameCity = allClinics
+  .filter((p) => p.id !== post.id && p.data.state.toUpperCase() === stateCode && p.data.city === d.city)
+  .slice(0, 5);
+const hasHub = hubStates(allClinics).has(stateCode);
+const roundups = (await getCollection('doctors')).filter(
+  (p) => p.data.kind === 'roundup' && p.data.state.toUpperCase() === stateCode
+);
+
+const jsonLd: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@type': 'MedicalClinic',
+  name: d.clinicName,
+  address: { '@type': 'PostalAddress', addressLocality: d.city, addressRegion: d.state, ...(d.address ? { streetAddress: d.address } : {}) },
+  ...(d.website ? { url: d.website } : {}),
+  ...(d.phone ? { telephone: d.phone } : {}),
+  ...(d.ratingValue && d.ratingCount
+    ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: d.ratingValue, reviewCount: d.ratingCount } }
+    : {}),
+};
+---
+<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true}>
+  <article>
+    <h1>{d.title}</h1>
+    <p class="meta">
+      {d.city}, {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
+      {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
+      {d.ratingValue && d.ratingSource && ` · ${d.ratingValue}★ (${d.ratingCount} reviews on ${d.ratingSource})`}
+    </p>
+    <Content />
+    <p><a class="cta" href="/contact/">Request a consultation referral</a></p>
+    {(sameCity.length > 0 || hasHub || roundups.length > 0) && (
+      <section>
+        <h2>More peptide resources nearby</h2>
+        <ul>
+          {sameCity.map((p) => (
+            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a> — also in {d.city}</li>
+          ))}
+          {hasHub && (
+            <li><a href={`/clinics/${stateSlug(stateCode)}/`}>All peptide clinics in {stateName(stateCode)}</a></li>
+          )}
+          {roundups.map((p) => (
+            <li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+    <p class="meta">Sources: {d.sources.map((s: string, i: number) => (<span><a href={s} rel="nofollow">[{i + 1}]</a> </span>))}</p>
+  </article>
+</Base>

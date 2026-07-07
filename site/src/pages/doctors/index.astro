@@ -1,0 +1,24 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const all = await getCollection('doctors');
+const roundups = all.filter((p) => p.data.kind === 'roundup').sort((a, b) => a.data.state.localeCompare(b.data.state));
+const profiles = all.filter((p) => p.data.kind === 'profile').sort((a, b) => a.data.state.localeCompare(b.data.state));
+---
+<Base title="Peptide & GLP-1 Doctors by State | Peptide Directory" description="Editorial roundups and verified profiles of physicians offering peptide and GLP-1 therapy across US states.">
+  <h1>Doctors by state</h1>
+  {all.length === 0 && <p>Listings are being added state by state. Check back soon.</p>}
+  {roundups.length > 0 && (
+    <section>
+      <h2>Roundups</h2>
+      <ul>{roundups.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>))}</ul>
+    </section>
+  )}
+  {profiles.length > 0 && (
+    <section>
+      <h2>Profiles</h2>
+      <ul>{profiles.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a> — {p.data.state}</li>))}</ul>
+    </section>
+  )}
+</Base>

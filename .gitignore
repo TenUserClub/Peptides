@@ -1,0 +1,8 @@
+.env
+node_modules/
+site/dist/
+site/.astro/
+pipeline/logs/
+pipeline/data/exa/
+pipeline/data/rejected/
+NEEDS-HUMAN.md

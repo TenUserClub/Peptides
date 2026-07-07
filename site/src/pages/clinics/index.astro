@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { clinicsByState, hubStates, stateName, stateSlug } from '../../lib/states';
+
+const all = await getCollection('clinics');
+const byState = clinicsByState(all);
+const states = Object.keys(byState).sort();
+const hubs = hubStates(all);
+---
+<Base title="Peptide Clinics by City | Peptide Directory" description="Browse verified peptide therapy clinics across US cities and states.">
+  <h1>Peptide clinics by state</h1>
+  {states.length === 0 && <p>Listings are being added city by city. Check back soon.</p>}
+  {states.map((s) => (
+    <section>
+      <h2>{hubs.has(s) ? <a href={`/clinics/${stateSlug(s)}/`}>{stateName(s)}</a> : stateName(s)}</h2>
+      <ul>
+        {byState[s]
+          .sort((a, b) => a.data.city.localeCompare(b.data.city))
+          .map((p) => (
+            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a> — {p.data.city}</li>
+          ))}
+      </ul>
+    </section>
+  ))}
+</Base>

@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const news = (await getCollection('news')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 6);
+const clinics = (await getCollection('clinics')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 6);
+---
+<Base title="Peptide Directory & News" description="Verified peptide clinic and doctor listings across US cities, plus daily peptide industry and regulatory news.">
+  <h1>Peptide clinics, doctors, and daily news</h1>
+  <p>
+    Verified listings of clinics and physicians offering peptide therapy across the United States,
+    alongside daily coverage of peptide research, regulation, and industry news.
+  </p>
+
+  <h2>Latest news</h2>
+  <ul>
+    {news.map((p) => (
+      <li><a href={`/news/${p.id}/`}>{p.data.title}</a> <span class="meta">{p.data.publishDate.toISOString().slice(0, 10)}</span></li>
+    ))}
+  </ul>
+
+  <h2>Recently added clinics</h2>
+  <ul>
+    {clinics.map((p) => (
+      <li><a href={`/clinics/${p.id}/`}>{p.data.title}</a> <span class="meta">{p.data.city}, {p.data.state}</span></li>
+    ))}
+  </ul>
+</Base>

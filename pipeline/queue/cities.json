@@ -1,0 +1,85 @@
+{
+  "next": 0,
+  "cities": [
+    {
+      "city": "Miami",
+      "state": "FL"
+    },
+    {
+      "city": "Austin",
+      "state": "TX"
+    },
+    {
+      "city": "Scottsdale",
+      "state": "AZ"
+    },
+    {
+      "city": "Los Angeles",
+      "state": "CA"
+    },
+    {
+      "city": "Dallas",
+      "state": "TX"
+    },
+    {
+      "city": "Tampa",
+      "state": "FL"
+    },
+    {
+      "city": "Denver",
+      "state": "CO"
+    },
+    {
+      "city": "Nashville",
+      "state": "TN"
+    },
+    {
+      "city": "San Diego",
+      "state": "CA"
+    },
+    {
+      "city": "Houston",
+      "state": "TX"
+    },
+    {
+      "city": "Phoenix",
+      "state": "AZ"
+    },
+    {
+      "city": "Atlanta",
+      "state": "GA"
+    },
+    {
+      "city": "Las Vegas",
+      "state": "NV"
+    },
+    {
+      "city": "Orlando",
+      "state": "FL"
+    },
+    {
+      "city": "Charlotte",
+      "state": "NC"
+    },
+    {
+      "city": "Salt Lake City",
+      "state": "UT"
+    },
+    {
+      "city": "Boise",
+      "state": "ID"
+    },
+    {
+      "city": "New York",
+      "state": "NY"
+    },
+    {
+      "city": "Chicago",
+      "state": "IL"
+    },
+    {
+      "city": "Seattle",
+      "state": "WA"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('updates')).sort((a, b) => +b.data.publishDate - +a.data.publishDate);
+---
+<Base title="Weekly Peptide Updates | Peptide Directory" description="Weekly digest combining new clinic listings, doctor roundups, and the week's peptide news.">
+  <h1>Weekly updates</h1>
+  <ul>
+    {posts.map((p) => (
+      <li><a href={`/updates/${p.id}/`}>{p.data.title}</a> <span class="meta">week of {p.data.weekOf.toISOString().slice(0, 10)}</span></li>
+    ))}
+  </ul>
+</Base>
