@@ -64,9 +64,21 @@ function writeText(path, content) {
   writeFileSync(path, content);
 }
 
+function stripMarkdownFences(text) {
+  let cleaned = text.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```[\w]*\n?/, '');
+    cleaned = cleaned.replace(/\n?```\s*$/, '');
+    cleaned = cleaned.trim();
+  }
+  return cleaned;
+}
+
 function parseFrontmatter(text) {
+  const cleaned = stripMarkdownFences(text);
+
   // Handle both LF and CRLF line endings
-  const normalized = text.replace(/\r\n/g, '\n');
+  const normalized = cleaned.replace(/\r\n/g, '\n');
   const match = normalized.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
   if (!match) return null;
 
@@ -272,7 +284,7 @@ ${JSON.stringify(
 
 INSTRUCTIONS:
 1. Select up to ${available} most substantive stories from the Exa results above
-2. For each story, write a markdown post with YAML frontmatter matching this schema:
+2. For each story, write a markdown post with YAML frontmatter matching this schema. Output RAW markdown — do NOT wrap in \`\`\`markdown code blocks:
    ---
    title: "..."
    description: "..."
@@ -399,7 +411,7 @@ ${existingNewsTitles.slice(0, 20).map((t) => `- ${t}`).join('\n') || '(none yet)
 INSTRUCTIONS:
 1. Write ${available} evergreen educational blog post(s) about peptide therapy
 2. Choose topics that fill gaps — what would a patient researching peptide therapy want to know?
-3. For each post, write a markdown post with YAML frontmatter matching this schema:
+3. For each post, write a markdown post with YAML frontmatter matching this schema. Output RAW markdown — do NOT wrap in \`\`\`markdown code blocks:
    ---
    title: "..."
    description: "..."
@@ -495,9 +507,9 @@ async function runHumanise() {
     const draftText = readText(draftPath);
     if (!draftText) continue;
 
-    const systemPrompt = `You are an editor who removes AI-writing signs from draft articles.\n\n${rubric}\n\n${humanisePrompt}\n\nCRITICAL RULES:\n- Never change facts, names, numbers, ratings, platform attributions, URLs, or frontmatter\n- Never change the methodology paragraph's substance\n- Only change style and wording\n- Keep all YAML frontmatter exactly as-is`;
+    const systemPrompt = `You are an editor who removes AI-writing signs from draft articles.\n\n${rubric}\n\n${humanisePrompt}\n\nCRITICAL RULES:\n- Never change facts, names, numbers, ratings, platform attributions, URLs, or frontmatter\n- Never change the methodology paragraph's substance\n- Only change style and wording\n- Keep all YAML frontmatter exactly as-is\n- OUTPUT the raw article text only. Do NOT wrap the output in Markdown code fences (no \`\`\`markdown blocks). The file must start with --- (the YAML frontmatter delimiter).`;
 
-    const userPrompt = `Rewrite the following draft to remove all AI-writing signs. Keep the frontmatter unchanged. Keep all facts exactly as they are.\n\nDRAFT:\n${draftText}\n\nOUTPUT the full rewritten article with frontmatter unchanged.`;
+    const userPrompt = `Rewrite the following draft to remove all AI-writing signs. Keep the frontmatter unchanged. Keep all facts exactly as they are.\n\nOUTPUT the full rewritten article starting directly with the frontmatter (---). No code blocks, no markdown fences.\n\nDRAFT:\n${draftText}`;
 
     if (DRY_RUN) {
       log('info', `DRY RUN: would humanise ${basename(draftPath)}`);
@@ -517,9 +529,10 @@ async function runHumanise() {
       const outPath = join(humanisedDir, relativePath);
       const diffPath = outPath.replace(/\.md$/, '.diff.md');
 
-      writeText(outPath, response);
+      const cleanedResponse = stripMarkdownFences(response);
+      writeText(outPath, cleanedResponse);
 
-      const diff = `<!-- BEFORE -->\n${draftText}\n\n<!-- AFTER -->\n${response}`;
+      const diff = `<!-- BEFORE -->\n${draftText}\n\n<!-- AFTER -->\n${cleanedResponse}`;
       writeText(diffPath, diff);
 
       unlinkSync(draftPath);

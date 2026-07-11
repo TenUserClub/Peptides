@@ -1,4 +1,3 @@
-```markdown
 ---
 title: "FDA Staff Challenges RFK Jr.'s Push for Peptide Access"
 description: "A recent FDA staff recommendation poses a challenge to Health Secretary Robert F. Kennedy Jr.'s advocacy for broader peptide access."
@@ -15,4 +14,3 @@ Peptides, short chains of amino acids, are marketed for uses ranging from skin r
 The FDA's position prioritizes consumer safety and product efficacy. By opposing the push for wider peptide access, the FDA aims to ensure that products on the market meet established safety standards. This recommendation could lead to stricter oversight of peptide marketing and distribution, potentially reducing their availability.
 
 The FDA's recommendation might result in more stringent regulations for peptides, impacting both manufacturers and consumers. Stakeholders in the peptide industry may face a more complex regulatory environment to bring their products to market.
-```

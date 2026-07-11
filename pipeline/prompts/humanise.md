@@ -11,7 +11,8 @@ For every file in `pipeline/drafts/{clinics,doctors,news,legal,updates}/`:
 1. Rewrite to eliminate every sign on the rubric: puffery ("stands as a testament", "vibrant", "boasts", "nestled"), "not just X but Y", rule-of-three padding, essay intros/conclusions ("In conclusion", "Overall"), hedging stacks ("it's important to note"), vague attribution ("many experts believe" — name the source or cut), em-dash overuse, mid-sentence bold sprinkling, Title Case headings (→ sentence case), bullet lists where prose reads better, uniform paragraph rhythm (vary: some one-sentence paragraphs, some long), summarizing section endings.
 2. **Never change:** facts, names, numbers, ratings, platform attributions, URLs, frontmatter, the methodology paragraph's substance, or section structure required by the writer prompts.
 3. Read the result once as a skeptical human reader. If any sentence could not survive "says who?", fix the attribution or cut it.
-4. Write the result to `pipeline/humanised/{same relative path}` and a unified diff to `pipeline/humanised/{slug}.diff.md`. Delete the processed draft.
+4. **Output format:** Write the raw article directly. Do NOT wrap the output in Markdown code fences (no ```markdown blocks). The file must start with `---` (the YAML frontmatter delimiter).
+5. Write the result to `pipeline/humanised/{same relative path}` and a unified diff to `pipeline/humanised/{slug}.diff.md`. Delete the processed draft.
 
 ## Quality bar
 The test isn't "would an AI detector pass it" — it's "would a careful human editor have written it this way". Plain, specific, varied, source-grounded.

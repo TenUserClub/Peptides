@@ -1,4 +1,3 @@
-```markdown
 ---
 title: "Court Considers Marketing Context in Weight-Loss Product Classification"
 description: "A court decision could reshape how weight-loss products are marketed, focusing on the broader context beyond just the label."
@@ -18,4 +17,3 @@ This legal development highlights the need for companies in the dietary suppleme
 The outcome of this court case could influence future regulatory actions, affecting how dietary supplements are marketed and possibly leading to stricter enforcement of marketing claims. Companies may need to reevaluate their marketing strategies to avoid regulatory issues.
 
 This article provides general information and is not legal advice.
-```

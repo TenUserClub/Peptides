@@ -1,4 +1,3 @@
-```markdown
 ---
 title: "Peptide Therapy: Potential Benefits and Safety Considerations"
 description: "Explore the potential benefits of peptide therapy and understand the safety considerations to keep in mind before starting treatment."
@@ -53,4 +52,3 @@ Ensure the clinic you choose uses high-quality, legally sourced peptides. Poor q
 4. What monitoring is included in the treatment plan?
 
 Peptide therapy may offer benefits, but safety should always come first. Consult with a licensed healthcare provider and ensure any clinic you choose meets high standards for quality and care.
-```

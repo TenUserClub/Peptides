@@ -1,4 +1,3 @@
-```markdown
 ---
 title: "How to Choose the Right Peptide Therapy Clinic"
 description: "Selecting a peptide therapy clinic involves more than just proximity. Learn what factors to consider, from the credentials of practitioners to the quality of peptides used."
@@ -34,4 +33,3 @@ Before choosing a clinic, understand the cost structure. Ask about the total cos
 For more information on peptide therapy clinics, visit our [clinics directory](/clinics/).
 
 Choosing the right peptide therapy clinic requires careful consideration of several factors, including practitioner credentials, peptide quality, and patient feedback. By evaluating these aspects, you can make a well-informed decision.
-```
