@@ -22,6 +22,8 @@ const clinics = defineCollection({
     verified: z.literal(true), // publisher refuses records that didn't pass verification
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
   }),
 });
 
@@ -41,6 +43,8 @@ const doctors = defineCollection({
     verified: z.literal(true),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
   }),
 });
 
@@ -53,24 +57,41 @@ const news = defineCollection({
     sourceUrl: z.string().url(),
     tags: z.array(z.string()).default([]),
     publishDate: z.coerce.date(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
   }),
 });
 
 // Laws, regulation, enforcement, and legal-status explainers.
-// Written by the news writer when a story is primarily legal/regulatory;
-// counts toward the news velocity cap. Report accurately, never editorialize
-// (CLAUDE.md rule 4); not legal advice — the legal page template says so.
 const legal = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/legal' }),
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    jurisdiction: z.string().default('Federal'), // "Federal" or a two-letter state code
-    sourceName: z.string(), // primary source: FDA, HHS, a state board, court filing…
+    jurisdiction: z.string().default('Federal'),
+    sourceName: z.string(),
     sourceUrl: z.string().url(),
     tags: z.array(z.string()).default([]),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
+  }),
+});
+
+// Blog — evergreen educational content (not news)
+// Guides, explainers, comparisons, how-tos about peptide therapy
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    category: z.string(), // e.g. "guides", "comparisons", "science", "beginners"
+    tags: z.array(z.string()).default([]),
+    publishDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
   }),
 });
 
@@ -81,7 +102,9 @@ const updates = defineCollection({
     description: z.string(),
     weekOf: z.coerce.date(),
     publishDate: z.coerce.date(),
+    image: z.string().optional(),
+    ogImage: z.string().optional(),
   }),
 });
 
-export const collections = { clinics, doctors, news, legal, updates };
+export const collections = { clinics, doctors, news, legal, blog, updates };

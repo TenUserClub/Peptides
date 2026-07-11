@@ -12,33 +12,32 @@ const d = post.data;
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'Article',
+  '@type': 'NewsArticle',
   headline: d.title,
   datePublished: d.publishDate.toISOString(),
-  ...(d.updatedDate ? { dateModified: d.updatedDate.toISOString() } : {}),
   description: d.description,
+  ...(d.image ? { image: `https://peptide-seo-site.vercel.app${d.image}` } : {}),
 };
-
-const recent = (await getCollection('legal'))
-  .filter((p) => p.id !== post.id)
-  .sort((a, b) => +b.data.publishDate - +a.data.publishDate)
-  .slice(0, 5);
 ---
-<Base title={d.title} description={d.description} jsonLd={jsonLd}>
+<Base
+  title={d.title}
+  description={d.description}
+  jsonLd={jsonLd}
+  image={d.image}
+  ogImage={d.ogImage}
+>
   <article>
+    {d.image && (
+      <div class="featured-image">
+        <img src={d.image} alt={`Featured image for ${d.title}`} loading="eager" />
+      </div>
+    )}
     <h1>{d.title}</h1>
     <p class="meta">
-      {d.jurisdiction} · {d.publishDate.toISOString().slice(0, 10)}
+      {d.publishDate.toISOString().slice(0, 10)} · {d.jurisdiction} jurisdiction · Source: <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
-      · Reporting based on <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
     </p>
     <Content />
-    <p class="meta">This article is general information about laws and regulation, not legal advice. For decisions about a specific situation, consult a licensed attorney.</p>
-    {recent.length > 0 && (
-      <section>
-        <h2>More laws &amp; legal coverage</h2>
-        <ul>{recent.map((p) => (<li><a href={`/legal/${p.id}/`}>{p.data.title}</a></li>))}</ul>
-      </section>
-    )}
+    <p class="meta" style="font-style: italic;">This is general information, not legal advice. Consult a qualified attorney for guidance specific to your situation.</p>
   </article>
 </Base>

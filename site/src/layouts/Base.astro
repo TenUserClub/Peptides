@@ -6,8 +6,13 @@ interface Props {
   description: string;
   jsonLd?: Record<string, unknown>;
   showCorrections?: boolean;
+  image?: string; // path to featured image (used for Open Graph)
+  ogImage?: string; // path to social sharing image
 }
-const { title, description, jsonLd, showCorrections = false } = Astro.props;
+const { title, description, jsonLd, showCorrections = false, image, ogImage } = Astro.props;
+
+const siteUrl = 'https://peptide-seo-site.vercel.app';
+const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 ---
 <!doctype html>
 <html lang="en">
@@ -18,7 +23,22 @@ const { title, description, jsonLd, showCorrections = false } = Astro.props;
     <meta name="description" content={description} />
     <link rel="canonical" href={Astro.url.href} />
     <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={Astro.url.href} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    <meta property="og:site_name" content="Peptide Directory & News" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    <!-- Structured Data -->
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
     <style>
       :root { --ink: #1c2333; --muted: #5a6478; --accent: #0f6e5c; --bg: #fdfdfb; --rule: #e6e4dc; }
       * { box-sizing: border-box; }
@@ -34,6 +54,10 @@ const { title, description, jsonLd, showCorrections = false } = Astro.props;
       .disclaimer, .corrections { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--rule); margin-top: 3rem; padding: 1.25rem 0; }
       .cta { background: var(--accent); color: #fff; padding: .7rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block; font-family: system-ui, sans-serif; }
       footer { padding-bottom: 2.5rem; }
+      /* Featured image styles */
+      .featured-image { width: 100%; margin-bottom: 1.5rem; border-radius: 8px; }
+      .featured-image img { width: 100%; height: auto; border-radius: 8px; display: block; }
+      .card-image { width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0; }
     </style>
   </head>
   <body>
@@ -57,12 +81,12 @@ const { title, description, jsonLd, showCorrections = false } = Astro.props;
           <strong>Corrections:</strong> Information on this page was compiled from public sources and verified
           against official records at the time of publication. If you represent this clinic or practitioner and
           something is inaccurate or you'd like the listing updated or removed, email
-          <a href="mailto:corrections@YOUR-DOMAIN.com">corrections@YOUR-DOMAIN.com</a> — we act on requests within 5 business days.
+          <a href="mailto:corrections@peptide-seo-site.vercel.app">corrections@peptide-seo-site.vercel.app</a> — we act on requests within 5 business days.
         </div>
       )}
     </main>
     <footer class="meta">
-      <p>© {new Date().getFullYear()} Peptide Directory &amp; News. Listings are editorial; no clinic or doctor pays for placement.</p>
+      <p>&copy; {new Date().getFullYear()} Peptide Directory &amp; News. Listings are editorial; no clinic or doctor pays for placement.</p>
     </footer>
   </body>
 </html>

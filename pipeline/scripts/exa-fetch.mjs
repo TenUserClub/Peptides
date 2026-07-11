@@ -33,6 +33,13 @@ async function exaSearch(query, opts = {}) {
   return res.json();
 }
 
+// Exa rate limit: 10 requests/second. Space out requests to stay well under.
+const EXA_DELAY_MS = 200;
+
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 const STALE_DAYS = 3;
 
 // Returns the queue item to fetch, or null if we should wait for the
@@ -82,6 +89,7 @@ async function main() {
     for (const q of queries) {
       const r = await exaSearch(q, { numResults: 8, startPublishedDate: since, category: 'news' });
       results.push({ query: q, results: r.results ?? [] });
+      await sleep(EXA_DELAY_MS); // rate limit spacing
     }
     const out = join(PIPELINE, 'data', 'exa', 'news', `${stamp()}.json`);
     writeJson(out, { fetchedAt: new Date().toISOString(), sets: results });

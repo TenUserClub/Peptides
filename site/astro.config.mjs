@@ -1,9 +1,10 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
-// TODO(user): replace with your real domain once purchased
+// TODO: Update with your actual Vercel domain after first deploy
+// e.g. 'https://peptide-seo-site.vercel.app' or your custom domain
 export default defineConfig({
-  site: 'https://YOUR-DOMAIN.com',
+  site: 'https://peptide-seo-site.vercel.app',
   integrations: [sitemap()],
   trailingSlash: 'always',
 });

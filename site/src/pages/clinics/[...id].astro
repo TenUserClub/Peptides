@@ -31,10 +31,23 @@ const jsonLd: Record<string, unknown> = {
   ...(d.ratingValue && d.ratingCount
     ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: d.ratingValue, reviewCount: d.ratingCount } }
     : {}),
+  ...(d.image ? { image: `https://peptide-seo-site.vercel.app${d.image}` } : {}),
 };
 ---
-<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true}>
+<Base
+  title={d.title}
+  description={d.description}
+  jsonLd={jsonLd}
+  showCorrections={true}
+  image={d.image}
+  ogImage={d.ogImage}
+>
   <article>
+    {d.image && (
+      <div class="featured-image">
+        <img src={d.image} alt={`${d.clinicName} in ${d.city}, ${d.state}`} loading="eager" />
+      </div>
+    )}
     <h1>{d.title}</h1>
     <p class="meta">
       {d.city}, {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}

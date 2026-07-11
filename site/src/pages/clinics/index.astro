@@ -1,26 +1,227 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-import { clinicsByState, hubStates, stateName, stateSlug } from '../../lib/states';
+import { stateName } from '../../lib/states';
 
 const all = await getCollection('clinics');
-const byState = clinicsByState(all);
-const states = Object.keys(byState).sort();
-const hubs = hubStates(all);
+const clinics = all.filter((p) => !p.id.startsWith('_sample'));
+
+// Stats
+const totalClinics = clinics.length;
+const states = [...new Set(clinics.map((p) => p.data.state))].sort();
+const cities = [...new Set(clinics.map((p) => p.data.city))].sort();
+const services = [...new Set(clinics.flatMap((p) => p.data.services))].sort();
+
+// Average rating
+const rated = clinics.filter((p) => p.data.ratingValue);
+const avgRating = rated.length > 0
+  ? (rated.reduce((sum, p) => sum + (p.data.ratingValue || 0), 0) / rated.length).toFixed(1)
+  : null;
 ---
-<Base title="Peptide Clinics by City | Peptide Directory" description="Browse verified peptide therapy clinics across US cities and states.">
-  <h1>Peptide clinics by state</h1>
-  {states.length === 0 && <p>Listings are being added city by city. Check back soon.</p>}
-  {states.map((s) => (
-    <section>
-      <h2>{hubs.has(s) ? <a href={`/clinics/${stateSlug(s)}/`}>{stateName(s)}</a> : stateName(s)}</h2>
-      <ul>
-        {byState[s]
-          .sort((a, b) => a.data.city.localeCompare(b.data.city))
-          .map((p) => (
-            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a> — {p.data.city}</li>
-          ))}
-      </ul>
-    </section>
-  ))}
+<Base title="Peptide Therapy Clinics Directory | Find Verified Clinics" description={`Browse ${totalClinics} verified peptide therapy clinics across ${states.length} US states. Filter by city, state, services, and ratings.`}>
+  <h1>Find peptide therapy clinics</h1>
+  <p>
+    Browse verified clinics offering peptide therapy, GLP-1 treatments, hormone optimization,
+    and longevity medicine across the United States. Every listing is fact-checked before publication.
+  </p>
+
+  {totalClinics === 0 ? (
+    <p class="meta">Clinics are being added city by city. Check back soon.</p>
+  ) : (
+    <>
+      <p class="meta">
+        {totalClinics} verified clinics · {states.length} states · {cities.length} cities
+        {avgRating && ` · ${avgRating}★ average rating`}
+      </p>
+
+      <!-- Search & Filters -->
+      <div class="directory-filters" id="clinic-filters">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search clinics, cities, or services..."
+          class="search-input"
+        />
+        <select id="state-filter" class="filter-select">
+          <option value="">All States</option>
+          {states.map((s) => <option value={s}>{stateName(s)}</option>)}
+        </select>
+        <select id="service-filter" class="filter-select">
+          <option value="">All Services</option>
+          {services.map((s) => <option value={s}>{s}</option>)}
+        </select>
+        <select id="rating-filter" class="filter-select">
+          <option value="">Any Rating</option>
+          <option value="4.5">4.5+ stars</option>
+          <option value="4">4+ stars</option>
+          <option value="3">3+ stars</option>
+        </select>
+        <button id="clear-filters" class="filter-btn">Clear</button>
+      </div>
+
+      <!-- Results -->
+      <div class="directory-results" id="results-list">
+        {clinics.map((p) => (
+          <article class="directory-card" data-state={p.data.state} data-city={p.data.city.toLowerCase()} data-services={p.data.services.join('|').toLowerCase()} data-name={p.data.clinicName.toLowerCase()} data-rating={p.data.ratingValue || 0}>
+            <div class="card-main">
+              <h3><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a></h3>
+              <p class="meta">{p.data.city}, {p.data.state}</p>
+              {p.data.services.length > 0 && (
+                <p class="services">
+                  {p.data.services.slice(0, 4).map((s) => (
+                    <span class="tag">{s}</span>
+                  ))}
+                </p>
+              )}
+              {p.data.ratingValue && p.data.ratingSource && (
+                <p class="rating">{p.data.ratingValue}★ <span class="meta">({p.data.ratingCount} {p.data.ratingSource})</span></p>
+              )}
+            </div>
+            <a href={`/clinics/${p.id}/`} class="card-link">View →</a>
+          </article>
+        ))}
+      </div>
+
+      <p class="meta" id="results-count">Showing {totalClinics} clinics</p>
+    </>
+  )}
+
+  <script>
+    (function() {
+      const search = document.getElementById('search-input');
+      const stateFilter = document.getElementById('state-filter');
+      const serviceFilter = document.getElementById('service-filter');
+      const ratingFilter = document.getElementById('rating-filter');
+      const clearBtn = document.getElementById('clear-filters');
+      const results = document.getElementById('results-list');
+      const count = document.getElementById('results-count');
+      const cards = results ? Array.from(results.querySelectorAll('.directory-card')) : [];
+
+      function filter() {
+        const q = (search?.value || '').toLowerCase().trim();
+        const state = stateFilter?.value || '';
+        const service = (serviceFilter?.value || '').toLowerCase();
+        const minRating = parseFloat(ratingFilter?.value || '0');
+
+        let visible = 0;
+        cards.forEach((card) => {
+          const name = card.dataset.name || '';
+          const cardState = card.dataset.state || '';
+          const city = card.dataset.city || '';
+          const services = card.dataset.services || '';
+          const rating = parseFloat(card.dataset.rating || '0');
+
+          const matchesSearch = !q || name.includes(q) || city.includes(q) || services.includes(q);
+          const matchesState = !state || cardState === state;
+          const matchesService = !service || services.includes(service);
+          const matchesRating = !minRating || rating >= minRating;
+
+          if (matchesSearch && matchesState && matchesService && matchesRating) {
+            card.style.display = 'flex';
+            visible++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (count) count.textContent = `Showing ${visible} clinic${visible !== 1 ? 's' : ''}`;
+      }
+
+      search?.addEventListener('input', filter);
+      stateFilter?.addEventListener('change', filter);
+      serviceFilter?.addEventListener('change', filter);
+      ratingFilter?.addEventListener('change', filter);
+      clearBtn?.addEventListener('click', () => {
+        if (search) search.value = '';
+        if (stateFilter) stateFilter.value = '';
+        if (serviceFilter) serviceFilter.value = '';
+        if (ratingFilter) ratingFilter.value = '';
+        filter();
+      });
+    })();
+  </script>
+
+  <style>
+    .directory-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: #f8f8f6;
+      border-radius: 8px;
+    }
+    .search-input {
+      flex: 1 1 300px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--rule, #e6e4dc);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-family: system-ui, sans-serif;
+    }
+    .filter-select {
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--rule, #e6e4dc);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: system-ui, sans-serif;
+      background: #fff;
+      min-width: 140px;
+    }
+    .filter-btn {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--rule, #e6e4dc);
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .filter-btn:hover { background: #f0f0ee; }
+
+    .directory-results {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .directory-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--rule, #e6e4dc);
+      border-radius: 8px;
+      background: #fff;
+      transition: box-shadow 0.15s ease;
+    }
+    .directory-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card-main { flex: 1; }
+    .card-main h3 { margin: 0 0 0.25rem 0; font-size: 1.05rem; }
+    .card-main h3 a { text-decoration: none; }
+    .card-main h3 a:hover { text-decoration: underline; }
+    .services { margin: 0.4rem 0 0 0; }
+    .tag {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      margin: 0 0.35rem 0.35rem 0;
+      background: #eef4f2;
+      color: var(--accent, #0f6e5c);
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-family: system-ui, sans-serif;
+    }
+    .rating { margin: 0.3rem 0 0 0; font-weight: 600; color: #d4a017; }
+    .card-link {
+      margin-left: 1rem;
+      padding: 0.4rem 0.8rem;
+      background: var(--accent, #0f6e5c);
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap;
+    }
+    .card-link:hover { opacity: 0.9; }
+  </style>
 </Base>

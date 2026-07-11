@@ -10,7 +10,9 @@ export function loadEnv() {
   const envPath = join(ROOT, '.env');
   if (!existsSync(envPath)) return;
   for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    // Strip inline comments (# and everything after it) before parsing
+    const cleanLine = line.replace(/\s*#.*/, '');
+    const m = cleanLine.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
 }
