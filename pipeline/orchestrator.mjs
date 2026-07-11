@@ -726,15 +726,319 @@ ${logs}
   log('info', 'monitor: summary written');
 }
 
-// ── Stubs: Verify, Write Clinics/Doctors/Updates ───────────────
+// ── Stage: Verify ───────────────────────────────────────────────
 async function runVerify() {
-  log('info', 'orchestrator: verify (stub — clinic/doctor verification not yet implemented)');
-  return 0;
+  log('info', 'orchestrator: verify');
+  const exaDir = join(PIPELINE, 'data', 'exa', 'clinics');
+  const exaFiles = listFiles(exaDir, /\.json$/).sort();
+  if (exaFiles.length === 0) {
+    log('info', 'verify: no exa clinic data to process');
+    return 0;
+  }
+
+  const processedPath = join(PIPELINE, 'data', '.processed-clinics.json');
+  const processed = readJson(processedPath, { files: [] });
+
+  let verified = 0;
+  let rejected = 0;
+
+  for (const file of exaFiles) {
+    const fileName = basename(file);
+    if (processed.files.includes(fileName)) {
+      log('info', `verify: skipping already processed ${fileName}`);
+      continue;
+    }
+
+    const data = readJson(file);
+    if (!data || !data.results || data.results.length === 0) {
+      processed.files.push(fileName);
+      writeJson(processedPath, processed);
+      continue;
+    }
+
+    const city = data.city || {};
+    log('info', `verify: processing ${city.city || 'unknown'}, ${city.state || 'unknown'} (${data.results.length} results)`);
+
+    // Use OpenAI to extract structured clinic candidates from raw Exa text
+    const extractionPrompt = `Extract peptide therapy clinics from the following web search results for ${city.city || ''}, ${city.state || ''}.
+
+For each clinic, extract ONLY what is explicitly stated in the results:
+- clinicName: exact name
+- city, state
+- address (if present)
+- phone (if present)
+- website (URL if present)
+- doctorName (named practitioner if present)
+- services: list of peptide-related services mentioned
+- ratingValue, ratingCount, ratingSource (only if a specific platform is named)
+- sourceUrl: the URL of the search result this came from
+
+If a result is NOT about a specific clinic (e.g., a blog post, news article, or vendor site), skip it.
+If a result looks like a "research chemical" vendor or sells peptides "for research use only", mark it rejected.
+
+Output as JSON: { "candidates": [ { ... } ], "rejected": [ { "reason": "...", "sourceUrl": "..." } ] }
+
+EXA RESULTS:
+${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r.text || '').slice(0, 2000) })), null, 2)}`;
+
+    let candidates = [];
+    let rejects = [];
+
+    try {
+      if (DRY_RUN) {
+        log('info', `DRY RUN: would extract clinics from ${fileName}`);
+        processed.files.push(fileName);
+        writeJson(processedPath, processed);
+        continue;
+      }
+
+      const response = await chat({
+        system: 'You extract structured clinic data from web search results. Output ONLY valid JSON. Never invent data not present in the source.',
+        user: extractionPrompt,
+        model: CONFIG.models.verify,
+        temperature: 0.3,
+        jsonMode: true,
+      });
+
+      const parsed = JSON.parse(response);
+      candidates = parsed.candidates || [];
+      rejects = parsed.rejected || [];
+    } catch (e) {
+      log('error', `verify: extraction failed for ${fileName}: ${e.message}`);
+      continue;
+    }
+
+    // Verify each candidate
+    for (const c of candidates) {
+      const record = {
+        clinicName: c.clinicName || '',
+        city: c.city || city.city || '',
+        state: c.state || city.state || '',
+        address: c.address || '',
+        phone: c.phone || '',
+        website: c.website || '',
+        doctorName: c.doctorName || '',
+        services: Array.isArray(c.services) ? c.services : [],
+        ratingValue: c.ratingValue || null,
+        ratingCount: c.ratingCount || null,
+        ratingSource: c.ratingSource || '',
+        sourceUrls: [c.sourceUrl].filter(Boolean),
+        verified: false,
+        verificationNotes: [],
+      };
+
+      // Skip if no clinic name
+      if (!record.clinicName) {
+        rejects.push({ reason: 'Missing clinic name', sourceUrl: c.sourceUrl });
+        continue;
+      }
+
+      // Website verification: fetch and check for peptide mention
+      if (record.website) {
+        try {
+          const siteText = await webFetch(record.website, { maxRetries: 1, timeout: 8000 });
+          const hasPeptide = /peptide|GLP-1|semaglutide|tirzepatide/i.test(siteText);
+          if (!hasPeptide) {
+            record.verificationNotes.push('Website does not mention peptide therapy');
+          }
+        } catch (e) {
+          record.verificationNotes.push(`Website unreachable: ${e.message}`);
+        }
+      } else {
+        record.verificationNotes.push('No website provided');
+      }
+
+      // NPI verification for named doctor
+      if (record.doctorName) {
+        const nameParts = record.doctorName.trim().split(/\s+/);
+        const firstName = nameParts[0];
+        const lastName = nameParts[nameParts.length - 1];
+        if (firstName && lastName && record.state) {
+          try {
+            const npiOutput = execSync(
+              `node "${join(PIPELINE, 'scripts', 'npi-verify.mjs')}" "${firstName}" "${lastName}" ${record.state}`,
+              { cwd: ROOT, encoding: 'utf8', timeout: 15000 }
+            );
+            const npiData = JSON.parse(npiOutput);
+            if (npiData.count === 1) {
+              record.npi = npiData.matches[0].npi;
+              record.verificationNotes.push(`NPI verified: ${record.npi}`);
+            } else if (npiData.ambiguous) {
+              record.verificationNotes.push('NPI ambiguous — multiple matches');
+              record.doctorName = ''; // Drop name per CLAUDE.md
+            } else {
+              record.verificationNotes.push('NPI not found');
+              record.doctorName = '';
+            }
+          } catch (e) {
+            record.verificationNotes.push(`NPI check failed: ${e.message}`);
+            record.doctorName = '';
+          }
+        }
+      }
+
+      // Decide: verified or rejected
+      const hasWebsite = record.website && record.website.startsWith('http');
+      const hasPeptideService = record.services.some((s) => /peptide|GLP-1|hormone|longevity/i.test(s));
+      const isVerifiable = hasWebsite && (hasPeptideService || record.verificationNotes.some((n) => n.includes('peptide')));
+
+      if (isVerifiable) {
+        record.verified = true;
+        const slug = `${record.city.toLowerCase().replace(/\s+/g, '-')}-${record.state.toLowerCase()}-${slugify(record.clinicName)}`;
+        const outPath = join(PIPELINE, 'data', 'verified', 'clinics', `${slug}.json`);
+        writeJson(outPath, record);
+        verified++;
+      } else {
+        rejects.push({ reason: `Not verifiable: ${record.verificationNotes.join('; ')}`, clinicName: record.clinicName });
+      }
+    }
+
+    // Write rejected records
+    for (const r of rejects) {
+      const outPath = join(PIPELINE, 'data', 'rejected', `rejected-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.json`);
+      writeJson(outPath, { ...r, city: city.city, state: city.state });
+      rejected++;
+    }
+
+    processed.files.push(fileName);
+    writeJson(processedPath, processed);
+    log('info', `verify: ${verified} verified, ${rejected} rejected from ${fileName}`);
+  }
+
+  return verified;
 }
+
+// ── Stage: Write Clinics ───────────────────────────────────────
 async function runWriteClinics() {
-  log('info', 'orchestrator: write-clinics (stub — needs verified data)');
-  return 0;
+  log('info', 'orchestrator: write-clinics');
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todayCount = countToday('clinics');
+  if (todayCount >= CONFIG.velocity.maxDirPerDay) {
+    log('info', `write-clinics: velocity cap reached (${todayCount}/${CONFIG.velocity.maxDirPerDay})`);
+    return 0;
+  }
+
+  const verifiedDir = join(PIPELINE, 'data', 'verified', 'clinics');
+  if (!existsSync(verifiedDir)) {
+    log('info', 'write-clinics: no verified clinic data');
+    return 0;
+  }
+
+  const verifiedFiles = listFiles(verifiedDir, /\.json$/);
+  if (verifiedFiles.length === 0) {
+    log('info', 'write-clinics: no verified clinics');
+    return 0;
+  }
+
+  // Skip clinics that already have drafts or published posts
+  const existingSlugs = new Set([
+    ...findFiles(join(PIPELINE, 'drafts', 'clinics'), /\.md$/).map((p) => basename(p, '.md')),
+    ...findFiles(join(PIPELINE, 'humanised', 'clinics'), /\.md$/).map((p) => basename(p, '.md')),
+    ...findFiles(join(ROOT, 'site', 'src', 'content', 'clinics'), /\.md$/).map((p) => basename(p, '.md')),
+  ]);
+
+  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount);
+  let written = 0;
+
+  const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
+  const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-clinics.md')) || '';
+  const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'clinics', '_sample-austin-tx-example-clinic.md')) || '';
+
+  for (const vf of verifiedFiles.slice(0, available)) {
+    const record = readJson(vf);
+    if (!record || !record.verified) continue;
+
+    const slug = `${record.city.toLowerCase().replace(/\s+/g, '-')}-${record.state.toLowerCase()}-${slugify(record.clinicName)}`;
+    if (existingSlugs.has(slug)) continue;
+
+    const systemPrompt = `You are an autonomous peptide clinic writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
+
+    const userPrompt = `Write a clinic directory post for this verified clinic. Use ONLY the facts in the verified record below. Do NOT invent reviews, ratings, or credentials. If a field is empty or missing, omit that section or state it wasn't found.
+
+VERIFIED RECORD:
+${JSON.stringify(record, null, 2)}
+
+Today's date: ${today}
+
+Output a markdown post with YAML frontmatter matching the clinics schema:
+---
+title: "..."
+description: "..."
+clinicName: "..."
+city: "..."
+state: "..."
+address: "..."
+website: "..."
+phone: "..."
+doctorName: "..."
+services: ["..."]
+verified: true
+sources: ["..."]
+publishDate: YYYY-MM-DD
+---
+
+Then the article body with these sections:
+1. Opening paragraph (who, where, what they're known for)
+2. Services offered (each service described neutrally, no efficacy claims)
+3. About the doctor (ONLY if doctorName and NPI are in the record; credentials from record only)
+4. What patients say (summarize real reviews with platform attribution, or state none found)
+5. Location and contact
+
+700–1,100 words. US English. No treatment claims. Every fact from the verified record.`;
+
+    if (DRY_RUN) {
+      log('info', `DRY RUN: would write clinic ${slug}`);
+      written++;
+      continue;
+    }
+
+    try {
+      const response = await chat({
+        system: systemPrompt,
+        user: userPrompt,
+        model: CONFIG.models.writing,
+        temperature: 0.6,
+      });
+
+      const cleaned = stripMarkdownFences(response);
+      const fm = parseFrontmatter(cleaned);
+      if (!fm || !fm.data.clinicName) {
+        log('warn', `write-clinics: skipping malformed post for ${slug}`);
+        const debugPath = join(PIPELINE, 'drafts', 'clinics', `_malformed-${Date.now()}.md`);
+        writeText(debugPath, cleaned);
+        continue;
+      }
+
+      const outPath = join(PIPELINE, 'drafts', 'clinics', `${slug}.md`);
+
+      // Generate image
+      const imagePath = await generateImage('clinics', {
+        clinicName: record.clinicName,
+        city: record.city,
+        state: record.state,
+        services: record.services,
+      }, slug);
+
+      let postWithImage = cleaned;
+      if (imagePath) {
+        postWithImage = cleaned.replace(
+          /^(---\n[\s\S]*?publishDate:\s*\d{4}-\d{2}-\d{2}\n)/m,
+          `$1image: "${imagePath}"\n`
+        );
+      }
+
+      writeText(outPath, postWithImage);
+      log('info', `write-clinics: drafted ${slug}${imagePath ? ' with image' : ''}`);
+      written++;
+    } catch (e) {
+      log('error', `write-clinics: failed for ${slug}: ${e.message}`);
+    }
+  }
+
+  return written;
 }
+
 async function runWriteDoctors() {
   log('info', 'orchestrator: write-doctors (stub — needs verified data)');
   return 0;
@@ -756,7 +1060,7 @@ async function main() {
   if (stage === 'all' || stage === 'fetch-doctors') await runFetch('doctors');
 
   if (stage === 'all' && hour >= 2 && hour < 6) await runVerify();
-  if (stage === 'all' || stage === 'verify') await runVerify();
+  else if (stage === 'verify') await runVerify();
 
   if (stage === 'all' || stage === 'write-news') await runWriteNews();
   if (stage === 'all' || stage === 'write-blog') await runWriteBlog();
