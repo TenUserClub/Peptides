@@ -10,7 +10,11 @@ const ROOT = resolve(__dirname, '..', '..');
 loadEnv();
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp';
+// The experimental -exp image generation models have been shut down.
+// Set GEMINI_MODEL in .env to a model that supports generateContent with images.
+// Common working models: gemini-2.0-flash, gemini-2.0-flash-latest
+// Run: node pipeline/scripts/list-gemini-models.mjs  (see below)
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 
 /**
  * Image generation prompt templates per content type.
@@ -184,7 +188,7 @@ export async function generateImage(type, context, slug) {
     if (!res.ok) {
       const text = await res.text();
       if (res.status === 404) {
-        log('warn', `images: Gemini model "${GEMINI_MODEL}" not found for image generation. Set GEMINI_MODEL env var to a valid model, or remove GEMINI_API_KEY to skip images.`);
+        log('warn', `images: Gemini model "${GEMINI_MODEL}" not found. Run "node pipeline/scripts/list-gemini-models.mjs" to see available models, then set GEMINI_MODEL in .env.`);
       } else {
         log('error', `images: Gemini API error ${res.status}: ${text}`);
       }
