@@ -525,7 +525,7 @@ async function runHumanise() {
         temperature: 0.5,
       });
 
-      const relativePath = draftPath.replace(draftsDir, '').replace(/^\\/, '');
+      const relativePath = draftPath.replace(draftsDir, '').replace(/^[\\/]/, '');
       const outPath = join(humanisedDir, relativePath);
       const diffPath = outPath.replace(/\.md$/, '.diff.md');
 
@@ -580,8 +580,8 @@ async function runPublish() {
       continue;
     }
 
-    const relativePath = file.replace(humanisedDir, '').replace(/^\\/, '');
-    const collection = relativePath.split('/')[0];
+    const relativePath = file.replace(humanisedDir, '').replace(/^[\\/]/, '');
+    const collection = relativePath.split(/[\\/]/)[0];
     if (!collection) {
       log('warn', `publish: cannot determine collection for ${basename(file)}`);
       continue;
