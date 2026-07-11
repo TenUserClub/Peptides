@@ -1,6 +1,6 @@
 # Peptide SEO — Autonomous Blog Engine Plan (v2)
 
-*Updated July 7, 2026 · Scope realigned to the four content engines · Phases 3/4 (productization) deferred*
+*Updated July 11, 2026 · Scope realigned to the four content engines · Phases 3/4 (productization) deferred*
 
 ---
 
@@ -10,12 +10,13 @@
 |---|---|---|
 | **Peptides Clinics** | Exa fetches clinics offering peptides in each US city → one blog per clinic: Reviews, About the Doctor, Services offered | City-by-city queue, continuous |
 | **Peptides News** | Exa fetches latest peptide news → blog per story | 2–3 blogs/day |
-| **Peptides Doctors** | Exa fetches doctors by US city/state → roundup + profile blogs (e.g., "Top 10 Doctors for GLP-1 in Florida") | State-by-state queue, continuous |
+| **Peptides Doctors** | Exa fetches doctors by US city/state → roundup + profile blogs (e.g. "Top 10 Doctors for GLP-1 in Florida") | State-by-state queue, continuous |
+| **Peptides Blog** | Evergreen educational guides and explainers about peptide therapy | 1–2 posts/day |
 | **Peptides Updates** | Combines clinics + news + doctors into digest posts | Weekly (or as material accumulates) |
 
-**Every blog passes through the Humaniser agent before publishing** (see §3).
+**Every blog passes through the Humaniser before publishing** (see §3).
 
-## 2. Pipeline (runs 24/7 on your laptop via scheduled Claude Code agents)
+## 2. Pipeline
 
 | # | Stage | Schedule | Detail |
 |---|---|---|---|
@@ -26,12 +27,13 @@
 | 5 | **Writer — clinics** | Daily 04:00 | Blog per verified clinic. Sections: overview, **Reviews** (summarized from real public reviews, platform-attributed: "patients on Google (4.8★, 120 reviews) mention…"), **About the Doctor** (verified credentials), **Services** (from clinic's own listings). |
 | 6 | **Writer — doctors** | Daily 04:30 | "Top N doctors for X in {state}" roundups + profiles. Methodology line on every roundup (how the list was compiled). |
 | 7 | **Writer — news** | After each news fetch | 2–3 posts/day, primary source cited, no treatment claims. |
-| 8 | **Writer — updates** | Sun 05:00 | Weekly digest linking the week's clinic, doctor, and news posts (internal-link hub). |
-| 9 | **Humaniser** | After every draft | Strips AI style — see §3. Final gate before publish. |
-| 10 | **Publisher** | On humaniser pass | Git commit → Astro site auto-deploys (Vercel). Schema: `LocalBusiness`/`Physician` on directory posts, `NewsArticle` on news. Sitemap + internal links updated. |
-| 11 | **Monitor** | Daily 06:00 | GSC + DataForSEO rank logging → `data/rankings.csv`; flags stale clinic/doctor pages for re-verification every 90 days. |
+| 8 | **Writer — blog** | Daily | Evergreen educational content about peptide therapy. |
+| 9 | **Writer — updates** | Sun 05:00 | Weekly digest linking the week's clinic, doctor, and news posts (internal-link hub). |
+| 10 | **Humaniser** | After every draft | Strips AI style — see §3. Final gate before publish. |
+| 11 | **Publisher** | On humaniser pass | Git commit → Astro site auto-deploys (Vercel). Schema: `LocalBusiness`/`Physician` on directory posts, `NewsArticle` on news. Sitemap + internal links updated. |
+| 12 | **Monitor** | Daily 06:00 | GSC logging; flags stale clinic/doctor pages for re-verification every 90 days. |
 
-File-based handoffs (`queue/` → `data/` → `drafts/` → `published/`), each stage a headless `claude -p` invocation triggered by Windows Task Scheduler. `CLAUDE.md` holds shared rules so every agent inherits them.
+File-based handoffs (`queue/` → `data/` → `drafts/` → `published/`), orchestrated by `pipeline/orchestrator.mjs` (Node.js). The orchestrator runs on a schedule you set — Kimi cron, Windows Task Scheduler, GitHub Actions, or manually. `CLAUDE.md` holds shared rules so every generation inherits them.
 
 ## 3. Humaniser agent spec
 
@@ -53,6 +55,8 @@ Behavior: rewrite for varied rhythm and plain language, cut filler, **never alte
 /doctors/{state}/top-{specialty}/           ← roundups (e.g. /doctors/florida/top-glp1/)
 /doctors/{state}/{doctor-slug}/             ← doctor profiles
 /news/{yyyy}/{slug}/                        ← news blogs
+/blog/{category}/{slug}/                    ← evergreen educational guides
+/legal/{yyyy}/{slug}/                       ← laws & legal posts
 /updates/{yyyy}-w{ww}/                      ← weekly digests
 ```
 
@@ -69,21 +73,21 @@ One domain, one Astro site, content as markdown. Clinic and doctor pages carry a
 
 | Item | Cost |
 |---|---|
-| Domain + hosting (Vercel Hobby free tier; non-commercial — revisit at monetization) | ~$8 |
+| Hosting (Vercel Hobby free tier; non-commercial — revisit at monetization) | $0 |
 | Exa API (usage-based) | ~$20–50 |
-| DataForSEO (rank tracking only, pay-as-you-go) | ~$50 top-up lasts months at this usage |
-| Claude usage (existing plan; API if headless volume needs it) | $0–100 |
-| **Total** | **~$30–160/mo** |
+| OpenAI API (GPT-4o for writing + humanising) | ~$30–60 |
+| Gemini API (image generation, optional) | ~$0–15 |
+| **Total** | **~$50–125/mo** |
 
 ## 7. Build order
 
-**Week 1 — Foundation:** buy domain → scaffold Astro site → write `CLAUDE.md` (editorial rules, humaniser rubric, guardrails) → Exa + GSC accounts → seed `queue/cities.json` (start with 10 high-value metros: Miami, Austin, Scottsdale, LA, Dallas, Tampa, Denver, Nashville, San Diego, Houston).
+**Week 1 — Foundation:** ✅ scaffold Astro site → write `CLAUDE.md` (editorial rules, humaniser rubric, guardrails) → Exa + OpenAI accounts → seed `queue/cities.json` (20 high-value metros) → seed `queue/states.json` (10 states/specialties).
 
-**Week 2 — News engine live:** stages 1, 7, 9, 10. Smallest loop, proves the fetch→write→humanise→publish chain end-to-end. Run supervised 3 days, then scheduled.
+**Week 2 — News engine live:** ✅ stages 1, 7, 10, 11. Smallest loop, proves the fetch→write→humanise→publish chain end-to-end. Run supervised 3 days, then scheduled.
 
 **Week 3 — Clinics engine live:** stages 2, 4, 5. First city fully published before the queue advances.
 
-**Week 4 — Doctors + Updates engines live:** stages 3, 6, 8, 11. Full pipeline autonomous; your role drops to spot-checking humaniser diffs and GSC.
+**Week 4 — Doctors + Updates engines live:** stages 3, 6, 9, 12. Full pipeline autonomous; your role drops to spot-checking humaniser diffs and GSC.
 
 Deferred (revisit once traffic exists): compound pillar pages, regulatory tracker, lead monetization, productization/service model.
 
@@ -95,4 +99,3 @@ Deferred (revisit once traffic exists): compound pillar pages, regulatory tracke
 - [Google AI-content spam policies — INSIDEA](https://insidea.com/blog/seo/googles-spam-policies-for-ai-generated-content) · [YMYL guide — Search Engine Land](https://searchengineland.com/guide/ymyl)
 - [FTC peptide advertising crackdown — PeptideLaws](https://peptidelaws.com/news/ftc-crackdown-peptide-advertising-social-media-influencer-compliance) · [FDA warning letters to 30 telehealth companies — Patient Care Online](https://www.patientcareonline.com/view/fda-issues-warning-letters-30-telehealth-companies-over-misleading-compounded-glp-1-ra-marketing)
 - [FDA peptide regulations 2026 — PeptideLaws](https://peptidelaws.com/news/fda-peptide-regulations-2026) · [Pharmacy Times on the 2026 reclassification](https://www.pharmacytimes.com/view/the-peptide-reclassification-everyone-s-talking-about-a-pharmacist-s-take-on-what-rfk-jr-s-announcement-actually-means)
-- [DataForSEO pricing](https://dataforseo.com/pricing/keywords-data)

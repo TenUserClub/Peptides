@@ -9,7 +9,7 @@ Autonomous content pipeline: clinic directory, doctor directory, blog, news, and
 - **Exa API** fetches raw research and news data
 - **Gemini API** (optional) generates featured images for posts
 - **Vercel** hosts the site on a free `*.vercel.app` domain
-- **Supabase** (optional, free tier) persists clinic records, rankings, and queue state
+- **Supabase** (free tier) persists clinic records, rankings, and queue state — already connected and working
 
 **Agent-agnostic by design.** The orchestrator is just a Node.js script. Any coding agent can run it, or you can run it manually, or schedule it via cron/Task Scheduler/GitHub Actions. There is no lock-in to any specific AI platform.
 
@@ -32,7 +32,7 @@ site/                Astro site — content in site/src/content/{clinics,doctors
 pipeline/
   orchestrator.mjs    Pipeline orchestrator: fetch → write → humanise → publish → monitor
   lib/               llm.mjs (OpenAI/Gemini) · images.mjs (prompt templates) · db.mjs (Supabase)
-  scripts/           exa-fetch.mjs (news|clinics|doctors) · npi-verify.mjs
+  scripts/           exa-fetch.mjs (news|clinics|doctors) · npi-verify.mjs · lib.mjs
   prompts/           agent instructions per stage (verify, write-*, humanise, publish, monitor)
   queue/             cities.json, states.json (work queues)
   data/              exa/ (raw) → verified/ (fact-checked)
@@ -99,7 +99,7 @@ cd site && npm run dev                            # localhost:4321
 - Nothing publishes without passing the humaniser (OpenAI rewrite against the Wikipedia AI-writing rubric)
 - Reviews are only ever summaries of real, platform-attributed public reviews (FTC fake-review rule)
 - Velocity-capped publishing to stay clear of Google's scaled-content-abuse classification
-- Every stage logs to `pipeline/logs/`; failures write `NEEDS-HUMAN.md`
+- Every stage logs to `pipeline/logs/`
 - The orchestrator commits locally; you manually `git push` when ready
 - Clinic/doctor data verified against NPI registry + clinic's own site before publishing
 
@@ -111,7 +111,7 @@ cd site && npm run dev                            # localhost:4321
 | OpenAI (GPT-4o) | ~$30–60 | Writing + humanising (~6 posts/day) |
 | Gemini images | ~$0–15 | Optional, ~$0.01 per image |
 | Vercel Hobby | **$0** | Free tier |
-| Supabase | **$0** | Free tier (optional) |
+| Supabase | **$0** | Free tier (already connected) |
 | **Total** | **~$50–125/mo** | Lower end if using gpt-4o-mini for humanising |
 
 ## Multi-domain plan

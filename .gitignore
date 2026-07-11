@@ -5,4 +5,4 @@ site/.astro/
 pipeline/logs/
 pipeline/data/exa/
 pipeline/data/rejected/
-NEEDS-HUMAN.md
+# Blocker notes now go in pipeline/logs/daily-summary.md

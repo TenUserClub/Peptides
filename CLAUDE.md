@@ -4,7 +4,7 @@ Every agent in this repo inherits these rules. They are non-negotiable and overr
 
 ## What this repo is
 
-An autonomous blog pipeline with four engines: **Clinics** (blog per peptide clinic per US city), **Doctors & experts** (roundups + profiles, e.g. "Top 10 GLP-1 Doctors in Florida"), **News** (2–3 posts/day; stories that are primarily laws/regulation/enforcement are routed to the site's **Laws & legal** section instead of News — same writer, same velocity cap), **Updates** (weekly digest). Data comes from the Exa API; every draft passes the Humaniser before publish. Site is Astro in `site/`, pipeline lives in `pipeline/`.
+An autonomous content pipeline with four engines: **Clinics** (directory per US city), **Doctors & experts** (roundups + profiles), **News** (2–3 posts/day; stories that are primarily laws/regulation/enforcement are routed to the site's **Laws & legal** section instead of News — same writer, same velocity cap), **Blog** (evergreen educational guides), and **Updates** (weekly digest). Data comes from the Exa API; every draft passes the Humaniser before publish. The pipeline is orchestrated by `pipeline/orchestrator.mjs` (Node.js), which delegates writing and humanising to OpenAI (GPT-4o). The site is Astro in `site/`, deployed via git push to Vercel.
 
 ## Directory contract
 
@@ -15,11 +15,11 @@ pipeline/data/verified/  fact-checked clinic/doctor records ready for writers
 pipeline/data/rejected/  candidates that failed verification (JSON with a one-line reason each)
 pipeline/drafts/      writer output awaiting humaniser: {engine}/{slug}.md
 pipeline/humanised/   humaniser output awaiting publish (diff saved alongside as {slug}.diff.md)
-site/src/content/     published markdown: clinics/, doctors/, news/, legal/, updates/
+site/src/content/     published markdown: clinics/, doctors/, news/, legal/, blog/, updates/
 pipeline/logs/        one line per stage run: timestamp, stage, counts, errors
 ```
 
-Agents communicate ONLY through these files. Never skip a stage. If an upstream directory is empty, log and exit cleanly — do not fabricate input.
+The orchestrator moves content through these directories: `data/exa/` → `drafts/` → `humanised/` → `site/src/content/`. Never skip a stage. If an upstream directory is empty, log and exit cleanly — do not fabricate input.
 
 ## Hard editorial rules (legal/compliance — never violate)
 
@@ -35,7 +35,7 @@ Agents communicate ONLY through these files. Never skip a stage. If an upstream 
 
 - Grounded and specific. Every claim traceable to a source in the frontmatter `sources` list.
 - US English, 8th–10th grade reading level, second person sparingly.
-- Clinic posts: 700–1,100 words. Doctor roundups: 1,000–1,500. News: 400–700. Digests: 500–800.
+- Clinic posts: 700–1,100 words. Doctor roundups: 1,000–1,500. News: 400–700. Blog: 1,000–1,500. Digests: 500–800.
 - Frontmatter must match the collection schema in `site/src/content.config.ts` exactly.
 
 ## Humaniser rubric (Stage 9 — full spec in pipeline/prompts/humanise.md)
@@ -59,4 +59,4 @@ Max 5 directory posts/day + 3 news posts/day (news + legal combined — a legal 
 
 ## Failure behavior
 
-Log errors to `pipeline/logs/`, never retry more than twice, never publish anything that failed verification, and leave a `NEEDS-HUMAN.md` note in the repo root describing what's blocked.
+Log errors to `pipeline/logs/`, never retry more than twice, never publish anything that failed verification, and leave a note in `pipeline/logs/daily-summary.md` describing what's blocked.

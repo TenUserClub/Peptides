@@ -1,47 +1,28 @@
 # Architecture Deep Dive — Database, Costs & Supabase
 
-*For the Peptide SEO Engine — Kimi + OpenAI + Supabase (optional)*
+*For the Peptide SEO Engine — Kimi + OpenAI + Supabase*
 
 ---
 
-## 1. What is DataForSEO?
+## 1. Rank tracking (deferred)
 
-**DataForSEO** is a commercial API that searches Google on your behalf and tells you where your website ranks for specific keywords.
+**Status: Not implemented.** We track rankings via Google Search Console (free) for now. A commercial rank-tracking API may be added later when:
 
-### How it works in our pipeline
-
-```
-You send:    { keyword: "peptide clinic miami", location: "US", depth: 100 }
-DataForSEO:  { position: 12, url: "https://your-site.com/clinics/miami/..." }
-```
-
-The `pipeline/scripts/rank-track.mjs` script does exactly this every day:
-1. Reads keywords from `pipeline/queue/keywords.json`
-2. Calls DataForSEO for each keyword
-3. Appends results to `pipeline/data/rankings.csv`
-
-### Do you need it?
-
-**No — not at the start.** The script is designed to skip gracefully if `DATAFORSEO_LOGIN` is missing. You can add it later when:
 - You have 50+ published posts
 - You care about tracking keyword positions over time
 - You want to prove ROI on the content investment
 
-**Free alternative:** Google Search Console (free) shows you which queries bring traffic and your average position. It doesn't track specific keywords on a schedule, but it's enough for the first 3-6 months.
-
-### Cost
-
-- Pay-as-you-go pricing
-- $50 credit lasts ~3-6 months at our usage (4 keywords × 30 days = 120 queries/mo)
-- Can skip entirely until you're ready
+**Free alternative:** Google Search Console shows you which queries bring traffic and your average position. It's enough for the first 3-6 months.
 
 ---
 
-## 2. Where is the database hosted right now?
+## 2. Where is the database?
 
-**Nowhere. There is no database.**
+**Supabase — connected and working.**
 
-The entire pipeline is file-based by design:
+Project: `zfwszjbaiqpximishnco` at `https://zfwszjbaiqpximishnco.supabase.co`
+
+The pipeline is primarily file-based (markdown content in `site/src/content/`), but Supabase backs the operational data:
 
 | What | Where | Format |
 |---|---|---|
@@ -49,23 +30,16 @@ The entire pipeline is file-based by design:
 | Work queues | `pipeline/queue/{cities,states,keywords}.json` | JSON |
 | Raw research | `pipeline/data/exa/{news,clinics,doctors}/` | JSON |
 | Verified records | `pipeline/data/verified/{clinics,doctors}/` | JSON |
-| Rankings | `pipeline/data/rankings.csv` | CSV |
+| Clinic/doctor DB | Supabase `clinics` / `doctors` tables | Postgres |
+| Post metadata | Supabase `posts` table | Postgres |
+| Pipeline runs | Supabase `pipeline_runs` table | Postgres |
 | Logs | `pipeline/logs/*.log` | Plain text |
 
-### Why no database was the right call initially
+### Why the hybrid approach works
 
-- **Zero setup:** No connection strings, no migrations, no schema drift
-- **Git-native:** Content is version-controlled automatically
-- **Astro-native:** Astro's content collections read markdown files directly
-- **Offline-first:** The pipeline runs entirely on your laptop with no internet except for API calls
-
-### Why a database becomes useful now
-
-- **Query power:** "Show me all clinics in Florida with GLP-1 services and 4.5+ stars" — trivial in SQL, hard in JSON files
-- **Analytics:** "Which city produces the most verified clinics?" — SQL aggregation vs. custom JS
-- **Reliability:** JSON files can corrupt. Postgres transactions are atomic.
-- **Dashboard:** A simple Supabase dashboard lets you see pipeline health without reading log files
-- **Backup:** Supabase auto-backups vs. relying on git alone
+- **Content stays in files:** Astro's content collections read markdown directly. Git gives us version control for free.
+- **Operational data in Supabase:** Query power for "show me all clinics in Florida with GLP-1 services", atomic queue state, pipeline audit logs.
+- **Graceful fallback:** If Supabase is unreachable, the orchestrator falls back to files automatically.
 
 ---
 
@@ -82,11 +56,11 @@ The entire pipeline is file-based by design:
 | API requests | Unlimited | ~100/day |
 | **Cost** | **$0** | **$0** |
 
-### Architecture with Supabase (optional — pipeline works without it)
+### Architecture
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Kimi Cron     │────▶│  Orchestrator   │────▶│   OpenAI API    │
+│   Scheduler     │────▶│  Orchestrator   │────▶│   OpenAI API    │
 │  (every 6h)     │     │  (Node.js)      │     │  (GPT-4o)       │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
          │                       │
@@ -114,11 +88,10 @@ The entire pipeline is file-based by design:
 - **Images** → `site/public/images/` (served by Vercel CDN)
 - **Pipeline scripts** → `pipeline/scripts/` (local execution)
 
-### What moves to Supabase (optional enhancement)
+### What moves to Supabase
 
 - **Verified clinic/doctor records** → `clinics` and `doctors` tables
 - **Published post metadata** → `posts` table (title, slug, URL, publish date, tags)
-- **Rank tracking** → `rankings` table (queryable trends over time)
 - **Queue state** → `queue_state` table (atomic updates, no JSON corruption)
 - **Pipeline audit log** → `pipeline_runs` table (see every run, every failure)
 
@@ -165,11 +138,11 @@ You can add Supabase **after** the pipeline is running. No rush.
 
 ## 5. Do you need Supabase right now?
 
-### Start without it (Phase 1)
+### Already connected (Phase 1)
 
-Run the news pipeline with just `.env` + `EXA_API_KEY` + `OPENAI_API_KEY`. The file-based system works. Monitor via `pipeline/logs/daily-summary.md`.
+Supabase is set up and working. The pipeline writes to it when credentials are present. If you remove the credentials, it falls back to files seamlessly.
 
-### Add Supabase when (Phase 2)
+### When Supabase becomes essential (Phase 2)
 
 - You have 20+ verified clinics and need to query them
 - You want a dashboard instead of reading log files
@@ -178,25 +151,18 @@ Run the news pipeline with just `.env` + `EXA_API_KEY` + `OPENAI_API_KEY`. The f
 
 ### The Supabase setup is already done
 
-I've created:
 - `supabase/migrations/001_initial_schema.sql` — Full schema with indexes, RLS policies, comments
 - `pipeline/lib/db.mjs` — Client wrapper with helper functions for every table
 
-You just need to:
-1. Create a free Supabase project (I can do this for you — it's $0)
-2. Run the migration
-3. Add `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` to `.env`
-
 ---
 
-## 6. Files created in this session
+## 6. Key files
 
 | File | Purpose |
 |---|---|
-| `pipeline/lib/llm.mjs` | OpenAI chat + Gemini image wrappers |
+| `pipeline/lib/llm.mjs` | OpenAI chat + Gemini image wrappers with retry logic |
 | `pipeline/lib/images.mjs` | 6 content-type prompt templates for image generation |
 | `pipeline/lib/db.mjs` | Supabase client — optional, graceful fallback to files |
 | `pipeline/orchestrator.mjs` | Full pipeline orchestrator (fetch→write→humanise→publish→monitor) |
 | `supabase/migrations/001_initial_schema.sql` | Postgres schema: clinics, doctors, posts, rankings, queues, runs |
-| `.env.example` | Updated with all keys: Exa, OpenAI, Gemini, Supabase, DataForSEO |
-| `REVIEW.md` | 12 gaps found, 4-phase roadmap, risk assessment |
+| `.env.example` | All keys: Exa, OpenAI, Gemini, Supabase |

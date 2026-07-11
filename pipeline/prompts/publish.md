@@ -14,7 +14,7 @@ For each file in `pipeline/humanised/` (excluding `.diff.md`):
 1. Move passing files to `site/src/content/{collection}/`.
 2. Run `npm run build` in `site/` — if the build fails, revert the move, log, and stop.
 3. Commit: `git add -A && git commit -m "publish: <n> posts <date>"` then `git push` (this triggers the Vercel deploy).
-   - If the push fails (network, auth), retry ONCE. If it still fails: keep the local commit (do NOT revert the content), log, and note in `NEEDS-HUMAN.md` that a manual `git push` is needed — the next successful publish run will push it anyway.
+   - If the push fails (network, auth), retry ONCE. If it still fails: keep the local commit (do NOT revert the content), log the error, and note in `pipeline/logs/daily-summary.md` that a manual `git push` is needed — the next successful publish run will push it anyway.
 4. Append each new post's target keyword to `pipeline/queue/keywords.json` (e.g. "peptide clinic {city}", "{specialty} doctor {state}").
 
 ## Advance the work queues (only you may do this)
@@ -22,4 +22,4 @@ The queue contract in CLAUDE.md: pointers advance only after a batch fully publi
 - `pipeline/queue/cities.json`: if it has an `inFlight` batch AND every verified clinic from that city's batch is now published (nothing from it remains in `data/verified/clinics/` without a published post, `drafts/clinics/`, or `humanised/`), then increment `next`, delete `inFlight`, and log "advanced cities queue past {city}". Items held back only by the velocity cap count as NOT yet published — leave the pointer alone.
 - Same for `pipeline/queue/states.json` (doctors).
 
-Failures → log + `NEEDS-HUMAN.md` in repo root. Never force-push, never skip the build check.
+Failures → log to `pipeline/logs/` and note in `pipeline/logs/daily-summary.md`. Never force-push, never skip the build check.
