@@ -13,7 +13,7 @@ For each file in `pipeline/humanised/` (excluding `.diff.md`):
 ## Publish
 1. Move passing files to `site/src/content/{collection}/`.
 2. Run `npm run build` in `site/` — if the build fails, revert the move, log, and stop.
-3. Commit: `git add -A && git commit -m "publish: <n> posts <date>"` then `git push` (this triggers the Cloudflare Pages/Vercel deploy).
+3. Commit: `git add -A && git commit -m "publish: <n> posts <date>"` then `git push` (this triggers the Vercel deploy).
    - If the push fails (network, auth), retry ONCE. If it still fails: keep the local commit (do NOT revert the content), log, and note in `NEEDS-HUMAN.md` that a manual `git push` is needed — the next successful publish run will push it anyway.
 4. Append each new post's target keyword to `pipeline/queue/keywords.json` (e.g. "peptide clinic {city}", "{specialty} doctor {state}").
 

@@ -6,8 +6,9 @@
 // pages still build and the pipeline still publishes into them).
 //
 // To move a section out: set `domain` (full origin, no trailing slash),
-// e.g. domain: 'https://peptide-news.com'. The nav will link out, and the
-// local path is added to site/public/_redirects (Cloudflare Pages) below.
+// e.g. domain: 'https://peptide-news.com'. The nav will link out; also add a
+// redirect for the old local path in site/vercel.json ("redirects" array) so
+// any indexed URLs 308 to the new domain.
 export interface Section {
   label: string;
   path: string;    // local path on this site

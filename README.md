@@ -4,7 +4,7 @@ Autonomous blog pipeline: four content engines (clinics, doctors, news, weekly u
 
 ## Multi-domain plan
 
-This repo stays ONE monorepo. `site/` is the permanent home of the central **clinic registry**. The other sections (doctors & experts, news, laws & legal, weekly updates) will each move to their own domain later; until then they render locally here. The section→domain mapping lives in ONE file: `site/src/lib/sections.ts` — set a section's `domain` and the nav links out to it. When a section actually splits, its Astro site goes in `sites/{name}/` in this same repo, connected as its own Cloudflare Pages project (same repo, different root directory, own custom domain), and the publisher starts moving that engine's posts there instead.
+This repo stays ONE monorepo. `site/` is the permanent home of the central **clinic registry**. The other sections (doctors & experts, news, laws & legal, weekly updates) will each move to their own domain later; until then they render locally here. The section→domain mapping lives in ONE file: `site/src/lib/sections.ts` — set a section's `domain` and the nav links out to it. When a section actually splits, its Astro site goes in `sites/{name}/` in this same repo, connected as its own Vercel project (same repo, different Root Directory, own custom domain, "Ignored Build Step: only build on Root Directory changes"), and the publisher starts moving that engine's posts there instead.
 
 ## Layout
 
@@ -39,7 +39,7 @@ Your only routine job: skim `pipeline/logs/daily-summary.md` and the diffs in `p
 
 ## First-time setup
 
-Do `ACTION-ITEMS.md` top to bottom. In short: fill `.env`, `npm install` in `site/`, init git + connect Cloudflare Pages, run each stage once manually (commands below), then `setup-scheduler.ps1`.
+Do `ACTION-ITEMS.md` top to bottom. In short: fill `.env`, `npm install` in `site/`, push to GitHub + connect Vercel, run each stage once manually (commands below), then `setup-scheduler.ps1`.
 
 ## Run any stage manually
 

@@ -28,7 +28,7 @@
 | 7 | **Writer — news** | After each news fetch | 2–3 posts/day, primary source cited, no treatment claims. |
 | 8 | **Writer — updates** | Sun 05:00 | Weekly digest linking the week's clinic, doctor, and news posts (internal-link hub). |
 | 9 | **Humaniser** | After every draft | Strips AI style — see §3. Final gate before publish. |
-| 10 | **Publisher** | On humaniser pass | Git commit → Astro site auto-deploys (Cloudflare Pages). Schema: `LocalBusiness`/`Physician` on directory posts, `NewsArticle` on news. Sitemap + internal links updated. |
+| 10 | **Publisher** | On humaniser pass | Git commit → Astro site auto-deploys (Vercel). Schema: `LocalBusiness`/`Physician` on directory posts, `NewsArticle` on news. Sitemap + internal links updated. |
 | 11 | **Monitor** | Daily 06:00 | GSC + DataForSEO rank logging → `data/rankings.csv`; flags stale clinic/doctor pages for re-verification every 90 days. |
 
 File-based handoffs (`queue/` → `data/` → `drafts/` → `published/`), each stage a headless `claude -p` invocation triggered by Windows Task Scheduler. `CLAUDE.md` holds shared rules so every agent inherits them.
@@ -69,7 +69,7 @@ One domain, one Astro site, content as markdown. Clinic and doctor pages carry a
 
 | Item | Cost |
 |---|---|
-| Domain + hosting (Cloudflare Pages free tier) | ~$8 |
+| Domain + hosting (Vercel Hobby free tier; non-commercial — revisit at monetization) | ~$8 |
 | Exa API (usage-based) | ~$20–50 |
 | DataForSEO (rank tracking only, pay-as-you-go) | ~$50 top-up lasts months at this usage |
 | Claude usage (existing plan; API if headless volume needs it) | $0–100 |

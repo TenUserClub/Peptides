@@ -8,14 +8,14 @@ Everything is built. These are the only things I couldn't do for you.
 - [ ] **Exa API key** — exa.ai → dashboard → API keys.
 - [ ] **DataForSEO** — dataforseo.com → register → $50 top-up → note API login + password. (Optional at start; rank tracking skips itself if missing.)
 - [ ] Copy `.env.example` → `.env` in this folder and fill in `EXA_API_KEY`, `DATAFORSEO_LOGIN`, `DATAFORSEO_PASSWORD`, `SITE_DOMAIN`.
-- [ ] Email: create `hello@` and `corrections@` on your domain (Cloudflare Email Routing is free — forward to your inbox).
+- [ ] Email: create `hello@` and `corrections@` on your domain, forwarded to your inbox (free regardless of host: ImprovMX, Namecheap email forwarding, or Cloudflare Email Routing if your DNS is on Cloudflare).
 
 ## 2. Site & deploy (~30 min)
 
 - [x] `cd site && npm install && npm run build` — done and verified on this machine 2026-07-07 (10 pages, clean).
 - [ ] Delete the 4 sample posts: `site/src/content/*/_sample-*.md` (they're format references for the agents; agents were told to read them from git history is fine — actually keep them until the first real posts exist if you want the site non-empty locally, but delete before connecting the live domain).
-- [ ] ~~`git init && git add -A && git commit -m "initial"`~~ local init + initial commit done 2026-07-07 — you still need to: push to a new private GitHub repo.
-- [ ] **Cloudflare Pages** (or Vercel): connect the repo, build command `npm run build`, root directory `site`, output `dist`. Attach your domain.
+- [ ] ~~`git init && git add -A && git commit -m "initial"`~~ local init + initial commit done 2026-07-07 — you still need to: push to a new private GitHub repo (Vercel imports it from there).
+- [ ] **Vercel** (free Hobby plan, no card needed): vercel.com → Add New → Project → import the GitHub repo → set **Root Directory** to `site` (framework auto-detects as Astro; build `npm run build`, output `dist` are picked up automatically) → Deploy. Then Project → Settings → Domains → add your domain and follow the DNS instructions. When the other sections split to their own domains later, repeat this — one more Vercel project per `sites/{name}/` folder, same repo, different Root Directory. In each project: Settings → Git → Ignored Build Step → "Only build if there are changes in the Root Directory" so one push doesn't rebuild every site.
 - [ ] Confirm `git push` works from this machine without a password prompt (SSH key or credential manager) — the publisher agent depends on it.
 
 ## 3. Google (~15 min)
@@ -51,5 +51,6 @@ Also smoke-test: `node pipeline\scripts\npi-verify.mjs John Smith FL` (should pr
 ## Parked for later (from the plan)
 
 - Legal hour with a healthcare-marketing attorney before monetizing leads.
+- Vercel's free Hobby plan is for non-commercial use — when the site starts monetizing (lead gen, CTAs converting), upgrade to Vercel Pro ($20/mo) or move hosting to a free tier that allows commercial use (e.g. Cloudflare Pages). The repo doesn't care which host builds it.
 - Compound pillar pages, regulatory tracker, lead monetization, productization (plan §7 "Deferred").
 - Move scheduling off the laptop (GitHub Actions/VPS) when reliability starts to matter commercially.
