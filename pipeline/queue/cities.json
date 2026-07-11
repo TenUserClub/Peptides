@@ -81,5 +81,10 @@
       "city": "Seattle",
       "state": "WA"
     }
-  ]
+  ],
+  "inFlight": {
+    "label": "Miami, FL",
+    "file": "C:\\Users\\paksh\\Claude\\Projects\\SEO - Peptides\\pipeline\\data\\exa\\clinics\\miami-fl-2026-07-11T21-24-06-092Z.json",
+    "fetchedAt": "2026-07-11T21:24:06.095Z"
+  }
 }

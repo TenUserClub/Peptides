@@ -1,0 +1,23 @@
+{
+  "clinicName": "Timeless Health MD",
+  "city": "Miami",
+  "state": "FL",
+  "address": "",
+  "phone": "(786) 490-5915",
+  "website": "https://www.timelesshealthmd.com/",
+  "doctorName": "",
+  "services": [
+    "Peptide Therapy",
+    "Hormone Optimization"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.timelesshealthmd.com/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "NPI check failed: Command failed: node \"C:\\Users\\paksh\\Claude\\Projects\\SEO - Peptides\\pipeline\\scripts\\npi-verify.mjs\" \"Dr.\" \"Dinetz\" FL\nAssertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\\win\\async.c, line 76\r\n"
+  ]
+}

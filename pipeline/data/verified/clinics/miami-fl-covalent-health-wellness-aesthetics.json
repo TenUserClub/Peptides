@@ -1,0 +1,27 @@
+{
+  "clinicName": "Covalent Health Wellness & Aesthetics",
+  "city": "Miami",
+  "state": "FL",
+  "address": "9835 SW 72nd St, Ste 208, Miami, FL 33173",
+  "phone": "786-953-8867",
+  "website": "https://covalenthealth.org/functional-medicine/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Hormone balance",
+    "Metabolism support",
+    "Immune strength",
+    "Recovery",
+    "Longevity"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://covalenthealth.org/functional-medicine/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website unreachable: HTTP 403",
+    "NPI check failed: Command failed: node \"C:\\Users\\paksh\\Claude\\Projects\\SEO - Peptides\\pipeline\\scripts\\npi-verify.mjs\" \"Dr.\" \"Suarez\" FL\nAssertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\\win\\async.c, line 76\r\n"
+  ]
+}

@@ -848,22 +848,36 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
         record.verificationNotes.push('No website provided');
       }
 
-      // NPI verification for named doctor
+      // NPI verification for named doctor (inline fetch, no execSync)
       if (record.doctorName) {
-        const nameParts = record.doctorName.trim().split(/\s+/);
+        const cleanName = record.doctorName.replace(/\b(Dr|MD|DO|NP|PA|DVM|PhD)\.?\b/gi, '').trim();
+        const nameParts = cleanName.split(/\s+/).filter((p) => p.length > 1);
         const firstName = nameParts[0];
         const lastName = nameParts[nameParts.length - 1];
         if (firstName && lastName && record.state) {
           try {
-            const npiOutput = execSync(
-              `node "${join(PIPELINE, 'scripts', 'npi-verify.mjs')}" "${firstName}" "${lastName}" ${record.state}`,
-              { cwd: ROOT, encoding: 'utf8', timeout: 15000 }
-            );
-            const npiData = JSON.parse(npiOutput);
-            if (npiData.count === 1) {
-              record.npi = npiData.matches[0].npi;
+            const params = new URLSearchParams({
+              version: '2.1',
+              first_name: firstName,
+              last_name: lastName,
+              state: record.state,
+              limit: '10',
+            });
+            const npiRes = await fetch(`https://npiregistry.cms.hhs.gov/api/?${params}`);
+            if (!npiRes.ok) throw new Error(`HTTP ${npiRes.status}`);
+            const npiData = await npiRes.json();
+            const matches = (npiData.results ?? []).map((r) => ({
+              npi: r.number,
+              name: `${r.basic?.first_name ?? ''} ${r.basic?.last_name ?? ''}`.trim(),
+              status: r.basic?.status ?? null,
+              taxonomies: (r.taxonomies ?? []).map((t) => ({ desc: t.desc, state: t.state })),
+              addresses: (r.addresses ?? []).map((a) => ({ city: a.city, state: a.state })),
+            }));
+
+            if (matches.length === 1) {
+              record.npi = matches[0].npi;
               record.verificationNotes.push(`NPI verified: ${record.npi}`);
-            } else if (npiData.ambiguous) {
+            } else if (matches.length > 1) {
               record.verificationNotes.push('NPI ambiguous — multiple matches');
               record.doctorName = ''; // Drop name per CLAUDE.md
             } else {
