@@ -553,6 +553,7 @@ async function runPublish() {
   const files = findFiles(humanisedDir, /\.md$/, /\.diff\.md/);
   if (files.length === 0) {
     log('info', 'publish: nothing to publish');
+    advanceQueues();
     return 0;
   }
 
@@ -624,17 +625,21 @@ async function runPublish() {
     toMove.push({ file, targetPath, collection, title: fm.data.title, isDir, isNews, isBlog });
   }
 
-  if (toMove.length === 0) {
-    log('info', 'publish: no files passed validation');
-    return 0;
+  if (DRY_RUN) {
+    if (toMove.length > 0) {
+      log('info', `DRY RUN: would publish ${toMove.length} posts:`);
+      for (const item of toMove) {
+        log('info', `  - ${item.title} → ${item.collection}`);
+      }
+    }
+    advanceQueues();
+    return toMove.length;
   }
 
-  if (DRY_RUN) {
-    log('info', `DRY RUN: would publish ${toMove.length} posts:`);
-    for (const item of toMove) {
-      log('info', `  - ${item.title} → ${item.collection}`);
-    }
-    return toMove.length;
+  if (toMove.length === 0) {
+    log('info', 'publish: no files passed validation');
+    advanceQueues();
+    return 0;
   }
 
   for (const item of toMove) {
@@ -669,23 +674,100 @@ async function runPublish() {
   }
 
   advanceQueues();
-
   return toMove.length;
 }
 
 // ── Queue advancement ──────────────────────────────────────────
 function advanceQueues() {
+  // Advance cities queue
   const citiesPath = join(PIPELINE, 'queue', 'cities.json');
   const cities = readJson(citiesPath);
   if (cities && cities.inFlight) {
-    log('info', `publish: queue check — cities in-flight: ${cities.inFlight.label}`);
+    const inFlightCity = cities.inFlight.label; // e.g. "Miami, FL"
+    const [inFlightCityName, inFlightState] = inFlightCity.split(', ').map((s) => s.trim());
+
+    // Check if any verified/draft/humanised records for this city remain unpublished
+    const cityLower = inFlightCityName.toLowerCase();
+    const stateLower = inFlightState.toLowerCase();
+
+    const publishedSlugs = new Set(
+      findFiles(join(ROOT, 'site', 'src', 'content', 'clinics'), /\.md$/)
+        .map((p) => basename(p, '.md').toLowerCase())
+    );
+
+    const verifiedFiles = listFiles(join(PIPELINE, 'data', 'verified', 'clinics'), /\.json$/)
+      .filter((p) => basename(p).toLowerCase().startsWith(`${cityLower}-${stateLower}-`));
+    const hasUnpublishedVerified = verifiedFiles.some((p) => !publishedSlugs.has(basename(p, '.json').toLowerCase()));
+
+    const hasRemainingDrafts = existsSync(join(PIPELINE, 'drafts', 'clinics')) &&
+      listFiles(join(PIPELINE, 'drafts', 'clinics'), /\.md$/)
+        .some((p) => basename(p).toLowerCase().startsWith(`${cityLower}-${stateLower}-`));
+    const hasRemainingHumanised = existsSync(join(PIPELINE, 'humanised', 'clinics')) &&
+      listFiles(join(PIPELINE, 'humanised', 'clinics'), /\.md$/)
+        .some((p) => basename(p).toLowerCase().startsWith(`${cityLower}-${stateLower}-`));
+
+    if (!hasUnpublishedVerified && !hasRemainingDrafts && !hasRemainingHumanised) {
+      cities.next += 1;
+      delete cities.inFlight;
+      writeJson(citiesPath, cities);
+      log('info', `publish: advanced cities queue past ${inFlightCity} (next=${cities.next})`);
+    } else {
+      log('info', `publish: cities queue holding — ${inFlightCity} still has unpublished content (unpublished-verified:${hasUnpublishedVerified}, drafts:${hasRemainingDrafts}, humanised:${hasRemainingHumanised})`);
+    }
   }
 
+  // Advance states queue
   const statesPath = join(PIPELINE, 'queue', 'states.json');
   const states = readJson(statesPath);
   if (states && states.inFlight) {
-    log('info', `publish: queue check — states in-flight: ${states.inFlight.label}`);
+    const inFlightLabel = states.inFlight.label; // e.g. "Florida/GLP-1 therapy"
+    const [inFlightState, inFlightSpecialty] = inFlightLabel.split('/').map((s) => s.trim());
+
+    const stateCode = inFlightState.length === 2 ? inFlightState.toLowerCase() : stateNameToCode(inFlightState)?.toLowerCase() || '';
+
+    const publishedDoctorSlugs = new Set(
+      findFiles(join(ROOT, 'site', 'src', 'content', 'doctors'), /\.md$/)
+        .map((p) => basename(p, '.md').toLowerCase())
+    );
+
+    const verifiedDoctorFiles = listFiles(join(PIPELINE, 'data', 'verified', 'doctors'), /\.json$/)
+      .filter((p) => basename(p).toLowerCase().startsWith(`${stateCode}-`));
+    const hasUnpublishedVerified = verifiedDoctorFiles.some((p) => !publishedDoctorSlugs.has(basename(p, '.json').toLowerCase()));
+
+    const hasRemainingDrafts = existsSync(join(PIPELINE, 'drafts', 'doctors')) &&
+      listFiles(join(PIPELINE, 'drafts', 'doctors'), /\.md$/)
+        .some((p) => basename(p).toLowerCase().startsWith(`${stateCode}-`));
+    const hasRemainingHumanised = existsSync(join(PIPELINE, 'humanised', 'doctors')) &&
+      listFiles(join(PIPELINE, 'humanised', 'doctors'), /\.md$/)
+        .some((p) => basename(p).toLowerCase().startsWith(`${stateCode}-`));
+
+    if (!hasUnpublishedVerified && !hasRemainingDrafts && !hasRemainingHumanised) {
+      states.next += 1;
+      delete states.inFlight;
+      writeJson(statesPath, states);
+      log('info', `publish: advanced states queue past ${inFlightLabel} (next=${states.next})`);
+    } else {
+      log('info', `publish: states queue holding — ${inFlightLabel} still has unpublished content`);
+    }
   }
+}
+
+/** Convert full state name to two-letter code (common ones). */
+function stateNameToCode(name) {
+  const map = {
+    alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
+    colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+    hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA',
+    kansas: 'KS', kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD',
+    massachusetts: 'MA', michigan: 'MI', minnesota: 'MN', mississippi: 'MS', missouri: 'MO',
+    montana: 'MT', nebraska: 'NE', nevada: 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+    'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND',
+    ohio: 'OH', oklahoma: 'OK', oregon: 'OR', pennsylvania: 'PA', 'rhode island': 'RI',
+    'south carolina': 'SC', 'south dakota': 'SD', tennessee: 'TN', texas: 'TX',
+    utah: 'UT', vermont: 'VT', virginia: 'VA', washington: 'WA', 'west virginia': 'WV',
+    wisconsin: 'WI', wyoming: 'WY',
+  };
+  return map[name.toLowerCase().trim()] || name;
 }
 
 // ── Stage: Monitor ─────────────────────────────────────────────
@@ -729,197 +811,277 @@ ${logs}
 // ── Stage: Verify ───────────────────────────────────────────────
 async function runVerify() {
   log('info', 'orchestrator: verify');
-  const exaDir = join(PIPELINE, 'data', 'exa', 'clinics');
-  const exaFiles = listFiles(exaDir, /\.json$/).sort();
-  if (exaFiles.length === 0) {
-    log('info', 'verify: no exa clinic data to process');
-    return 0;
-  }
+  let totalVerified = 0;
 
-  const processedPath = join(PIPELINE, 'data', '.processed-clinics.json');
-  const processed = readJson(processedPath, { files: [] });
+  // ── Verify clinics ────────────────────────────────────────────
+  const clinicExaDir = join(PIPELINE, 'data', 'exa', 'clinics');
+  const clinicExaFiles = listFiles(clinicExaDir, /\.json$/).sort();
+  const clinicProcessedPath = join(PIPELINE, 'data', '.processed-clinics.json');
+  const clinicProcessed = readJson(clinicProcessedPath, { files: [] });
 
-  let verified = 0;
-  let rejected = 0;
-
-  for (const file of exaFiles) {
+  for (const file of clinicExaFiles) {
     const fileName = basename(file);
-    if (processed.files.includes(fileName)) {
-      log('info', `verify: skipping already processed ${fileName}`);
+    if (clinicProcessed.files.includes(fileName)) {
+      log('info', `verify: skipping already processed clinic ${fileName}`);
       continue;
     }
 
     const data = readJson(file);
     if (!data || !data.results || data.results.length === 0) {
-      processed.files.push(fileName);
-      writeJson(processedPath, processed);
+      clinicProcessed.files.push(fileName);
+      writeJson(clinicProcessedPath, clinicProcessed);
       continue;
     }
 
     const city = data.city || {};
-    log('info', `verify: processing ${city.city || 'unknown'}, ${city.state || 'unknown'} (${data.results.length} results)`);
+    log('info', `verify: processing clinics ${city.city || ''}, ${city.state || ''} (${data.results.length} results)`);
 
-    // Use OpenAI to extract structured clinic candidates from raw Exa text
-    const extractionPrompt = `Extract peptide therapy clinics from the following web search results for ${city.city || ''}, ${city.state || ''}.
+    if (DRY_RUN) {
+      log('info', `DRY RUN: would extract clinics from ${fileName}`);
+      clinicProcessed.files.push(fileName);
+      writeJson(clinicProcessedPath, clinicProcessed);
+      continue;
+    }
 
-For each clinic, extract ONLY what is explicitly stated in the results:
-- clinicName: exact name
-- city, state
-- address (if present)
-- phone (if present)
-- website (URL if present)
-- doctorName (named practitioner if present)
-- services: list of peptide-related services mentioned
-- ratingValue, ratingCount, ratingSource (only if a specific platform is named)
-- sourceUrl: the URL of the search result this came from
+    const { verified, rejected } = await verifyExaBatch(data, 'clinic', city);
+    totalVerified += verified;
 
-If a result is NOT about a specific clinic (e.g., a blog post, news article, or vendor site), skip it.
-If a result looks like a "research chemical" vendor or sells peptides "for research use only", mark it rejected.
+    clinicProcessed.files.push(fileName);
+    writeJson(clinicProcessedPath, clinicProcessed);
+    log('info', `verify: ${verified} verified, ${rejected} rejected clinics from ${fileName}`);
+  }
 
-Output as JSON: { "candidates": [ { ... } ], "rejected": [ { "reason": "...", "sourceUrl": "..." } ] }
+  // ── Verify doctors ────────────────────────────────────────────
+  const doctorExaDir = join(PIPELINE, 'data', 'exa', 'doctors');
+  const doctorExaFiles = listFiles(doctorExaDir, /\.json$/).sort();
+  const doctorProcessedPath = join(PIPELINE, 'data', '.processed-doctors.json');
+  const doctorProcessed = readJson(doctorProcessedPath, { files: [] });
+
+  for (const file of doctorExaFiles) {
+    const fileName = basename(file);
+    if (doctorProcessed.files.includes(fileName)) {
+      log('info', `verify: skipping already processed doctor ${fileName}`);
+      continue;
+    }
+
+    const data = readJson(file);
+    if (!data || !data.results || data.results.length === 0) {
+      doctorProcessed.files.push(fileName);
+      writeJson(doctorProcessedPath, doctorProcessed);
+      continue;
+    }
+
+    const item = data.item || {};
+    log('info', `verify: processing doctors ${item.state || ''}/${item.specialty || ''} (${data.results.length} results)`);
+
+    if (DRY_RUN) {
+      log('info', `DRY RUN: would extract doctors from ${fileName}`);
+      doctorProcessed.files.push(fileName);
+      writeJson(doctorProcessedPath, doctorProcessed);
+      continue;
+    }
+
+    const { verified, rejected } = await verifyExaBatch(data, 'doctor', item);
+    totalVerified += verified;
+
+    doctorProcessed.files.push(fileName);
+    writeJson(doctorProcessedPath, doctorProcessed);
+    log('info', `verify: ${verified} verified, ${rejected} rejected doctors from ${fileName}`);
+  }
+
+  return totalVerified;
+}
+
+/**
+ * Verify a single batch of Exa results.
+ * @param {object} data — Exa fetch result
+ * @param {string} type — 'clinic' | 'doctor'
+ * @param {object} context — city object for clinics, item object for doctors
+ * @returns {object} { verified, rejected }
+ */
+async function verifyExaBatch(data, type, context) {
+  let verified = 0;
+  let rejected = 0;
+
+  const extractionPrompt = type === 'clinic'
+    ? `Extract peptide therapy clinics from the following web search results for ${context.city || ''}, ${context.state || ''}.
+
+For each clinic, extract ONLY what is explicitly stated:
+- clinicName, city, state, address, phone, website, doctorName
+- services: list of peptide-related services
+- ratingValue, ratingCount, ratingSource (only if platform named)
+- sourceUrl
+Skip blog posts, news articles, vendor sites. Reject "research chemical" vendors.
+Output JSON: { "candidates": [ {...} ], "rejected": [ { "reason": "...", "sourceUrl": "..." } ] }
+
+EXA RESULTS:
+${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r.text || '').slice(0, 2000) })), null, 2)}`
+    : `Extract peptide therapy physicians and doctors from the following web search results for ${context.state || ''}, specialty: ${context.specialty || ''}.
+
+For each doctor, extract ONLY what is explicitly stated:
+- doctorName (full name), city, state
+- credentials (MD, DO, NP, etc. if mentioned)
+- specialty (confirm matches ${context.specialty || ''} or related)
+- clinicName, clinicWebsite, phone
+- services: list of peptide-related services offered
+- ratingValue, ratingCount, ratingSource (only if platform named)
+- yearsInPractice (if stated)
+- sourceUrl
+Skip blog posts, news articles, vendor sites. Reject "research chemical" vendors.
+Output JSON: { "candidates": [ {...} ], "rejected": [ { "reason": "...", "sourceUrl": "..." } ] }
 
 EXA RESULTS:
 ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r.text || '').slice(0, 2000) })), null, 2)}`;
 
-    let candidates = [];
-    let rejects = [];
+  let candidates = [];
+  let rejects = [];
 
-    try {
-      if (DRY_RUN) {
-        log('info', `DRY RUN: would extract clinics from ${fileName}`);
-        processed.files.push(fileName);
-        writeJson(processedPath, processed);
-        continue;
-      }
+  try {
+    const response = await chat({
+      system: `You extract structured ${type} data from web search results. Output ONLY valid JSON. Never invent data not present in the source.`,
+      user: extractionPrompt,
+      model: CONFIG.models.verify,
+      temperature: 0.3,
+      jsonMode: true,
+    });
+    const parsed = JSON.parse(response);
+    candidates = parsed.candidates || [];
+    rejects = parsed.rejected || [];
+  } catch (e) {
+    log('error', `verify: extraction failed: ${e.message}`);
+    return { verified: 0, rejected: 0 };
+  }
 
-      const response = await chat({
-        system: 'You extract structured clinic data from web search results. Output ONLY valid JSON. Never invent data not present in the source.',
-        user: extractionPrompt,
-        model: CONFIG.models.verify,
-        temperature: 0.3,
-        jsonMode: true,
-      });
+  // Verify each candidate
+  for (const c of candidates) {
+    const record = type === 'clinic'
+      ? {
+          clinicName: c.clinicName || '',
+          city: c.city || context.city || '',
+          state: c.state || context.state || '',
+          address: c.address || '',
+          phone: c.phone || '',
+          website: c.website || '',
+          doctorName: c.doctorName || '',
+          services: Array.isArray(c.services) ? c.services : [],
+          ratingValue: c.ratingValue || null,
+          ratingCount: c.ratingCount || null,
+          ratingSource: c.ratingSource || '',
+          sourceUrls: [c.sourceUrl].filter(Boolean),
+          verified: false,
+          verificationNotes: [],
+        }
+      : {
+          doctorName: c.doctorName || '',
+          city: c.city || '',
+          state: c.state || context.state || '',
+          credentials: c.credentials || '',
+          specialty: c.specialty || context.specialty || '',
+          clinicName: c.clinicName || '',
+          website: c.clinicWebsite || c.website || '',
+          phone: c.phone || '',
+          services: Array.isArray(c.services) ? c.services : [],
+          ratingValue: c.ratingValue || null,
+          ratingCount: c.ratingCount || null,
+          ratingSource: c.ratingSource || '',
+          yearsInPractice: c.yearsInPractice || null,
+          sourceUrls: [c.sourceUrl].filter(Boolean),
+          verified: false,
+          verificationNotes: [],
+        };
 
-      const parsed = JSON.parse(response);
-      candidates = parsed.candidates || [];
-      rejects = parsed.rejected || [];
-    } catch (e) {
-      log('error', `verify: extraction failed for ${fileName}: ${e.message}`);
+    const nameField = type === 'clinic' ? record.clinicName : record.doctorName;
+    if (!nameField) {
+      rejects.push({ reason: `Missing ${type} name`, sourceUrl: c.sourceUrl });
       continue;
     }
 
-    // Verify each candidate
-    for (const c of candidates) {
-      const record = {
-        clinicName: c.clinicName || '',
-        city: c.city || city.city || '',
-        state: c.state || city.state || '',
-        address: c.address || '',
-        phone: c.phone || '',
-        website: c.website || '',
-        doctorName: c.doctorName || '',
-        services: Array.isArray(c.services) ? c.services : [],
-        ratingValue: c.ratingValue || null,
-        ratingCount: c.ratingCount || null,
-        ratingSource: c.ratingSource || '',
-        sourceUrls: [c.sourceUrl].filter(Boolean),
-        verified: false,
-        verificationNotes: [],
-      };
-
-      // Skip if no clinic name
-      if (!record.clinicName) {
-        rejects.push({ reason: 'Missing clinic name', sourceUrl: c.sourceUrl });
-        continue;
-      }
-
-      // Website verification: fetch and check for peptide mention
-      if (record.website) {
-        try {
-          const siteText = await webFetch(record.website, { maxRetries: 1, timeout: 8000 });
-          const hasPeptide = /peptide|GLP-1|semaglutide|tirzepatide/i.test(siteText);
-          if (!hasPeptide) {
-            record.verificationNotes.push('Website does not mention peptide therapy');
-          }
-        } catch (e) {
-          record.verificationNotes.push(`Website unreachable: ${e.message}`);
+    // Website verification
+    const siteUrl = type === 'clinic' ? record.website : record.website;
+    if (siteUrl) {
+      try {
+        const siteText = await webFetch(siteUrl, { maxRetries: 1, timeout: 8000 });
+        const hasPeptide = /peptide|GLP-1|semaglutide|tirzepatide/i.test(siteText);
+        if (!hasPeptide) {
+          record.verificationNotes.push('Website does not mention peptide therapy');
         }
-      } else {
-        record.verificationNotes.push('No website provided');
+      } catch (e) {
+        record.verificationNotes.push(`Website unreachable: ${e.message}`);
       }
+    } else {
+      record.verificationNotes.push('No website provided');
+    }
 
-      // NPI verification for named doctor (inline fetch, no execSync)
-      if (record.doctorName) {
-        const cleanName = record.doctorName.replace(/\b(Dr|MD|DO|NP|PA|DVM|PhD)\.?\b/gi, '').trim();
-        const nameParts = cleanName.split(/\s+/).filter((p) => p.length > 1);
-        const firstName = nameParts[0];
-        const lastName = nameParts[nameParts.length - 1];
-        if (firstName && lastName && record.state) {
-          try {
-            const params = new URLSearchParams({
-              version: '2.1',
-              first_name: firstName,
-              last_name: lastName,
-              state: record.state,
-              limit: '10',
-            });
-            const npiRes = await fetch(`https://npiregistry.cms.hhs.gov/api/?${params}`);
-            if (!npiRes.ok) throw new Error(`HTTP ${npiRes.status}`);
-            const npiData = await npiRes.json();
-            const matches = (npiData.results ?? []).map((r) => ({
-              npi: r.number,
-              name: `${r.basic?.first_name ?? ''} ${r.basic?.last_name ?? ''}`.trim(),
-              status: r.basic?.status ?? null,
-              taxonomies: (r.taxonomies ?? []).map((t) => ({ desc: t.desc, state: t.state })),
-              addresses: (r.addresses ?? []).map((a) => ({ city: a.city, state: a.state })),
-            }));
+    // NPI verification for named doctor
+    const doctorToCheck = type === 'clinic' ? record.doctorName : record.doctorName;
+    if (doctorToCheck) {
+      const cleanName = doctorToCheck.replace(/\b(Dr|MD|DO|NP|PA|DVM|PhD)\.?\b/gi, '').trim();
+      const nameParts = cleanName.split(/\s+/).filter((p) => p.length > 1);
+      const firstName = nameParts[0];
+      const lastName = nameParts[nameParts.length - 1];
+      if (firstName && lastName && record.state) {
+        try {
+          const params = new URLSearchParams({
+            version: '2.1',
+            first_name: firstName,
+            last_name: lastName,
+            state: record.state,
+            limit: '10',
+          });
+          const npiRes = await fetch(`https://npiregistry.cms.hhs.gov/api/?${params}`);
+          if (!npiRes.ok) throw new Error(`HTTP ${npiRes.status}`);
+          const npiData = await npiRes.json();
+          const matches = (npiData.results ?? []).map((r) => ({
+            npi: r.number,
+            name: `${r.basic?.first_name ?? ''} ${r.basic?.last_name ?? ''}`.trim(),
+            status: r.basic?.status ?? null,
+            taxonomies: (r.taxonomies ?? []).map((t) => ({ desc: t.desc, state: t.state })),
+            addresses: (r.addresses ?? []).map((a) => ({ city: a.city, state: a.state })),
+          }));
 
-            if (matches.length === 1) {
-              record.npi = matches[0].npi;
-              record.verificationNotes.push(`NPI verified: ${record.npi}`);
-            } else if (matches.length > 1) {
-              record.verificationNotes.push('NPI ambiguous — multiple matches');
-              record.doctorName = ''; // Drop name per CLAUDE.md
-            } else {
-              record.verificationNotes.push('NPI not found');
-              record.doctorName = '';
-            }
-          } catch (e) {
-            record.verificationNotes.push(`NPI check failed: ${e.message}`);
+          if (matches.length === 1) {
+            record.npi = matches[0].npi;
+            record.verificationNotes.push(`NPI verified: ${record.npi}`);
+          } else if (matches.length > 1) {
+            record.verificationNotes.push('NPI ambiguous — multiple matches');
+            record.doctorName = '';
+          } else {
+            record.verificationNotes.push('NPI not found');
             record.doctorName = '';
           }
+        } catch (e) {
+          record.verificationNotes.push(`NPI check failed: ${e.message}`);
+          record.doctorName = '';
         }
       }
-
-      // Decide: verified or rejected
-      const hasWebsite = record.website && record.website.startsWith('http');
-      const hasPeptideService = record.services.some((s) => /peptide|GLP-1|hormone|longevity/i.test(s));
-      const isVerifiable = hasWebsite && (hasPeptideService || record.verificationNotes.some((n) => n.includes('peptide')));
-
-      if (isVerifiable) {
-        record.verified = true;
-        const slug = `${record.city.toLowerCase().replace(/\s+/g, '-')}-${record.state.toLowerCase()}-${slugify(record.clinicName)}`;
-        const outPath = join(PIPELINE, 'data', 'verified', 'clinics', `${slug}.json`);
-        writeJson(outPath, record);
-        verified++;
-      } else {
-        rejects.push({ reason: `Not verifiable: ${record.verificationNotes.join('; ')}`, clinicName: record.clinicName });
-      }
     }
 
-    // Write rejected records
-    for (const r of rejects) {
-      const outPath = join(PIPELINE, 'data', 'rejected', `rejected-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.json`);
-      writeJson(outPath, { ...r, city: city.city, state: city.state });
-      rejected++;
-    }
+    // Decide: verified or rejected
+    const hasWebsite = record.website && record.website.startsWith('http');
+    const hasPeptideService = record.services.some((s) => /peptide|GLP-1|hormone|longevity/i.test(s));
+    const isVerifiable = hasWebsite && (hasPeptideService || record.verificationNotes.some((n) => n.includes('peptide')));
 
-    processed.files.push(fileName);
-    writeJson(processedPath, processed);
-    log('info', `verify: ${verified} verified, ${rejected} rejected from ${fileName}`);
+    if (isVerifiable) {
+      record.verified = true;
+      const slug = type === 'clinic'
+        ? `${record.city.toLowerCase().replace(/\s+/g, '-')}-${record.state.toLowerCase()}-${slugify(record.clinicName)}`
+        : `${record.state.toLowerCase()}-${slugify(record.doctorName)}`;
+      const outPath = join(PIPELINE, 'data', 'verified', type === 'clinic' ? 'clinics' : 'doctors', `${slug}.json`);
+      writeJson(outPath, record);
+      verified++;
+    } else {
+      rejects.push({ reason: `Not verifiable: ${record.verificationNotes.join('; ')}`, name: nameField });
+    }
   }
 
-  return verified;
+  // Write rejected records
+  for (const r of rejects) {
+    const outPath = join(PIPELINE, 'data', 'rejected', `rejected-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.json`);
+    writeJson(outPath, { ...r, context });
+    rejected++;
+  }
+
+  return { verified, rejected };
 }
 
 // ── Stage: Write Clinics ───────────────────────────────────────
@@ -1054,8 +1216,170 @@ Then the article body with these sections:
 }
 
 async function runWriteDoctors() {
-  log('info', 'orchestrator: write-doctors (stub — needs verified data)');
-  return 0;
+  log('info', 'orchestrator: write-doctors');
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todayCount = countToday('doctors');
+  if (todayCount >= CONFIG.velocity.maxDirPerDay) {
+    log('info', `write-doctors: velocity cap reached (${todayCount}/${CONFIG.velocity.maxDirPerDay})`);
+    return 0;
+  }
+
+  const verifiedDir = join(PIPELINE, 'data', 'verified', 'doctors');
+  if (!existsSync(verifiedDir)) {
+    log('info', 'write-doctors: no verified doctor data');
+    return 0;
+  }
+
+  const verifiedFiles = listFiles(verifiedDir, /\.json$/);
+  if (verifiedFiles.length === 0) {
+    log('info', 'write-doctors: no verified doctors');
+    return 0;
+  }
+
+  // Skip doctors that already have drafts or published posts
+  const existingSlugs = new Set([
+    ...findFiles(join(PIPELINE, 'drafts', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
+    ...findFiles(join(PIPELINE, 'humanised', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
+    ...findFiles(join(ROOT, 'site', 'src', 'content', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
+  ]);
+
+  // Group verified doctors by state+specialty for roundups
+  const byGroup = {};
+  for (const vf of verifiedFiles) {
+    const record = readJson(vf);
+    if (!record || !record.verified) continue;
+    const key = `${record.state}-${record.specialty}`;
+    if (!byGroup[key]) byGroup[key] = [];
+    byGroup[key].push(record);
+  }
+
+  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount);
+  let written = 0;
+
+  const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
+  const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-doctors.md')) || '';
+  const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'doctors', '_sample-florida-top-glp1.md')) || '';
+
+  // Write roundups for groups with 3+ doctors, profiles for singletons
+  for (const [groupKey, doctors] of Object.entries(byGroup)) {
+    if (written >= available) break;
+
+    const [state, specialty] = groupKey.split('-');
+    const isRoundup = doctors.length >= 3;
+    const slug = isRoundup
+      ? `${state.toLowerCase()}-top-${slugify(specialty)}`
+      : `${state.toLowerCase()}-${slugify(doctors[0].doctorName || doctors[0].slug || 'doctor')}`;
+
+    if (existingSlugs.has(slug)) continue;
+
+    const systemPrompt = `You are an autonomous peptide doctor directory writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
+
+    const userPrompt = isRoundup
+      ? `Write a "Top N" doctor roundup for ${specialty} physicians in ${state}.
+
+VERIFIED DOCTORS (${doctors.length}):
+${JSON.stringify(doctors.map((d) => ({
+        name: d.doctorName,
+        city: d.city,
+        specialty: d.specialty,
+        credentials: d.credentials || '',
+        npi: d.npi || '',
+        ratingValue: d.ratingValue,
+        ratingCount: d.ratingCount,
+        ratingSource: d.ratingSource,
+        services: d.services || [],
+      })), null, 2)}
+
+Today's date: ${today}
+
+Output a markdown post with YAML frontmatter matching the doctors schema:
+---
+title: "Top ${doctors.length} ${specialty} Doctors in ${state} (${today.slice(0,4)})"
+description: "..."
+kind: "roundup"
+state: "${state}"
+specialty: "${specialty}"
+methodology: "Compiled from public physician directories, the NPI registry, state licensing records, and published patient ratings. Ranked by verified ${specialty} service offering, years in practice, and volume of public patient ratings. No physician paid for inclusion."
+sources: ["https://npiregistry.cms.hhs.gov"]
+verified: true
+publishDate: ${today}
+---
+
+Body: intro paragraph → numbered list (1 per doctor with verified facts) → "How to choose" section.
+1,000–1,500 words. No treatment claims.`
+      : `Write a doctor profile for this verified physician.
+
+VERIFIED RECORD:
+${JSON.stringify(doctors[0], null, 2)}
+
+Today's date: ${today}
+
+Output a markdown post with YAML frontmatter matching the doctors schema:
+---
+title: "${doctors[0].doctorName || 'Doctor Profile'} — ${doctors[0].city || ''}, ${state}"
+description: "..."
+kind: "profile"
+state: "${state}"
+specialty: "${doctors[0].specialty || specialty}"
+doctorName: "${doctors[0].doctorName || ''}"
+npi: "${doctors[0].npi || ''}"
+sources: ["https://npiregistry.cms.hhs.gov"]
+verified: true
+publishDate: ${today}
+---
+
+Body: opening → credentials → services → patient reviews (attributed or "none found") → location/contact.
+700–1,000 words. No treatment claims. Facts only from the verified record.`;
+
+    if (DRY_RUN) {
+      log('info', `DRY RUN: would write doctor ${slug} (${isRoundup ? 'roundup' : 'profile'})`);
+      written++;
+      continue;
+    }
+
+    try {
+      const response = await chat({
+        system: systemPrompt,
+        user: userPrompt,
+        model: CONFIG.models.writing,
+        temperature: 0.6,
+      });
+
+      const cleaned = stripMarkdownFences(response);
+      const fm = parseFrontmatter(cleaned);
+      if (!fm || !fm.data.title) {
+        log('warn', `write-doctors: skipping malformed post for ${slug}`);
+        const debugPath = join(PIPELINE, 'drafts', 'doctors', `_malformed-${Date.now()}.md`);
+        writeText(debugPath, cleaned);
+        continue;
+      }
+
+      const outPath = join(PIPELINE, 'drafts', 'doctors', `${slug}.md`);
+
+      const imagePath = await generateImage('doctors', {
+        title: fm.data.title,
+        specialty: fm.data.specialty,
+        state: fm.data.state,
+      }, slug);
+
+      let postWithImage = cleaned;
+      if (imagePath) {
+        postWithImage = cleaned.replace(
+          /^(---\n[\s\S]*?publishDate:\s*\d{4}-\d{2}-\d{2}\n)/m,
+          `$1image: "${imagePath}"\n`
+        );
+      }
+
+      writeText(outPath, postWithImage);
+      log('info', `write-doctors: drafted ${slug} (${isRoundup ? 'roundup' : 'profile'})${imagePath ? ' with image' : ''}`);
+      written++;
+    } catch (e) {
+      log('error', `write-doctors: failed for ${slug}: ${e.message}`);
+    }
+  }
+
+  return written;
 }
 async function runWriteUpdates() {
   log('info', 'orchestrator: write-updates (stub — needs published posts)');
