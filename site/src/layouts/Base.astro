@@ -1,4 +1,6 @@
 ---
+import { SECTIONS, sectionHref } from '../lib/sections';
+
 interface Props {
   title: string;
   description: string;
@@ -38,11 +40,9 @@ const { title, description, jsonLd, showCorrections = false } = Astro.props;
     <header>
       <a href="/">Peptide Directory &amp; News</a>
       <nav>
-        <a href="/clinics/">Clinics</a>
-        <a href="/doctors/">Doctors &amp; experts</a>
-        <a href="/news/">News</a>
-        <a href="/legal/">Laws &amp; legal</a>
-        <a href="/updates/">Weekly updates</a>
+        {SECTIONS.map((s) => (
+          <a href={sectionHref(s)} {...(s.domain ? { rel: 'noopener' } : {})}>{s.label}</a>
+        ))}
       </nav>
     </header>
     <main>

@@ -2,6 +2,10 @@
 
 Autonomous blog pipeline: four content engines (clinics, doctors, news, weekly updates) feeding an Astro site, run 24/7 by scheduled Claude Code agents on this machine. Full strategy: `peptide-seo-plan.md`. Editorial rules every agent obeys: `CLAUDE.md`. Your setup checklist: `ACTION-ITEMS.md`.
 
+## Multi-domain plan
+
+This repo stays ONE monorepo. `site/` is the permanent home of the central **clinic registry**. The other sections (doctors & experts, news, laws & legal, weekly updates) will each move to their own domain later; until then they render locally here. The section→domain mapping lives in ONE file: `site/src/lib/sections.ts` — set a section's `domain` and the nav links out to it. When a section actually splits, its Astro site goes in `sites/{name}/` in this same repo, connected as its own Cloudflare Pages project (same repo, different root directory, own custom domain), and the publisher starts moving that engine's posts there instead.
+
 ## Layout
 
 ```
