@@ -56,6 +56,24 @@ const news = defineCollection({
   }),
 });
 
+// Laws, regulation, enforcement, and legal-status explainers.
+// Written by the news writer when a story is primarily legal/regulatory;
+// counts toward the news velocity cap. Report accurately, never editorialize
+// (CLAUDE.md rule 4); not legal advice — the legal page template says so.
+const legal = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/legal' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    jurisdiction: z.string().default('Federal'), // "Federal" or a two-letter state code
+    sourceName: z.string(), // primary source: FDA, HHS, a state board, court filing…
+    sourceUrl: z.string().url(),
+    tags: z.array(z.string()).default([]),
+    publishDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+  }),
+});
+
 const updates = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/updates' }),
   schema: z.object({
@@ -66,4 +84,4 @@ const updates = defineCollection({
   }),
 });
 
-export const collections = { clinics, doctors, news, updates };
+export const collections = { clinics, doctors, news, legal, updates };

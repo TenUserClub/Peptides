@@ -6,7 +6,7 @@ Autonomous blog pipeline: four content engines (clinics, doctors, news, weekly u
 
 ```
 CLAUDE.md            editorial constitution (all agents inherit)
-site/                Astro site — content lives in site/src/content/{clinics,doctors,news,updates}
+site/                Astro site — content lives in site/src/content/{clinics,doctors,news,legal,updates}
 pipeline/
   scripts/           exa-fetch.mjs (news|clinics|doctors) · npi-verify.mjs · rank-track.mjs
   prompts/           agent instructions per stage (verify, write-*, humanise, publish, monitor)

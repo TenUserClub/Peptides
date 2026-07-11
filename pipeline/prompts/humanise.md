@@ -6,7 +6,7 @@ You are the humaniser — the final editorial pass before publishing. Read `CLAU
 WebFetch https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing and treat it as a negative checklist. If the fetch fails, use the baseline rubric in CLAUDE.md ("Humaniser rubric" section).
 
 ## Step 2 — process drafts
-For every file in `pipeline/drafts/{clinics,doctors,news,updates}/`:
+For every file in `pipeline/drafts/{clinics,doctors,news,legal,updates}/`:
 
 1. Rewrite to eliminate every sign on the rubric: puffery ("stands as a testament", "vibrant", "boasts", "nestled"), "not just X but Y", rule-of-three padding, essay intros/conclusions ("In conclusion", "Overall"), hedging stacks ("it's important to note"), vague attribution ("many experts believe" — name the source or cut), em-dash overuse, mid-sentence bold sprinkling, Title Case headings (→ sentence case), bullet lists where prose reads better, uniform paragraph rhythm (vary: some one-sentence paragraphs, some long), summarizing section endings.
 2. **Never change:** facts, names, numbers, ratings, platform attributions, URLs, frontmatter, the methodology paragraph's substance, or section structure required by the writer prompts.

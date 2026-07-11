@@ -4,7 +4,7 @@ Every agent in this repo inherits these rules. They are non-negotiable and overr
 
 ## What this repo is
 
-An autonomous blog pipeline with four engines: **Clinics** (blog per peptide clinic per US city), **Doctors** (roundups + profiles, e.g. "Top 10 GLP-1 Doctors in Florida"), **News** (2–3 posts/day), **Updates** (weekly digest). Data comes from the Exa API; every draft passes the Humaniser before publish. Site is Astro in `site/`, pipeline lives in `pipeline/`.
+An autonomous blog pipeline with four engines: **Clinics** (blog per peptide clinic per US city), **Doctors & experts** (roundups + profiles, e.g. "Top 10 GLP-1 Doctors in Florida"), **News** (2–3 posts/day; stories that are primarily laws/regulation/enforcement are routed to the site's **Laws & legal** section instead of News — same writer, same velocity cap), **Updates** (weekly digest). Data comes from the Exa API; every draft passes the Humaniser before publish. Site is Astro in `site/`, pipeline lives in `pipeline/`.
 
 ## Directory contract
 
@@ -15,7 +15,7 @@ pipeline/data/verified/  fact-checked clinic/doctor records ready for writers
 pipeline/data/rejected/  candidates that failed verification (JSON with a one-line reason each)
 pipeline/drafts/      writer output awaiting humaniser: {engine}/{slug}.md
 pipeline/humanised/   humaniser output awaiting publish (diff saved alongside as {slug}.diff.md)
-site/src/content/     published markdown: clinics/, doctors/, news/, updates/
+site/src/content/     published markdown: clinics/, doctors/, news/, legal/, updates/
 pipeline/logs/        one line per stage run: timestamp, stage, counts, errors
 ```
 
@@ -55,7 +55,7 @@ Humaniser NEVER changes facts, names, numbers, ratings, attributions, sources, o
 
 ## Velocity limits
 
-Max 5 directory posts/day + 3 news posts/day until `pipeline/logs/` shows 30 days of healthy GSC indexing. Do not batch-publish a backlog. If the publisher finds >8 items in `pipeline/humanised/`, publish the cap and leave the rest for tomorrow.
+Max 5 directory posts/day + 3 news posts/day (news + legal combined — a legal post consumes a news slot) until `pipeline/logs/` shows 30 days of healthy GSC indexing. Do not batch-publish a backlog. If the publisher finds >8 items in `pipeline/humanised/`, publish the cap and leave the rest for tomorrow.
 
 ## Failure behavior
 

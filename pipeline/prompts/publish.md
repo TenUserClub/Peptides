@@ -8,7 +8,7 @@ For each file in `pipeline/humanised/` (excluding `.diff.md`):
 2. Clinic/doctor posts: `verified: true` present AND a matching record exists in `pipeline/data/verified/`. Roundups: `methodology` present.
 3. No banned patterns: invented review language (opinions without platform attribution), treatment claims (peptide + cures/heals/treats/fixes/reverses/prevents), links to research-chemical vendors.
 4. Duplicate slug: the target filename must NOT already exist in `site/src/content/{collection}/`. If it does, do not overwrite — compare the two; if the new file covers the same clinic/doctor/story, delete it from `pipeline/humanised/` as a duplicate and log; if it's genuinely different content with a colliding slug, rename with a `-2` suffix and log.
-5. Velocity: count today's already-published posts. Cap: 5 directory (clinics+doctors) + 3 news per day. Leave excess in `pipeline/humanised/` for tomorrow.
+5. Velocity: count today's already-published posts. Cap: 5 directory (clinics+doctors) + 3 news per day (news + legal combined). Leave excess in `pipeline/humanised/` for tomorrow.
 
 ## Publish
 1. Move passing files to `site/src/content/{collection}/`.
