@@ -26,7 +26,7 @@ requireEnv('OPENAI_API_KEY');
 const rawDomain = process.env.SITE_DOMAIN || '';
 const SITE_DOMAIN = rawDomain && !rawDomain.startsWith('#')
   ? rawDomain.trim()
-  : 'peptide-seo-site.vercel.app';
+  : 'peptides-three-phi.vercel.app';
 
 // ── Configuration ──────────────────────────────────────────────
 const CONFIG = {

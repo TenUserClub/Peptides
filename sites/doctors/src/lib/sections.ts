@@ -5,9 +5,9 @@ export interface Section {
 }
 
 export const SITES = {
-  clinics: 'https://peptide-clinics.vercel.app',
-  doctors: 'https://peptide-doctors.vercel.app',
-  content: 'https://peptide-hub.vercel.app',
+  clinics: 'https://peptides-three-phi.vercel.app',
+  doctors: 'https://peptides-doctors-and-experts.vercel.app',
+  content: 'https://peptides-content.vercel.app',
 } as const;
 
 export const SECTIONS: Section[] = [
