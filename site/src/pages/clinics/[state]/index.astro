@@ -3,7 +3,6 @@ import Base from '../../../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 import { clinicsByState, stateName, stateSlug, HUB_MIN_CLINICS } from '../../../lib/states';
 
-// State hub pages exist only once a state has HUB_MIN_CLINICS clinics.
 export async function getStaticPaths() {
   const all = await getCollection('clinics');
   return Object.entries(clinicsByState(all))
@@ -17,18 +16,22 @@ const name = stateName(code);
 const byCity: Record<string, typeof posts> = {};
 for (const p of posts) (byCity[p.data.city] ??= []).push(p);
 const cities = Object.keys(byCity).sort();
-
-const doctors = await getCollection('doctors');
-const stateDoctors = doctors.filter((p) => p.data.state.toUpperCase() === code);
-const roundups = stateDoctors.filter((p) => p.data.kind === 'roundup');
-const profiles = stateDoctors.filter((p) => p.data.kind === 'profile');
 ---
 <Base
-  title={`Peptide Clinics in ${name}: ${posts.length} Verified Listings | Peptide Directory`}
+  title={`Peptide Clinics in ${name}: ${posts.length} Verified Listings | Peptide Clinics Directory`}
   description={`Browse ${posts.length} verified peptide therapy clinics across ${cities.length} ${cities.length === 1 ? 'city' : 'cities'} in ${name}, with services, practitioner details, and summarized public reviews.`}
 >
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    <span class="sep" aria-hidden="true">→</span>
+    <a href="/clinics/">Clinics</a>
+    <span class="sep" aria-hidden="true">→</span>
+    <span aria-current="page">{name}</span>
+  </nav>
+
   <h1>Peptide clinics in {name}</h1>
   <p class="meta">{posts.length} verified {posts.length === 1 ? 'listing' : 'listings'} · <a href="/clinics/">all states</a></p>
+
   {cities.map((city) => (
     <section>
       <h2>{city}</h2>
@@ -41,16 +44,4 @@ const profiles = stateDoctors.filter((p) => p.data.kind === 'profile');
       </ul>
     </section>
   ))}
-  {roundups.length > 0 && (
-    <section>
-      <h2>Doctor roundups for {name}</h2>
-      <ul>{roundups.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>))}</ul>
-    </section>
-  )}
-  {profiles.length > 0 && (
-    <section>
-      <h2>Doctor profiles in {name}</h2>
-      <ul>{profiles.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>))}</ul>
-    </section>
-  )}
 </Base>

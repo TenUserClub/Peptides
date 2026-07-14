@@ -1,0 +1,17 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('news')).sort((a, b) => +b.data.publishDate - +a.data.publishDate);
+---
+<Base title="Peptide News | Peptide Hub" description="Daily coverage of peptide research, FDA regulation, compounding policy, and industry news.">
+  <h1>Peptide news</h1>
+  <ul>
+    {posts.map((p) => (
+      <li>
+        <a href={`/news/${p.id}/`}>{p.data.title}</a>
+        <span class="meta"> · {p.data.publishDate.toISOString().slice(0, 10)} · via {p.data.sourceName}</span>
+      </li>
+    ))}
+  </ul>
+</Base>

@@ -175,10 +175,23 @@ async function webFetch(url, opts = {}) {
   throw new Error(`Failed to fetch ${url}`);
 }
 
+// ── Content directory routing (multi-site) ──────────────────────
+function contentDirFor(collection) {
+  if (collection === 'clinics') return join(ROOT, 'site', 'src', 'content', 'clinics');
+  if (collection === 'doctors') return join(ROOT, 'sites', 'doctors', 'src', 'content', 'doctors');
+  return join(ROOT, 'sites', 'content', 'src', 'content', collection);
+}
+
+function siteDirFor(collection) {
+  if (collection === 'clinics') return join(ROOT, 'site');
+  if (collection === 'doctors') return join(ROOT, 'sites', 'doctors');
+  return join(ROOT, 'sites', 'content');
+}
+
 // ── Count helpers ──────────────────────────────────────────────
 function countToday(collection, date = null) {
   const d = date || new Date().toISOString().slice(0, 10);
-  const dir = join(ROOT, 'site', 'src', 'content', collection);
+  const dir = contentDirFor(collection);
   if (!existsSync(dir)) return 0;
   return findFiles(dir, /\.md$/, /_sample|\.diff\.md/)
     .filter((p) => extractDate(readText(p)) === d)
@@ -186,7 +199,7 @@ function countToday(collection, date = null) {
 }
 
 function allTitles(collection) {
-  const dir = join(ROOT, 'site', 'src', 'content', collection);
+  const dir = contentDirFor(collection);
   if (!existsSync(dir)) return [];
   return findFiles(dir, /\.md$/, /_sample|\.diff\.md/)
     .map((p) => extractTitle(readText(p)))
@@ -258,7 +271,7 @@ async function runWriteNews() {
   const existingTitles = [...allTitles('news'), ...allTitles('legal')];
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-news.md')) || '';
-  const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'news', '_sample-fda-reclassification.md')) || '';
+  const samplePost = readText(join(ROOT, 'sites', 'content', 'src', 'content', 'news', '_sample-fda-reclassification.md')) || '';
 
   const systemPrompt = `You are an autonomous peptide news writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
 
@@ -393,7 +406,7 @@ async function runWriteBlog() {
   const existingNewsTitles = [...allTitles('news'), ...allTitles('legal')];
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-blog.md')) || '';
-  const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'blog', '_sample-beginners-guide.md')) || '';
+  const samplePost = readText(join(ROOT, 'sites', 'content', 'src', 'content', 'blog', '_sample-beginners-guide.md')) || '';
 
   const systemPrompt = `You are an autonomous peptide blog writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
 
@@ -558,11 +571,6 @@ async function runPublish() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const contentDir = join(ROOT, 'site', 'src', 'content');
-  const allPublished = findFiles(contentDir, /\.md$/, /_sample/);
-  const publishedTitles = allPublished
-    .map((p) => extractTitle(readText(p)))
-    .filter(Boolean);
 
   const todayDirCount = countToday('clinics') + countToday('doctors');
   const todayNewsCount = countToday('news') + countToday('legal');
@@ -605,15 +613,17 @@ async function runPublish() {
       continue;
     }
 
-    if (publishedTitles.includes(fm.data.title)) {
-      log('warn', `publish: duplicate title "${fm.data.title}", removing`);
+    const collectionTitles = allTitles(collection);
+    if (collectionTitles.includes(fm.data.title)) {
+      log('warn', `publish: duplicate title "${fm.data.title}" in ${collection}, removing`);
       unlinkSync(file);
       const diffFile = file.replace(/\.md$/, '.diff.md');
       if (existsSync(diffFile)) unlinkSync(diffFile);
       continue;
     }
 
-    const targetPath = join(contentDir, collection, basename(file));
+    const targetDir = contentDirFor(collection);
+    const targetPath = join(targetDir, basename(file));
     if (existsSync(targetPath)) {
       log('warn', `publish: already exists ${basename(file)}, removing from humanised`);
       unlinkSync(file);
@@ -650,19 +660,27 @@ async function runPublish() {
     if (existsSync(diffFile)) unlinkSync(diffFile);
   }
 
-  log('info', 'publish: building site');
-  try {
-    execSync('npm run build', { cwd: join(ROOT, 'site'), stdio: 'pipe' });
-    log('info', 'publish: build successful');
-  } catch (e) {
-    log('error', `publish: build failed: ${e.message}`);
-    for (const item of toMove) {
-      if (existsSync(item.targetPath)) {
-        renameSync(item.targetPath, item.file);
-        log('info', `publish: reverted ${item.title}`);
+  // Build all sites that received content
+  const sitesToBuild = new Set();
+  for (const item of toMove) {
+    sitesToBuild.add(siteDirFor(item.collection));
+  }
+
+  for (const siteDir of sitesToBuild) {
+    log('info', `publish: building ${siteDir.replace(ROOT, '').replace(/\\/g, '/')}...`);
+    try {
+      execSync('npm run build', { cwd: siteDir, stdio: 'pipe' });
+      log('info', `publish: build successful for ${siteDir.replace(ROOT, '').replace(/\\/g, '/')}`);
+    } catch (e) {
+      log('error', `publish: build failed: ${e.message}`);
+      for (const item of toMove) {
+        if (existsSync(item.targetPath)) {
+          renameSync(item.targetPath, item.file);
+          log('info', `publish: reverted ${item.title}`);
+        }
       }
+      return 0;
     }
-    return 0;
   }
 
   log('info', 'publish: committing');
@@ -691,7 +709,7 @@ function advanceQueues() {
     const stateLower = inFlightState.toLowerCase();
 
     const publishedSlugs = new Set(
-      findFiles(join(ROOT, 'site', 'src', 'content', 'clinics'), /\.md$/)
+      findFiles(contentDirFor('clinics'), /\.md$/)
         .map((p) => basename(p, '.md').toLowerCase())
     );
 
@@ -726,7 +744,7 @@ function advanceQueues() {
     const stateCode = inFlightState.length === 2 ? inFlightState.toLowerCase() : stateNameToCode(inFlightState)?.toLowerCase() || '';
 
     const publishedDoctorSlugs = new Set(
-      findFiles(join(ROOT, 'site', 'src', 'content', 'doctors'), /\.md$/)
+      findFiles(contentDirFor('doctors'), /\.md$/)
         .map((p) => basename(p, '.md').toLowerCase())
     );
 

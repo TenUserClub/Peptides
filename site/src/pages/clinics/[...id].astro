@@ -17,10 +17,8 @@ const sameCity = allClinics
   .filter((p) => p.id !== post.id && p.data.state.toUpperCase() === stateCode && p.data.city === d.city)
   .slice(0, 5);
 const hasHub = hubStates(allClinics).has(stateCode);
-const roundups = (await getCollection('doctors')).filter(
-  (p) => p.data.kind === 'roundup' && p.data.state.toUpperCase() === stateCode
-);
 
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || '';
 const jsonLd: Record<string, unknown> = {
   '@context': 'https://schema.org',
   '@type': 'MedicalClinic',
@@ -31,7 +29,7 @@ const jsonLd: Record<string, unknown> = {
   ...(d.ratingValue && d.ratingCount
     ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: d.ratingValue, reviewCount: d.ratingCount } }
     : {}),
-  ...(d.image ? { image: `https://peptide-seo-site.vercel.app${d.image}` } : {}),
+  ...(d.image ? { image: `${siteUrl}${d.image}` } : {}),
 };
 ---
 <Base
@@ -43,22 +41,49 @@ const jsonLd: Record<string, unknown> = {
   ogImage={d.ogImage}
 >
   <article>
+    <!-- Breadcrumbs -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep" aria-hidden="true">→</span>
+      <a href="/clinics/">Clinics</a>
+      <span class="sep" aria-hidden="true">→</span>
+      <a href={`/clinics/${stateSlug(stateCode)}/`}>{stateName(stateCode)}</a>
+      <span class="sep" aria-hidden="true">→</span>
+      <span aria-current="page">{d.clinicName}</span>
+    </nav>
+
     {d.image && (
       <div class="featured-image">
         <img src={d.image} alt={`${d.clinicName} in ${d.city}, ${d.state}`} loading="eager" />
       </div>
     )}
+
     <h1>{d.title}</h1>
+
     <p class="meta">
-      {d.city}, {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
+      <span class="verified-badge" title="Facts checked against the clinic's own site and public records.">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        Verified
+      </span>
+      {d.city}, {d.state}
+      · Published {d.publishDate.toISOString().slice(0, 10)}
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
-      {d.ratingValue && d.ratingSource && ` · ${d.ratingValue}★ (${d.ratingCount} reviews on ${d.ratingSource})`}
+      {d.ratingValue && d.ratingSource && (
+        <span style="margin-left: 0.5rem;">
+          <span class="rating-chip">{d.ratingValue}★ <span class="rating-source">({d.ratingCount} reviews on {d.ratingSource})</span></span>
+        </span>
+      )}
     </p>
+
     <Content />
+
     <p><a class="cta" href="/contact/">Request a consultation referral</a></p>
-    {(sameCity.length > 0 || hasHub || roundups.length > 0) && (
+
+    {(sameCity.length > 0 || hasHub) && (
       <section>
-        <h2>More peptide resources nearby</h2>
+        <h2>More peptide clinics nearby</h2>
         <ul>
           {sameCity.map((p) => (
             <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a> — also in {d.city}</li>
@@ -66,12 +91,15 @@ const jsonLd: Record<string, unknown> = {
           {hasHub && (
             <li><a href={`/clinics/${stateSlug(stateCode)}/`}>All peptide clinics in {stateName(stateCode)}</a></li>
           )}
-          {roundups.map((p) => (
-            <li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>
-          ))}
         </ul>
       </section>
     )}
-    <p class="meta">Sources: {d.sources.map((s: string, i: number) => (<span><a href={s} rel="nofollow">[{i + 1}]</a> </span>))}</p>
+
+    <p class="sources">
+      Sources:
+      {d.sources.map((s: string, i: number) => (
+        <a href={s} rel="nofollow">[{i + 1}]</a>
+      ))}
+    </p>
   </article>
 </Base>

@@ -1,124 +1,69 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
+import { stateName } from '../lib/states';
 
-const news = (await getCollection('news')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 4);
-const blog = (await getCollection('blog')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 4);
-const clinics = (await getCollection('clinics')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 4);
-const legal = (await getCollection('legal')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 3);
-
-const totalClinics = (await getCollection('clinics')).filter((p) => !p.id.startsWith('_sample')).length;
-const totalDoctors = (await getCollection('doctors')).filter((p) => !p.id.startsWith('_sample')).length;
+const clinics = (await getCollection('clinics')).filter((p) => !p.id.startsWith('_sample'));
+const totalClinics = clinics.length;
+const states = [...new Set(clinics.map((p) => p.data.state))].sort();
+const cities = [...new Set(clinics.map((p) => p.data.city))].sort();
+const recent = clinics.sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 6);
 ---
-<Base title="Peptide Directory & Blog" description="Verified peptide therapy clinics and doctor listings across US cities, plus educational guides, daily news, and laws & legal coverage.">
-  <h1>Peptide therapy clinics, doctors, and trusted guides</h1>
-  <p>
-    Verified listings of peptide therapy clinics and physicians across the United States,
-    alongside science-backed educational guides, daily industry news, and plain-English
-    reporting on the <a href="/legal/">laws and regulations</a> that govern peptide treatments.
-  </p>
+<Base title="Peptide Clinics Directory | Find Verified Peptide Therapy Clinics" description={`Browse ${totalClinics} verified peptide therapy clinics across ${states.length} US states. Filter by city, state, and services.`}>
+  <div class="hero">
+    <h1>Find verified peptide therapy clinics</h1>
+    <p>Browse verified clinics offering peptide therapy, GLP-1 treatments, hormone optimization, and longevity medicine across the United States.</p>
+    <a class="cta" href="/clinics/" style="margin-top: var(--space-lg);">Browse all clinics →</a>
+  </div>
 
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0;">
-    <div style="text-align: center; padding: 1rem; background: #f8f8f6; border-radius: 8px;">
-      <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent, #0f6e5c);">{totalClinics}</div>
-      <div class="meta">Verified Clinics</div>
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-value">{totalClinics}</div>
+      <div class="stat-label">Verified Clinics</div>
     </div>
-    <div style="text-align: center; padding: 1rem; background: #f8f8f6; border-radius: 8px;">
-      <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent, #0f6e5c);">{totalDoctors}</div>
-      <div class="meta">Doctor Listings</div>
+    <div class="stat-item">
+      <div class="stat-value">{states.length}</div>
+      <div class="stat-label">States</div>
     </div>
-    <div style="text-align: center; padding: 1rem; background: #f8f8f6; border-radius: 8px;">
-      <div style="font-size: 1.5rem; font-weight: bold; color: var(--accent, #0f6e5c);">{blog.length}</div>
-      <div class="meta">Educational Guides</div>
+    <div class="stat-item">
+      <div class="stat-value">{cities.length}</div>
+      <div class="stat-label">Cities</div>
     </div>
   </div>
 
-  <h2>Latest guides</h2>
-  <div class="card-grid">
-    {blog.map((p) => (
-      <article class="card">
-        {p.data.image && <img class="card-image" src={p.data.image} alt="" loading="lazy" />}
-        <div class="card-body">
-          <span style="text-transform: uppercase; font-size: 0.7rem; color: var(--accent, #0f6e5c); letter-spacing: 0.03em;">{p.data.category}</span>
-          <h3><a href={`/blog/${p.id}/`}>{p.data.title}</a></h3>
-          <p class="meta">{p.data.publishDate.toISOString().slice(0, 10)}</p>
-        </div>
-      </article>
-    ))}
-  </div>
-  <p><a href="/blog/">Browse all guides →</a></p>
-
-  {legal.length > 0 && (
+  {states.length > 0 && (
     <>
-      <h2>Laws &amp; legal</h2>
-      <ul>
-        {legal.map((p) => (
-          <li><a href={`/legal/${p.id}/`}>{p.data.title}</a> <span class="meta">{p.data.jurisdiction} · {p.data.publishDate.toISOString().slice(0, 10)}</span></li>
+      <h2>Browse by state</h2>
+      <div class="state-grid">
+        {states.map((s) => (
+          <a href={`/clinics/${stateName(s).toLowerCase().replace(/\s+/g, '-')}/`} class="state-link">{stateName(s)}</a>
         ))}
-      </ul>
+      </div>
     </>
   )}
 
-  <h2>Latest news</h2>
-  <ul>
-    {news.map((p) => (
-      <li><a href={`/news/${p.id}/`}>{p.data.title}</a> <span class="meta">{p.data.publishDate.toISOString().slice(0, 10)}</span></li>
-    ))}
-  </ul>
-
-  <h2>Recently added clinics</h2>
-  <div class="card-grid">
-    {clinics.map((p) => (
-      <article class="card">
-        {p.data.image && <img class="card-image" src={p.data.image} alt="" loading="lazy" />}
-        <div class="card-body">
-          <h3><a href={`/clinics/${p.id}/`}>{p.data.title}</a></h3>
-          <p class="meta">{p.data.city}, {p.data.state}</p>
-          {p.data.services.length > 0 && (
-            <p class="services">
-              {p.data.services.slice(0, 2).map((s) => (
-                <span class="tag">{s}</span>
-              ))}
-            </p>
-          )}
-        </div>
-      </article>
-    ))}
-  </div>
-
-  <style>
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .card {
-      border: 1px solid var(--rule, #e6e4dc);
-      border-radius: 8px;
-      overflow: hidden;
-      background: #fff;
-      transition: box-shadow 0.2s ease;
-    }
-    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .card h3 { font-size: 0.95rem; margin: 0.3rem 0 0.4rem 0; line-height: 1.3; }
-    .card h3 a { text-decoration: none; }
-    .card h3 a:hover { text-decoration: underline; }
-    .card-body { padding: 0.6rem 0.9rem 0.9rem; }
-    .card-image {
-      width: 100%; height: 130px; object-fit: cover; display: block;
-      border-bottom: 1px solid var(--rule, #e6e4dc);
-    }
-    .tag {
-      display: inline-block;
-      padding: 0.1rem 0.4rem;
-      margin: 0 0.25rem 0.25rem 0;
-      background: #eef4f2;
-      color: var(--accent, #0f6e5c);
-      border-radius: 3px;
-      font-size: 0.72rem;
-      font-family: system-ui, sans-serif;
-    }
-    .services { margin: 0.3rem 0 0 0; }
-  </style>
+  {recent.length > 0 && (
+    <>
+      <h2>Recently added clinics</h2>
+      <div class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+        {recent.map((p) => (
+          <article class="card">
+            {p.data.image && <img class="card-image" src={p.data.image} alt="" loading="lazy" />}
+            <div class="card-body">
+              <h3><a href={`/clinics/${p.id}/`}>{p.data.title}</a></h3>
+              <p class="meta">{p.data.city}, {p.data.state}</p>
+              {p.data.services.length > 0 && (
+                <p class="services" style="margin: 0.3rem 0 0 0;">
+                  {p.data.services.slice(0, 2).map((s) => (
+                    <span class="tag">{s}</span>
+                  ))}
+                </p>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+      <p><a href="/clinics/">View all clinics →</a></p>
+    </>
+  )}
 </Base>

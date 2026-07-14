@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('legal')).sort((a, b) => +b.data.publishDate - +a.data.publishDate);
+const federal = posts.filter((p) => p.data.jurisdiction === 'Federal');
+const state = posts.filter((p) => p.data.jurisdiction !== 'Federal');
+---
+<Base title="Peptide Laws & Legal | Peptide Hub" description="Plain-English coverage of peptide laws, FDA and HHS regulation, compounding policy, and enforcement actions — federal and state.">
+  <h1>Laws &amp; legal</h1>
+  <p>How peptides are regulated in the United States: FDA and HHS actions, compounding policy, enforcement, and state rules — reported from primary sources. General information, not legal advice.</p>
+  {posts.length === 0 && <p>Coverage is being added. Check back soon.</p>}
+  {federal.length > 0 && (
+    <section>
+      <h2>Federal</h2>
+      <ul>
+        {federal.map((p) => (
+          <li>
+            <a href={`/legal/${p.id}/`}>{p.data.title}</a>
+            <span class="meta"> · {p.data.publishDate.toISOString().slice(0, 10)} · via {p.data.sourceName}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+  {state.length > 0 && (
+    <section>
+      <h2>State</h2>
+      <ul>
+        {state.map((p) => (
+          <li>
+            <a href={`/legal/${p.id}/`}>{p.data.title}</a>
+            <span class="meta"> · {p.data.jurisdiction} · {p.data.publishDate.toISOString().slice(0, 10)} · via {p.data.sourceName}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

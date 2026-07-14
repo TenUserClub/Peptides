@@ -1,0 +1,150 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+import { stateName } from '../lib/states';
+
+const all = await getCollection('doctors');
+const doctors = all.filter((p) => !p.id.startsWith('_sample'));
+
+const roundups = doctors.filter((p) => p.data.kind === 'roundup');
+const profiles = doctors.filter((p) => p.data.kind === 'profile');
+
+const total = doctors.length;
+const states = [...new Set(doctors.map((p) => p.data.state))].sort();
+const specialties = [...new Set(doctors.map((p) => p.data.specialty))].sort();
+---
+<Base title="Peptide & GLP-1 Doctors Directory | Find Verified Physicians" description={`Browse ${total} verified physicians and doctor roundups specializing in peptide therapy, GLP-1 treatments, and longevity medicine across the US.`}>
+  <h1>Find peptide &amp; GLP-1 doctors</h1>
+  <p>
+    Browse verified physicians, specialists, and editorial roundups for peptide therapy,
+    GLP-1 treatments, hormone optimization, and longevity medicine. Every doctor is
+    cross-checked against the NPI registry.
+  </p>
+
+  {total === 0 ? (
+    <p class="meta">Doctors and roundups are being added. Check back soon.</p>
+  ) : (
+    <>
+      <p class="meta">
+        {total} verified listings · {states.length} states · {specialties.length} specialties
+      </p>
+
+      <div class="directory-filters" id="doctor-filters">
+        <input type="text" id="search-input" placeholder="Search doctors, specialties, or states..." class="search-input" />
+        <select id="state-filter" class="filter-select">
+          <option value="">All States</option>
+          {states.map((s) => <option value={s}>{stateName(s)}</option>)}
+        </select>
+        <select id="specialty-filter" class="filter-select">
+          <option value="">All Specialties</option>
+          {specialties.map((s) => <option value={s}>{s}</option>)}
+        </select>
+        <select id="kind-filter" class="filter-select">
+          <option value="">All Types</option>
+          <option value="roundup">Roundups</option>
+          <option value="profile">Profiles</option>
+        </select>
+        <button id="clear-filters" class="filter-btn">Clear</button>
+      </div>
+
+      <div class="directory-results" id="results-list">
+        {doctors.map((p) => (
+          <article class="directory-card" data-state={p.data.state} data-specialty={p.data.specialty.toLowerCase()} data-kind={p.data.kind} data-name={(p.data.doctorName || p.data.title).toLowerCase()}>
+            <div class="card-main">
+              <h3><a href={`/doctors/${p.id}/`}>{p.data.title}</a></h3>
+              <p class="meta">
+                {stateName(p.data.state)}
+                {p.data.city && ` · ${p.data.city}`}
+                {p.data.specialty && ` · ${p.data.specialty}`}
+              </p>
+              {p.data.kind === 'roundup' && p.data.methodology && (
+                <p class="meta" style="font-style: italic;">{p.data.methodology.slice(0, 120)}...</p>
+              )}
+              {p.data.kind === 'profile' && p.data.doctorName && (
+                <p class="meta">{p.data.doctorName}{p.data.npi && ` · NPI: ${p.data.npi}`}</p>
+              )}
+            </div>
+            <span class={`kind-badge kind-${p.data.kind}`}>{p.data.kind}</span>
+            <a href={`/doctors/${p.id}/`} class="card-link">View →</a>
+          </article>
+        ))}
+      </div>
+
+      <p class="meta" id="results-count">Showing {total} listings</p>
+    </>
+  )}
+
+  <script>
+    (function() {
+      const search = document.getElementById('search-input');
+      const stateFilter = document.getElementById('state-filter');
+      const specialtyFilter = document.getElementById('specialty-filter');
+      const kindFilter = document.getElementById('kind-filter');
+      const clearBtn = document.getElementById('clear-filters');
+      const results = document.getElementById('results-list');
+      const count = document.getElementById('results-count');
+      const cards = results ? Array.from(results.querySelectorAll('.directory-card')) : [];
+
+      function filter() {
+        const q = (search?.value || '').toLowerCase().trim();
+        const state = stateFilter?.value || '';
+        const specialty = (specialtyFilter?.value || '').toLowerCase();
+        const kind = kindFilter?.value || '';
+
+        let visible = 0;
+        cards.forEach((card) => {
+          const name = card.dataset.name || '';
+          const cardState = card.dataset.state || '';
+          const cardSpecialty = card.dataset.specialty || '';
+          const cardKind = card.dataset.kind || '';
+
+          const matchesSearch = !q || name.includes(q);
+          const matchesState = !state || cardState === state;
+          const matchesSpecialty = !specialty || cardSpecialty.includes(specialty);
+          const matchesKind = !kind || cardKind === kind;
+
+          if (matchesSearch && matchesState && matchesSpecialty && matchesKind) {
+            card.style.display = 'flex';
+            visible++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (count) count.textContent = `Showing ${visible} listing${visible !== 1 ? 's' : ''}`;
+      }
+
+      search?.addEventListener('input', filter);
+      stateFilter?.addEventListener('change', filter);
+      specialtyFilter?.addEventListener('change', filter);
+      kindFilter?.addEventListener('change', filter);
+      clearBtn?.addEventListener('click', () => {
+        if (search) search.value = '';
+        if (stateFilter) stateFilter.value = '';
+        if (specialtyFilter) specialtyFilter.value = '';
+        if (kindFilter) kindFilter.value = '';
+        filter();
+      });
+    })();
+  </script>
+
+  <style>
+    .directory-filters { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1.5rem 0; padding: 1rem; background: #f8f8f6; border-radius: 8px; }
+    .search-input { flex: 1 1 300px; padding: 0.6rem 0.9rem; border: 1px solid var(--rule, #e6e4dc); border-radius: 6px; font-size: 0.95rem; font-family: system-ui, sans-serif; }
+    .filter-select { padding: 0.6rem 0.9rem; border: 1px solid var(--rule, #e6e4dc); border-radius: 6px; font-size: 0.9rem; font-family: system-ui, sans-serif; background: #fff; min-width: 140px; }
+    .filter-btn { padding: 0.6rem 1rem; border: 1px solid var(--rule, #e6e4dc); border-radius: 6px; background: #fff; font-size: 0.9rem; cursor: pointer; }
+    .filter-btn:hover { background: #f0f0ee; }
+    .directory-results { display: flex; flex-direction: column; gap: 0.75rem; margin: 1rem 0; }
+    .directory-card { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border: 1px solid var(--rule, #e6e4dc); border-radius: 8px; background: #fff; transition: box-shadow 0.15s ease; gap: 0.75rem; }
+    .directory-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card-main { flex: 1; }
+    .card-main h3 { margin: 0 0 0.25rem 0; font-size: 1.05rem; }
+    .card-main h3 a { text-decoration: none; }
+    .card-main h3 a:hover { text-decoration: underline; }
+    .kind-badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.72rem; font-family: system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+    .kind-roundup { background: #eef4f2; color: var(--accent, #0f6e5c); }
+    .kind-profile { background: #f0f0ee; color: var(--muted, #5a6478); }
+    .card-link { padding: 0.4rem 0.8rem; background: var(--accent, #0f6e5c); color: #fff; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-family: system-ui, sans-serif; white-space: nowrap; }
+    .card-link:hover { opacity: 0.9; }
+  </style>
+</Base>

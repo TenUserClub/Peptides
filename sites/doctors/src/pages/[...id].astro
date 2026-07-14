@@ -1,0 +1,59 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+import { stateName, stateSlug } from '../lib/states';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('doctors');
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+const { post } = Astro.props;
+const { Content } = await render(post);
+const d = post.data;
+
+const stateCode = d.state.toUpperCase();
+const related = (await getCollection('doctors')).filter(
+  (p) => p.id !== post.id && p.data.state.toUpperCase() === stateCode
+).slice(0, 5);
+
+if (d.kind === 'roundup' && !d.methodology) {
+  throw new Error(`Doctor roundup "${post.id}" is missing required frontmatter: methodology`);
+}
+
+const jsonLd: Record<string, unknown> =
+  d.kind === 'profile' && d.doctorName
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Physician',
+        name: d.doctorName,
+        medicalSpecialty: d.specialty,
+        address: { '@type': 'PostalAddress', addressRegion: d.state, ...(d.city ? { addressLocality: d.city } : {}) },
+        ...(d.npi ? { identifier: { '@type': 'PropertyValue', propertyID: 'NPI', value: d.npi } } : {}),
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: d.title,
+        datePublished: d.publishDate.toISOString(),
+      };
+---
+<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true}>
+  <article>
+    <h1>{d.title}</h1>
+    <p class="meta">
+      {d.specialty} · {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
+      {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
+    </p>
+    {d.kind === 'roundup' && (
+      <p class="meta"><strong>How this list was compiled:</strong> {d.methodology}</p>
+    )}
+    <Content />
+    {related.length > 0 && (
+      <section>
+        <h2>Related listings in {stateName(stateCode)}</h2>
+        <ul>{related.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>))}</ul>
+      </section>
+    )}
+    <p class="meta">Sources: {d.sources.map((s: string, i: number) => (<span><a href={s} rel="nofollow">[{i + 1}]</a> </span>))}</p>
+  </article>
+</Base>

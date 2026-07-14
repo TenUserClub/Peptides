@@ -1,17 +1,18 @@
 ---
-import { SECTIONS, sectionHref } from '../lib/sections';
+import { SECTIONS, sectionHref, SITES } from '../lib/sections';
 
 interface Props {
   title: string;
   description: string;
   jsonLd?: Record<string, unknown>;
   showCorrections?: boolean;
-  image?: string; // path to featured image (used for Open Graph)
-  ogImage?: string; // path to social sharing image
+  image?: string;
+  ogImage?: string;
+  currentSection?: string;
 }
-const { title, description, jsonLd, showCorrections = false, image, ogImage } = Astro.props;
+const { title, description, jsonLd, showCorrections = false, image, ogImage, currentSection = 'Clinics' } = Astro.props;
 
-const siteUrl = 'https://peptide-seo-site.vercel.app';
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://peptide-clinics.vercel.app';
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 ---
 <!doctype html>
@@ -24,69 +25,119 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
     <link rel="canonical" href={Astro.url.href} />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <!-- Open Graph / Social Sharing -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="article" />
     <meta property="og:url" content={Astro.url.href} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
-    <meta property="og:site_name" content="Peptide Directory & News" />
+    <meta property="og:site_name" content="Peptide Clinics Directory" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
 
-    <!-- Structured Data -->
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
 
-    <style>
-      :root { --ink: #1c2333; --muted: #5a6478; --accent: #0f6e5c; --bg: #fdfdfb; --rule: #e6e4dc; }
-      * { box-sizing: border-box; }
-      body { margin: 0; font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--bg); line-height: 1.65; }
-      header, main, footer { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
-      header { padding-top: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
-      header a { color: var(--ink); text-decoration: none; font-weight: bold; font-size: 1.15rem; }
-      nav a { color: var(--muted); text-decoration: none; margin-right: 1rem; font-size: .9rem; font-family: system-ui, sans-serif; }
-      nav a:hover { color: var(--accent); }
-      h1 { font-size: 1.9rem; line-height: 1.25; }
-      a { color: var(--accent); }
-      .meta { color: var(--muted); font-size: .85rem; font-family: system-ui, sans-serif; }
-      .disclaimer, .corrections { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--rule); margin-top: 3rem; padding: 1.25rem 0; }
-      .cta { background: var(--accent); color: #fff; padding: .7rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block; font-family: system-ui, sans-serif; }
-      footer { padding-bottom: 2.5rem; }
-      /* Featured image styles */
-      .featured-image { width: 100%; margin-bottom: 1.5rem; border-radius: 8px; }
-      .featured-image img { width: 100%; height: auto; border-radius: 8px; display: block; }
-      .card-image { width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0; }
-    </style>
+    <!-- Theme init — must run before first paint to prevent flash -->
+    <script is:inline>
+      (function() {
+        var saved = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'lab' : 'clinical');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+
+    <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body>
-    <header>
-      <a href="/">Peptide Directory &amp; News</a>
-      <nav>
-        {SECTIONS.map((s) => (
-          <a href={sectionHref(s)} {...(s.domain ? { rel: 'noopener' } : {})}>{s.label}</a>
-        ))}
-      </nav>
-    </header>
-    <main>
-      <slot />
-      <div class="disclaimer">
-        <strong>Medical disclaimer:</strong> This content is for informational purposes only and is not medical
-        advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA
-        review. Always consult a licensed physician before starting any therapy.
+    <header class="site-header">
+      <div class="container">
+        <a href="/" class="brand">Peptide Clinics Directory</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <nav class="site-nav" id="site-nav" aria-label="Main navigation">
+          {SECTIONS.map((s) => (
+            <a
+              href={sectionHref(s)}
+              aria-current={s.label === currentSection ? 'true' : undefined}
+              {...(s.domain && s.domain !== SITES.clinics ? { rel: 'noopener', target: '_blank' } : {})}
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
       </div>
-      {showCorrections && (
-        <div class="corrections">
-          <strong>Corrections:</strong> Information on this page was compiled from public sources and verified
-          against official records at the time of publication. If you represent this clinic or practitioner and
-          something is inaccurate or you'd like the listing updated or removed, email
-          <a href="mailto:corrections@example.com">corrections@example.com</a> — we act on requests within 5 business days.
+    </header>
+
+    <main>
+      <div class="container">
+        <slot />
+      </div>
+      <div class="container">
+        <div class="disclaimer">
+          <strong>Medical disclaimer:</strong> This content is for informational purposes only and is not medical
+          advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA
+          review. Always consult a licensed physician before starting any therapy.
         </div>
-      )}
+        {showCorrections && (
+          <div class="corrections">
+            <strong>Corrections:</strong> Information on this page was compiled from public sources and verified
+            against official records at the time of publication. If you represent this clinic and
+            something is inaccurate or you'd like the listing updated or removed, email
+            <a href="mailto:corrections@peptide-clinics.vercel.app">corrections@peptide-clinics.vercel.app</a> — we act on requests within 5 business days.
+          </div>
+        )}
+      </div>
     </main>
-    <footer class="meta">
-      <p>&copy; {new Date().getFullYear()} Peptide Directory &amp; News. Listings are editorial; no clinic or doctor pays for placement.</p>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>&copy; {new Date().getFullYear()} Peptide Clinics Directory. Listings are editorial; no clinic pays for placement.</p>
+      </div>
     </footer>
+
+    <!-- Theme switcher -->
+    <button class="theme-switcher" id="theme-switcher" aria-label="Switch theme">
+      <span class="theme-dot" aria-hidden="true"></span>
+      <span class="theme-label" id="theme-label">Theme</span>
+    </button>
+
+    <!-- Nav toggle + theme switcher scripts (vanilla JS, < 1KB) -->
+    <script is:inline>
+      (function() {
+        // Nav toggle
+        var toggle = document.getElementById('nav-toggle');
+        var nav = document.getElementById('site-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function() {
+            var open = nav.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          });
+        }
+
+        // Theme switcher
+        var themes = ['clinical', 'lab', 'wellness'];
+        var btn = document.getElementById('theme-switcher');
+        var label = document.getElementById('theme-label');
+        function applyTheme(t) {
+          document.documentElement.setAttribute('data-theme', t);
+          localStorage.setItem('theme', t);
+          if (label) label.textContent = t;
+        }
+        var current = document.documentElement.getAttribute('data-theme') || 'clinical';
+        if (label) label.textContent = current;
+        btn?.addEventListener('click', function() {
+          var now = document.documentElement.getAttribute('data-theme') || 'clinical';
+          var next = themes[(themes.indexOf(now) + 1) % themes.length];
+          applyTheme(next);
+        });
+      })();
+    </script>
   </body>
 </html>

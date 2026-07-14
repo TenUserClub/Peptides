@@ -38,14 +38,33 @@
 
 ## 2. What's missing (gaps & improvements)
 
-### A. Pipeline stages (currently stubbed)
+### A. Pipeline stages
+
+| Stage | Status | Notes |
+|---|---|---|
+| `write-clinics` | ✅ **DONE** | Publishes verified clinic data to `site/src/content/clinics/` |
+| `write-doctors` | ✅ **DONE** | Publishes verified doctor data to `sites/doctors/src/content/doctors/` |
+| `write-updates` | Stub — needs published posts | Low: weekly digest, not critical for launch |
+| `verify` | ✅ **DONE** | NPI verification wired into orchestrator flow |
+
+**Recommendation:** Multi-site architecture is now implemented. Each section has its own Astro site and Vercel deployment.
+
+### B. Multi-site architecture (✅ DONE)
+
+| Site | Directory | Domain | Status |
+|---|---|---|---|
+| Clinics registry | `site/` | `peptide-clinics.vercel.app` | ✅ Live, themed, cross-domain nav |
+| Doctors directory | `sites/doctors/` | `peptide-doctors.vercel.app` | ✅ Scaffolded, ready for content |
+| Content hub | `sites/content/` | `peptide-hub.vercel.app` | ✅ Scaffolded, ready for content |
+
+**Update domains in:** `site/src/lib/sections.ts`, `sites/doctors/src/lib/sections.ts`, `sites/content/src/lib/sections.ts`
 
 | Stage | Status | Risk |
 |---|---|---|
-| `write-clinics` | Stub — needs verified data | Medium: can't publish clinic content yet |
-| `write-doctors` | Stub — needs verified data | Medium: can't publish doctor content yet |
+| `write-clinics` | ✅ **DONE** | |
+| `write-doctors` | ✅ **DONE** | |
 | `write-updates` | Stub — needs published posts | Low: weekly digest, not critical for launch |
-| `verify` | Stub — NPI verification script exists but not integrated into orchestrator | High: publishing unverified clinic/doctor data is the biggest legal risk |
+| `verify` | ✅ **DONE** | |
 
 **Recommendation:** Implement `verify` + `write-clinics` before the first clinic pipeline run. The NPI script (`npi-verify.mjs`) already works; the orchestrator just needs to wire it into the flow.
 
@@ -122,7 +141,7 @@
 
 ### Phase 4 — Growth & polish
 
-14. ⏳ Design overhaul — execute `DESIGN-PROMPT.md` (three themes)
+14. ✅ Design overhaul — executed `DESIGN-PROMPT.md` (three themes, theme switcher, sticky nav, verified badges, breadcrumbs)
 15. ⏳ Add analytics (Plausible or GA4)
 16. ⏳ Add newsletter signup (ConvertKit or Beehiiv free tier)
 17. ⏳ Expand queues — add 50 more cities, 20 more states
