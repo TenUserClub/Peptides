@@ -13,6 +13,8 @@ interface Props {
 const { title, description, jsonLd, showCorrections = false, image, ogImage, currentSection = 'Clinics' } = Astro.props;
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') || SITES.clinics;
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
+const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
+const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 ---
 <!doctype html>
 <html lang="en">
@@ -35,6 +37,7 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    {analyticsDomain && <script defer data-domain={analyticsDomain} src="https://plausible.io/js/script.js"></script>}
     <script is:inline>
       (() => {
         const saved = localStorage.getItem('peptide-theme');
@@ -64,10 +67,10 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
       <div class="container"><slot /></div>
       <div class="container trust-footer">
         <div class="disclaimer"><strong>Medical disclaimer</strong><span>This content is for informational purposes only and is not medical advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA review. Always consult a licensed physician before starting any therapy.</span></div>
-        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified against official records at the time of publication. If you represent this clinic and something is inaccurate or you'd like the listing updated or removed, email <a href="mailto:corrections@peptide-clinics.vercel.app">corrections@peptide-clinics.vercel.app</a>. We act on requests within 5 business days.</span></div>}
+        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified against official records at the time of publication. If something is inaccurate or should be updated or removed, {correctionsEmail ? <a href={`mailto:${correctionsEmail}`}>{correctionsEmail}</a> : <a href={`${SITES.content}/corrections/`}>use the corrections page</a>}. We act on requests within 5 business days.</span></div>}
       </div>
     </main>
-    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><p>© {new Date().getFullYear()} Peptide Clinics Directory.<br />No clinic pays for placement.</p></div></footer>
+    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><nav class="footer-links" aria-label="Editorial information"><a href={`${SITES.content}/about/`}>About</a><a href={`${SITES.content}/editorial-policy/`}>Editorial policy</a><a href={`${SITES.content}/corrections/`}>Corrections</a></nav><p>© {new Date().getFullYear()} Peptide Clinics Directory.<br />No clinic pays for placement.</p></div></footer>
     <div class="theme-control">
       <div class="theme-menu" id="theme-menu" role="menu" aria-label="Choose a color theme" hidden>
         <button type="button" role="menuitemradio" data-theme-option="clinical"><span class="swatch swatch-clinical"></span><span><strong>Clinical</strong><small>Clean and calm</small></span></button>

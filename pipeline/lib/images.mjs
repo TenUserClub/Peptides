@@ -167,7 +167,12 @@ export async function generateImage(type, context, slug) {
   }
 
   const prompt = template(context);
-  const outputPath = join(ROOT, 'site', 'public', 'images', type, `${slug}.jpg`);
+  const siteRoot = type === 'clinics'
+    ? join(ROOT, 'site')
+    : type === 'doctors'
+      ? join(ROOT, 'sites', 'doctors')
+      : join(ROOT, 'sites', 'content');
+  const outputPath = join(siteRoot, 'public', 'images', type, `${slug}.jpg`);
 
   log('info', `images: generating ${type} image for ${slug}`);
 

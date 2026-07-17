@@ -21,7 +21,7 @@ const specialties = [...new Set(doctors.map((p) => p.data.specialty))].sort();
   </section>
 
   {total === 0 ? (
-    <p class="meta">Doctors and roundups are being added. Check back soon.</p>
+    <div class="empty-state"><h2>Doctor research is in progress.</h2><p>Profiles and roundups will appear after identity, NPI, and first-party service checks are complete.</p></div>
   ) : (
     <>
       <p class="meta">

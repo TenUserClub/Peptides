@@ -1,147 +1,76 @@
-# Peptide SEO Engine
+# Peptide Atlas
 
-Autonomous content pipeline: clinic directory, doctor directory, blog, news, and legal coverage — all feeding separate Astro sites, run by a Node.js orchestrator + OpenAI writer agents.
+Peptide Atlas is a three-site Astro publishing system for clinic listings, doctor profiles, evidence-led guides, primary-source news, legal coverage, and weekly reviews. A Node.js pipeline fetches source material, verifies records, drafts content, humanises it, applies deterministic safety checks, and publishes within daily velocity limits.
 
-## Architecture
+## Live sites
 
-- **Orchestrator** (`pipeline/orchestrator.mjs`) — a plain Node.js script that runs the full pipeline. Works with any agent (Kimi, Claude Code, etc.) or run manually.
-- **OpenAI** (GPT-4o) handles writing and humanising
-- **Exa API** fetches raw research and news data
-- **Gemini API** (optional) generates featured images for posts
-- **Vercel** hosts three separate sites on free `*.vercel.app` domains
-- **Supabase** (free tier) persists clinic records, rankings, and queue state — already connected and working
+| Site | Current Vercel URL | Project directory |
+| --- | --- | --- |
+| Clinics | https://peptides-three-phi.vercel.app | `site/` |
+| Doctors | https://peptides-doctors-and-experts.vercel.app | `sites/doctors/` |
+| Journal | https://peptides-content.vercel.app | `sites/content/` |
 
-**Agent-agnostic by design.** The orchestrator is just a Node.js script. Any coding agent can run it, or you can run it manually, or schedule it via cron/Task Scheduler/GitHub Actions. There is no lock-in to any specific AI platform.
+The shared header links directly to these current deployments. Future custom domains only require updating each `astro.config.mjs` and the three `src/lib/sections.ts` files.
 
-## Multi-site structure
+## Current launch status
 
-Each section lives on its own domain for better SEO focus and cleaner user experience:
+The UI overhaul is complete across all three sites. It includes responsive editorial layouts, accessible navigation, trust and correction pages, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
 
-| Site | Domain | Content | Collection |
-|---|---|---|---|
-| **Clinics** | `peptide-clinics.vercel.app` | Verified peptide therapy clinic directory | `site/` |
-| **Doctors** | `peptide-doctors.vercel.app` | Verified physicians + editorial roundups | `sites/doctors/` |
-| **Hub** | `peptide-hub.vercel.app` | Blog, news, legal, weekly updates | `sites/content/` |
+Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` after review found weak sourcing and unverifiable claims. Sample markdown remains as schema documentation but is excluded from routes and sitemaps. Production publication should resume only with content that passes the new guard.
 
-Each navbar item links to the other sites (cross-domain navigation). The mapping lives in `site/src/lib/sections.ts`, `sites/doctors/src/lib/sections.ts`, and `sites/content/src/lib/sections.ts`.
+## Setup
 
-## Sections
+1. Copy `.env.example` to `.env` and add the required keys.
+2. Install dependencies in the root and each Astro project.
+3. Run `npm run check` from the repository root.
+4. Run `node pipeline/orchestrator.mjs all --dry-run` before the first supervised live run.
 
-| Section | What it is | Content type | Site |
-|---|---|---|---|
-| **Clinics** | Directory of verified peptide therapy clinics by city | Directory listings with search + filters | Clinics |
-| **Doctors** | Directory of verified physicians + editorial roundups | Directory listings with search + filters | Doctors |
-| **Blog** | Evergreen educational guides and explainers | Long-form reference content | Hub |
-| **News** | Daily peptide industry and regulatory news | Time-sensitive reporting | Hub |
-| **Laws & legal** | Regulatory updates, FDA actions, court rulings | Legal analysis | Hub |
-| **Weekly updates** | Digest linking the week's content | Internal link hub | Hub |
+Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation and Supabase are optional. The orchestrator currently uses the filesystem as its source of truth; `pipeline/lib/db.mjs` is an optional helper and is not wired into the main workflow.
 
-## Layout
+Public site settings should be added to all three Vercel projects:
 
-```
-CLAUDE.md            editorial constitution (all agents inherit)
-site/                Astro site — clinics registry (clinics content only)
-sites/
-  doctors/           Astro site — doctors & experts directory
-  content/           Astro site — blog, news, legal, updates
-pipeline/
-  orchestrator.mjs   Pipeline orchestrator: fetch → write → humanise → publish → monitor
-  lib/               llm.mjs (OpenAI/Gemini) · images.mjs (prompt templates) · db.mjs (Supabase)
-  scripts/           exa-fetch.mjs (news|clinics|doctors) · npi-verify.mjs · lib.mjs
-  prompts/           agent instructions per stage (verify, write-*, humanise, publish, monitor)
-  queue/             cities.json, states.json (work queues)
-  data/              exa/ (raw) → verified/ (fact-checked)
-  drafts/ → humanised/ → site/src/content/   (the content conveyor belt)
-.env                 keys (EXA, OPENAI, GEMINI, SUPABASE) — never commit
-```
+- `PUBLIC_CONTACT_EMAIL`
+- `PUBLIC_CORRECTIONS_EMAIL`
+- `PUBLIC_PLAUSIBLE_DOMAIN`, only if Plausible is configured
 
-## Daily flow (automatic)
-
-The orchestrator runs on whatever schedule you set — Kimi cron, Windows Task Scheduler, GitHub Actions, or manually. Every 6 hours is recommended.
-
-The orchestrator decides what to do based on time of day:
-
-| Time window | What happens |
-|---|---|
-| Every run | Fetch news (Exa) → write news + blog (OpenAI) → humanise → publish |
-| 02:00–06:00 | Also fetch clinics + doctors, run verification |
-| 06:00–08:00 | Also run monitor (daily summary) |
-
-Velocity caps enforced automatically:
-- Max 3 news + legal posts/day
-- Max 2 blog posts/day
-- Max 5 clinic + doctor directory posts/day
-
-**Runs with any agent:** The orchestrator is just `node pipeline\orchestrator.mjs all`. Kimi, Claude Code, or your terminal — all the same command.
-
-## First-time setup
-
-1. Copy `.env.example` → `.env` and fill in `EXA_API_KEY`, `OPENAI_API_KEY`, `SITE_DOMAIN`
-2. `cd site && npm install && npm run build` — verify clinics site builds
-3. `cd sites/doctors && npm install && npm run build` — verify doctors site builds
-4. `cd sites/content && npm install && npm run build` — verify content hub builds
-5. Push to a new private GitHub repo.
-6. Connect each site to Vercel (free Hobby):
-   - **Clinics:** import repo, set **Root Directory** to `site`, deploy → `peptide-clinics.vercel.app`
-   - **Doctors:** import repo, set **Root Directory** to `sites/doctors`, deploy → `peptide-doctors.vercel.app`
-   - **Hub:** import repo, set **Root Directory** to `sites/content`, deploy → `peptide-hub.vercel.app`
-7. Update `SITE_DOMAIN` and the `SITES` constants in each `src/lib/sections.ts` with your actual Vercel domains
-8. Run the first supervised cycle manually (below), then set up your scheduler (cron, Task Scheduler, GitHub Actions, etc.)
-
-## Run any stage manually
+## Common commands
 
 ```powershell
-# Full pipeline (what the cron job runs)
-node pipeline\orchestrator.mjs all
-
-# Individual stages (for testing / debugging)
-node pipeline\orchestrator.mjs fetch-news
-node pipeline\orchestrator.mjs write-news
-node pipeline\orchestrator.mjs write-blog
-node pipeline\orchestrator.mjs humanise
-node pipeline\orchestrator.mjs publish
-node pipeline\orchestrator.mjs monitor
-
-# Dry run — simulates without calling APIs or writing files
-node pipeline\orchestrator.mjs all --dry-run
-
-# Exa fetch (standalone)
-node pipeline\scripts\exa-fetch.mjs news        # or clinics | doctors
-
-# NPI verify (standalone)
-node pipeline\scripts\npi-verify.mjs "John" "Smith" FL
-
-# Preview sites locally
-cd site && npm run dev                            # localhost:4321 — clinics
-cd sites/doctors && npm run dev                  # localhost:4321 — doctors
-cd sites/content && npm run dev                # localhost:4321 — hub
+npm test
+npm run build:all
+npm run check:sites
+npm run check
+node pipeline/orchestrator.mjs all --dry-run
+node pipeline/orchestrator.mjs all
 ```
 
-## Design guarantees
+`npm run check` runs guard tests, builds all three sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, and diverged shared CSS.
 
-- Nothing publishes without passing the humaniser (OpenAI rewrite against the Wikipedia AI-writing rubric)
-- Reviews are only ever summaries of real, platform-attributed public reviews (FTC fake-review rule)
-- Velocity-capped publishing to stay clear of Google's scaled-content-abuse classification
-- Every stage logs to `pipeline/logs/`
-- The orchestrator commits locally; you manually `git push` when ready
-- Clinic/doctor data verified against NPI registry + clinic's own site before publishing
-- **Clinics site features:** three themes (clinical, lab, wellness), theme switcher, sticky nav, mobile-first, verified badges, rating chips, breadcrumbs
+## Pipeline stages
 
-## Costs (monthly)
+1. Fetch news, clinics, and doctors.
+2. Verify clinic websites and doctor NPI records.
+3. Draft clinic, doctor, news, legal, and blog content from allowed sources.
+4. Humanise the draft without changing facts or citations.
+5. Apply deterministic frontmatter, source, claim, length, and record-matching checks.
+6. Publish within daily caps, build the affected site, and optionally push when `AUTO_PUSH=true`.
+7. Generate the Sunday weekly review and monitoring summary.
 
-| Item | Cost | Notes |
-|---|---|---|
-| Exa API | ~$20–50 | News fetches 3×/day + city/state fetches |
-| OpenAI (GPT-4o) | ~$30–60 | Writing + humanising (~6 posts/day) |
-| Gemini images | ~$0–15 | Optional, ~$0.01 per image |
-| Vercel Hobby (3 sites) | **$0** | Free tier — 100GB bandwidth, 6000 build minutes per site |
-| Supabase | **$0** | Free tier (already connected) |
-| **Total** | **~$50–125/mo** | Lower end if using gpt-4o-mini for humanising |
+GitHub Actions runs the repository check on pushes and pull requests. The scheduled pipeline workflow is ready, but it only becomes operational after repository secrets are configured.
 
-## More docs
+## Repository map
 
-- `CLAUDE.md` — editorial constitution (hard rules every agent follows)
-- `ARCHITECTURE.md` — deep dive on database, Supabase integration, costs, multi-site architecture
-- `REVIEW.md` — gap analysis, roadmap, risk assessment
-- `DESIGN-PROMPT.md` — UI/UX design system specification (tokens, themes, components)
-- `peptide-seo-plan.md` — original strategy document
+```text
+site/                    clinics Astro site
+sites/doctors/           doctors Astro site
+sites/content/           journal Astro site
+pipeline/orchestrator.mjs
+pipeline/lib/            LLM, image, database, and content guard helpers
+pipeline/prompts/        stage instructions
+pipeline/queue/          file-based work queues
+pipeline/quarantine/     withdrawn content retained for audit
+pipeline/tests/          deterministic guard tests
+.github/workflows/       CI and scheduled pipeline workflows
+```
+
+Read `CLAUDE.md` before changing editorial behaviour. See `ARCHITECTURE.md` for system boundaries, `REVIEW.md` for the latest audit, and `ACTION-ITEMS.md` for the remaining owner tasks.

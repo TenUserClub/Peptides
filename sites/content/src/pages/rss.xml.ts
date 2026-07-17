@@ -13,7 +13,7 @@ export async function GET(context: APIContext) {
     .sort((a, b) => +b.data.publishDate - +a.data.publishDate)
     .slice(0, 50);
 
-  const site = (context.site ?? 'https://peptide-hub.vercel.app').toString().replace(/\/$/, '');
+  const site = (context.site ?? 'https://peptides-content.vercel.app').toString().replace(/\/$/, '');
 
   const items = all.map((post) => {
     const collection = post.collection;

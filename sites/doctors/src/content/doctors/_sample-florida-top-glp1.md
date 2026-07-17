@@ -7,6 +7,7 @@ specialty: "GLP-1 therapy"
 methodology: "Compiled from public physician directories, the NPI registry, state licensing records, and published patient ratings on Google and Healthgrades. Ranked by verified GLP-1 service offering, years in practice, and volume of public patient ratings. No physician paid for inclusion."
 sources: ["https://npiregistry.cms.hhs.gov", "https://example.com"]
 verified: true
+author: "Peptide Atlas Editorial Team"
 publishDate: 2026-07-07
 ---
 

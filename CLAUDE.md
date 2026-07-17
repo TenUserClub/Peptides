@@ -1,62 +1,48 @@
-# Peptide SEO Engine — Editorial Constitution
+# Peptide Atlas editorial constitution
 
-Every agent in this repo inherits these rules. They are non-negotiable and override any stage prompt if in conflict.
+Every automated stage and human contributor must follow these rules. When a prompt conflicts with this file, this file wins.
 
-## What this repo is
+## Scope
 
-An autonomous content pipeline with four engines: **Clinics** (directory per US city), **Doctors & experts** (roundups + profiles), **News** (2–3 posts/day; stories that are primarily laws/regulation/enforcement are routed to the site's **Laws & legal** section instead of News — same writer, same velocity cap), **Blog** (evergreen educational guides), and **Updates** (weekly digest). Data comes from the Exa API; every draft passes the Humaniser before publish. The pipeline is orchestrated by `pipeline/orchestrator.mjs` (Node.js), which delegates writing and humanising to OpenAI (GPT-4o). The site is Astro in `site/`, deployed via git push to Vercel.
+Peptide Atlas operates five content engines across three sites: clinics, doctors, news and legal, blog, and weekly updates. The orchestrator is `pipeline/orchestrator.mjs`. Content moves through fetched data, verified records, drafts, humanised drafts, deterministic validation, and the appropriate Astro collection.
 
-## Directory contract
-
-```
-pipeline/queue/       cities.json, states.json — work queues (advance pointer only after a batch fully publishes)
-pipeline/data/exa/    raw Exa results: news/, clinics/, doctors/  (JSON, one file per fetch, timestamped)
-pipeline/data/verified/  fact-checked clinic/doctor records ready for writers
-pipeline/data/rejected/  candidates that failed verification (JSON with a one-line reason each)
-pipeline/drafts/      writer output awaiting humaniser: {engine}/{slug}.md
-pipeline/humanised/   humaniser output awaiting publish (diff saved alongside as {slug}.diff.md)
-site/src/content/     published markdown: clinics/, doctors/, news/, legal/, blog/, updates/
-pipeline/logs/        one line per stage run: timestamp, stage, counts, errors
+```text
+clinics -> site/src/content/clinics/
+doctors -> sites/doctors/src/content/doctors/
+news, legal, blog, updates -> sites/content/src/content/<collection>/
 ```
 
-The orchestrator moves content through these directories: `data/exa/` → `drafts/` → `humanised/` → `site/src/content/`. Never skip a stage. If an upstream directory is empty, log and exit cleanly — do not fabricate input.
+Do not skip a stage. Never fabricate input when an upstream directory is empty. Dry runs must not advance queues, write processed markers, move content, commit, or push.
 
-## Hard editorial rules (legal/compliance — never violate)
+## Hard editorial rules
 
-1. **Never invent reviews, testimonials, quotes, or opinions.** The Reviews section of a clinic/doctor post may only summarize real, existing public reviews and MUST attribute the platform and figures: "Patients on Google (4.8★ across 120 reviews) frequently mention…". If no public reviews are found, write "We could not find substantial public reviews for this clinic" — do not fill the gap.
-2. **Real people, verified facts only.** Any credential, specialty, affiliation, or service attributed to a named doctor/clinic must come from `pipeline/data/verified/`. If a fact isn't in the verified record, omit it. Never guess a doctor's title, board certification, or education.
-3. **No treatment claims.** Never state or imply a peptide cures, treats, heals, or prevents anything. Report what research or the source says, attributed ("a 2024 pilot study reported…"). Banned verbs applied to peptides: cures, heals, treats, fixes, reverses, prevents.
-4. **Compounded ≠ FDA-approved.** Never imply equivalence. When relevant, note legal status accurately (several peptides are pending FDA compounding reclassification as of 2026 — link the FDA/HHS source, don't editorialize).
-5. **Every post ends with the medical disclaimer** (the site layout injects it — never remove it) and every clinic/doctor post gets the correction-contact line (in the layout).
-6. **"Top N" roundups must state methodology on-page** — one short paragraph: what sources were used (public directories, NPI registry, published patient ratings), what was ranked on, and that no doctor paid for placement.
-7. **No affiliate links to research-chemical vendors. No links to "research use only" peptide sellers.** Ever.
+1. Never invent reviews, testimonials, quotes, ratings, opinions, credentials, addresses, services, or outcomes.
+2. A review summary must include its platform and verified figures. If that data is missing, say substantial public reviews were not found.
+3. Never say a peptide cures, heals, treats, fixes, reverses, or prevents a condition unless accurately quoting and clearly contextualising an authoritative regulatory source. Prefer neutral descriptions.
+4. Do not promote products labelled for research use, not for human consumption, or sold by research-chemical vendors.
+5. Never imply that a compounded product is FDA-approved or equivalent to an approved drug.
+6. News and legal articles require a reachable authoritative primary source. Blog articles require at least two authoritative sources.
+7. Clinic posts require a matching verified first-party record. Doctor profiles require a matching verified NPI record. Roundups require matching records for listed doctors and a visible methodology.
+8. Every article must identify its author. Add `reviewedBy` when a qualified human has reviewed it. Do not invent reviewers.
+9. The layouts must retain the medical disclaimer and correction route. Sources and methodology cannot be visually de-emphasised.
+10. Do not use em dashes in public-facing copy.
 
-## Writing style (before humaniser — write clean from the start)
+## Authoritative sourcing
 
-- Grounded and specific. Every claim traceable to a source in the frontmatter `sources` list.
-- US English, 8th–10th grade reading level, second person sparingly.
-- Clinic posts: 700–1,100 words. Doctor roundups: 1,000–1,500. News: 400–700. Blog: 1,000–1,500. Digests: 500–800.
-- Frontmatter must match the collection schema in `site/src/content.config.ts` exactly.
+Prefer official government sources, recognised academic institutions, clinical trial registries, peer-reviewed journals, and court records. Search snippets, commercial blogs, press rewrites, and social posts are discovery material, not primary evidence. Use the first-party page and preserve the exact URL in frontmatter.
 
-## Humaniser rubric (Stage 9 — full spec in pipeline/prompts/humanise.md)
+## Writing style
 
-Before each run, WebFetch https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing and apply it as a negative checklist. Baseline signs to eliminate (from that essay):
+Write in plain US English. Lead with the useful fact. Vary sentence and paragraph length naturally. Avoid rhetorical hype, fake certainty, canned conclusions, repetitive transitions, vague attribution, and decorative jargon. Explain uncertainty where the evidence is limited.
 
-- **Puffery / significance inflation:** "stands as a testament", "rich tapestry", "plays a vital/pivotal role", "nestled in the heart of", "boasts", "vibrant", "a beacon of", "underscores its importance", "continues to captivate".
-- **Formulaic constructions:** "not just X, but Y"; "it's not about X, it's about Y"; negative parallelisms; rule-of-three everywhere ("fast, friendly, and effective"); antithesis padding.
-- **Essay scaffolding:** throat-clearing intros; conclusions that restate ("In conclusion", "Overall", "In summary", "Ultimately"); section-ending mini-summaries; "letter-like" sign-offs.
-- **Hedging & filler:** "it's important to note", "it's worth mentioning", stacked qualifiers, "generally speaking".
-- **Vague attribution:** "many experts believe", "studies show" without a citation, "industry reports suggest" — name the source or cut the claim.
-- **Typographic tells:** em-dash overuse, excessive **bolding** of mid-sentence terms, Title Case Headings (use sentence case), bullet lists where prose reads better, emoji, curly-quote inconsistency, markdown artifacts.
-- **Rhythm tells:** uniform sentence length and paragraph size; every paragraph 3–4 sentences. Vary deliberately — some one-sentence paragraphs, some long.
-- **Cutoff/meta tells:** "as of [date]" without need, "while specific details are limited", any reference to being an AI or to information availability.
+## Humaniser limits
 
-Humaniser NEVER changes facts, names, numbers, ratings, attributions, sources, or frontmatter. Style only. Save a diff for human spot-checking.
+The humaniser may improve rhythm, clarity, and repetition. It may not add or remove facts, citations, names, figures, caveats, methodology, or frontmatter. A humanised draft must still pass `pipeline/lib/content-guard.mjs`.
 
 ## Velocity limits
 
-Max 5 directory posts/day + 3 news posts/day (news + legal combined — a legal post consumes a news slot) until `pipeline/logs/` shows 30 days of healthy GSC indexing. Do not batch-publish a backlog. If the publisher finds >8 items in `pipeline/humanised/`, publish the cap and leave the rest for tomorrow.
+Publish no more than five combined clinic and doctor posts per day and no more than three combined news and legal posts per day. Leave excess in `pipeline/humanised/`. Do not advance a city or state queue until its verified batch has fully published.
 
-## Failure behavior
+## Withdrawal and correction
 
-Log errors to `pipeline/logs/`, never retry more than twice, never publish anything that failed verification, and leave a note in `pipeline/logs/daily-summary.md` describing what's blocked.
+Withdraw content that cannot be supported, then preserve it under a dated directory in `pipeline/quarantine/` for audit. Do not silently restore withdrawn files. Corrections should record what changed, why it changed, and the supporting source.

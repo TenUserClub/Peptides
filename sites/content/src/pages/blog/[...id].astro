@@ -3,14 +3,14 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
+  const posts = (await getCollection('blog')).filter((item) => !item.id.startsWith('_sample'));
   return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
 
-const allBlog = await getCollection('blog');
+const allBlog = (await getCollection('blog')).filter((item) => !item.id.startsWith('_sample'));
 const related = allBlog.filter((p) => p.id !== post.id && p.data.category === d.category).slice(0, 3);
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') || '';
@@ -32,11 +32,12 @@ const jsonLd = {
     )}
     <p class="meta">
       <span style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;">{d.category}</span>
-      · Published {d.publishDate.toISOString().slice(0, 10)}
+      · By {d.author} · Published {d.publishDate.toISOString().slice(0, 10)}
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
     </p>
     <h1>{d.title}</h1>
     <Content />
+    <p class="sources">Sources {d.sources.map((source: string, index: number) => <a href={source} rel="nofollow">{index + 1}</a>)}</p>
     {related.length > 0 && (
       <section style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--rule, #e6e4dc);">
         <h2>Related guides</h2>

@@ -1,0 +1,52 @@
+name: Editorial pipeline
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: peptide-editorial-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix site
+      - run: npm ci --prefix sites/doctors
+      - run: npm ci --prefix sites/content
+      - name: Configure publication identity
+        run: |
+          git config user.name "Peptide Atlas Bot"
+          git config user.email "peptide-atlas-bot@users.noreply.github.com"
+      - name: Run guarded pipeline
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
+          OPENAI_HUMANISE_MODEL: ${{ vars.OPENAI_HUMANISE_MODEL }}
+          OPENAI_VERIFY_MODEL: ${{ vars.OPENAI_VERIFY_MODEL }}
+          SITE_DOMAIN: peptides-three-phi.vercel.app
+          AUTO_PUSH: "true"
+        if: ${{ env.OPENAI_API_KEY != '' && env.EXA_API_KEY != '' }}
+        run: node pipeline/orchestrator.mjs all
+      - name: Explain missing secrets
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+        if: ${{ env.OPENAI_API_KEY == '' || env.EXA_API_KEY == '' }}
+        run: echo "Pipeline skipped. Add OPENAI_API_KEY and EXA_API_KEY as repository secrets."

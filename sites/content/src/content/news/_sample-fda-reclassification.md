@@ -3,6 +3,8 @@ title: "SAMPLE: FDA Advances Peptide Compounding Review"
 description: "SAMPLE POST: format reference for the news writer agent. Delete before deploying."
 sourceName: "Example Wire"
 sourceUrl: "https://example.com/story"
+sourceType: primary
+author: "Peptide Atlas Editorial Team"
 tags: ["FDA", "regulation", "compounding"]
 publishDate: 2026-07-07
 ---

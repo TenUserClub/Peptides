@@ -42,6 +42,10 @@
             }
           ]
         },
+        "author": {
+          "type": "string",
+          "default": "Peptide Atlas Editorial Team"
+        },
         "image": {
           "type": "string"
         },

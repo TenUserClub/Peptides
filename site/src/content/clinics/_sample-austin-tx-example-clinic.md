@@ -14,6 +14,7 @@ ratingCount: 120
 ratingSource: "Google Reviews"
 sources: ["https://example.com", "https://npiregistry.cms.hhs.gov"]
 verified: true
+author: "Peptide Atlas Editorial Team"
 publishDate: 2026-07-07
 ---
 

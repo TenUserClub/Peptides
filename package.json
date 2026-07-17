@@ -2,6 +2,12 @@
   "name": "peptide-seo-pipeline",
   "type": "module",
   "private": true,
+  "scripts": {
+    "test": "node --test pipeline/tests/*.test.mjs",
+    "build:all": "npm --prefix site run build && npm --prefix sites/doctors run build && npm --prefix sites/content run build",
+    "check:sites": "node pipeline/scripts/check-sites.mjs",
+    "check": "npm test && npm run build:all && npm run check:sites"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2"
   }

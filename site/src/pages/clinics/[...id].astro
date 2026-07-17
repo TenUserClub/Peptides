@@ -4,14 +4,14 @@ import { getCollection, render } from 'astro:content';
 import { hubStates, stateName, stateSlug } from '../../lib/states';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('clinics');
+  const posts = (await getCollection('clinics')).filter((post) => !post.id.startsWith('_sample'));
   return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
 
-const allClinics = await getCollection('clinics');
+const allClinics = (await getCollection('clinics')).filter((clinic) => !clinic.id.startsWith('_sample'));
 const stateCode = d.state.toUpperCase();
 const sameCity = allClinics
   .filter((p) => p.id !== post.id && p.data.state.toUpperCase() === stateCode && p.data.city === d.city)
@@ -67,7 +67,7 @@ const jsonLd: Record<string, unknown> = {
         </svg>
         Verified
       </span>
-      {d.city}, {d.state}
+      By {d.author} · {d.city}, {d.state}
       · Published {d.publishDate.toISOString().slice(0, 10)}
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
       {d.ratingValue && d.ratingSource && (

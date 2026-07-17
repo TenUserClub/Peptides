@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://peptides-doctors-and-experts.vercel.app/sitemap-index.xml

@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('updates');
+  const posts = (await getCollection('updates')).filter((item) => !item.id.startsWith('_sample'));
   return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
@@ -13,7 +13,7 @@ const d = post.data;
 <Base title={d.title} description={d.description} currentSection="Updates">
   <article>
     <h1>{d.title}</h1>
-    <p class="meta">Week of {d.weekOf.toISOString().slice(0, 10)}</p>
+    <p class="meta">By {d.author} · Week of {d.weekOf.toISOString().slice(0, 10)}</p>
     <Content />
   </article>
 </Base>

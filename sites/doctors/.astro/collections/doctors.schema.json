@@ -47,6 +47,13 @@
           "type": "boolean",
           "const": true
         },
+        "author": {
+          "type": "string",
+          "default": "Peptide Atlas Editorial Team"
+        },
+        "reviewedBy": {
+          "type": "string"
+        },
         "publishDate": {
           "anyOf": [
             {

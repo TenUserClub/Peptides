@@ -1,10 +1,9 @@
-import { loadEnv, requireEnv, log } from '../scripts/lib.mjs';
+import { loadEnv, log } from '../scripts/lib.mjs';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 loadEnv();
 
-const OPENAI_KEY = requireEnv('OPENAI_API_KEY');
 const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 
 /**
@@ -12,6 +11,8 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
  * Retries with exponential backoff on 429 (rate limit) and 5xx errors.
  */
 export async function chat({ system, user, model = 'gpt-4o', temperature = 0.7, jsonMode = false, maxTokens = 4000 }) {
+  const openAIKey = process.env.OPENAI_API_KEY || '';
+  if (!openAIKey) throw new Error('OPENAI_API_KEY is required for this stage');
   const body = {
     model,
     messages: [
@@ -31,7 +32,7 @@ export async function chat({ system, user, model = 'gpt-4o', temperature = 0.7, 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY}`,
+        'Authorization': `Bearer ${openAIKey}`,
       },
       body: JSON.stringify(body),
     });

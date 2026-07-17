@@ -21,12 +21,23 @@
           "type": "string",
           "format": "uri"
         },
+        "sourceType": {
+          "type": "string",
+          "const": "primary"
+        },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": []
+        },
+        "author": {
+          "type": "string",
+          "default": "Peptide Atlas Editorial Team"
+        },
+        "reviewedBy": {
+          "type": "string"
         },
         "publishDate": {
           "anyOf": [
@@ -75,6 +86,7 @@
         "description",
         "sourceName",
         "sourceUrl",
+        "sourceType",
         "publishDate"
       ],
       "additionalProperties": false

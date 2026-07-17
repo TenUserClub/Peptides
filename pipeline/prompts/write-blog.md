@@ -15,7 +15,7 @@ Generate blog post ideas based on:
 
 ## Output
 
-`pipeline/drafts/blog/{category}-{slug}.md` — frontmatter matches the `blog` schema in `site/src/content.config.ts`.
+`pipeline/drafts/blog/{category}-{slug}.md` with frontmatter matching `sites/content/src/content.config.ts`. Include `author: "Peptide Atlas Editorial Team"` and at least two authoritative URLs in `sources`.
 
 ### Categories (pick one)
 
@@ -32,7 +32,7 @@ Generate blog post ideas based on:
 2. **Opening paragraph** — who this is for and what they'll learn
 3. **Body** — 3–5 sections with H2s. Use plain language. Every claim sourced.
 4. **FAQ or "What to ask"** — practical takeaways
-5. **Internal links** — link to relevant clinic directory pages, news posts, legal updates
+5. **Internal links**: use absolute links for the separate clinic and doctor sites (`https://peptides-three-phi.vercel.app/` and `https://peptides-doctors-and-experts.vercel.app/`). Use relative links only for blog, news, legal, and updates on the content site.
 6. **Medical disclaimer** — the layout injects this; don't add your own
 
 ### Word count

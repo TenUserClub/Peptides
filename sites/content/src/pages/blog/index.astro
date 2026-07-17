@@ -25,7 +25,7 @@ const totalCategories = categories.length;
   </p>
 
   {totalPosts === 0 ? (
-    <p class="meta">Guides are being added. Check back soon.</p>
+    <div class="empty-state"><h2>Guides are under editorial review.</h2><p>New guides will appear after their claims and supporting sources have been checked.</p></div>
   ) : (
     <>
       <p class="meta">{totalPosts} guides across {totalCategories} categories</p>

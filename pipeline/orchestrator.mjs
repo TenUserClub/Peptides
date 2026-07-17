@@ -11,18 +11,18 @@
  * Environment: .env (OPENAI_API_KEY, EXA_API_KEY, GEMINI_API_KEY, SITE_DOMAIN, SUPABASE_URL, SUPABASE_SERVICE_KEY)
  */
 
-import { join, dirname, basename } from 'node:path';
-import { execSync } from 'node:child_process';
+import { join, dirname, basename, relative } from 'node:path';
+import { execFileSync, execSync } from 'node:child_process';
 import {
   readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, unlinkSync,
 } from 'node:fs';
-import { loadEnv, requireEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib.mjs';
+import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib.mjs';
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
+import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
 
 loadEnv();
 
-requireEnv('OPENAI_API_KEY');
 const rawDomain = process.env.SITE_DOMAIN || '';
 const SITE_DOMAIN = rawDomain && !rawDomain.startsWith('#')
   ? rawDomain.trim()
@@ -31,10 +31,10 @@ const SITE_DOMAIN = rawDomain && !rawDomain.startsWith('#')
 // ── Configuration ──────────────────────────────────────────────
 const CONFIG = {
   models: {
-    writing: 'gpt-4o',
-    humanise: 'gpt-4o',
-    verify: 'gpt-4o-mini',
-    summary: 'gpt-4o-mini',
+    writing: process.env.OPENAI_WRITING_MODEL || 'gpt-4o',
+    humanise: process.env.OPENAI_HUMANISE_MODEL || 'gpt-4o-mini',
+    verify: process.env.OPENAI_VERIFY_MODEL || 'gpt-4o-mini',
+    summary: process.env.OPENAI_SUMMARY_MODEL || 'gpt-4o-mini',
   },
   velocity: {
     maxNewsPerDay: 3,
@@ -262,9 +262,27 @@ async function runWriteNews() {
     return 0;
   }
 
-  const allStories = exaData.sets.flatMap((s) => s.results || []);
-  if (allStories.length === 0) {
+  const candidateStories = exaData.sets.flatMap((s) => s.results || []);
+  if (candidateStories.length === 0) {
     log('info', 'write-news: no stories in exa data');
+    return 0;
+  }
+
+  const allStories = [];
+  for (const story of candidateStories) {
+    if (!story.url || !isAuthoritativeUrl(story.url)) continue;
+    try {
+      const primaryText = await webFetch(story.url, { maxRetries: 1, timeout: 12000 });
+      allStories.push({ ...story, primaryText: primaryText.slice(0, 6000) });
+    } catch (e) {
+      log('warn', `write-news: primary source unavailable ${story.url}: ${e.message}`);
+    }
+    if (allStories.length >= 12) break;
+  }
+  if (allStories.length === 0) {
+    log('warn', 'write-news: no reachable authoritative primary sources; refusing to draft');
+    processed.files.push(fileName);
+    writeJson(processedPath, processed);
     return 0;
   }
 
@@ -288,7 +306,7 @@ ${JSON.stringify(
     allStories.map((r) => ({
       title: r.title,
       url: r.url,
-      text: (r.text || '').slice(0, 1000),
+      text: r.primaryText,
       publishedDate: r.publishedDate,
     })),
     null,
@@ -303,6 +321,8 @@ INSTRUCTIONS:
    description: "..."
    sourceName: "..."
    sourceUrl: "..."
+   sourceType: primary
+   author: "Peptide Atlas Editorial Team"
    tags: ["tag1", "tag2"]
    publishDate: YYYY-MM-DD
    ---
@@ -317,6 +337,8 @@ INSTRUCTIONS:
    jurisdiction: "Federal"
    sourceName: "..."
    sourceUrl: "..."
+   sourceType: primary
+   author: "Peptide Atlas Editorial Team"
    tags: ["tag1", "tag2"]
    publishDate: YYYY-MM-DD
    ---`;
@@ -353,10 +375,9 @@ INSTRUCTIONS:
         continue;
       }
 
-      const slug = `${today}-${slugify(fm.data.title)}`;
-      const outPath = join(PIPELINE, 'drafts', 'news', `${slug}.md`);
-
       const collection = fm.data.jurisdiction ? 'legal' : 'news';
+      const slug = `${today}-${slugify(fm.data.title)}`;
+      const outPath = join(PIPELINE, 'drafts', collection, `${slug}.md`);
       const imagePath = await generateImage(collection, {
         title: fm.data.title,
         description: fm.data.description,
@@ -402,6 +423,27 @@ async function runWriteBlog() {
     return 0;
   }
 
+  const researchTargets = [
+    'https://www.fda.gov/drugs/human-drug-compounding',
+    'https://clinicaltrials.gov/search?term=peptide',
+    'https://pubmed.ncbi.nlm.nih.gov/?term=peptide+therapy',
+  ];
+  const researchBundle = [];
+  if (!DRY_RUN) {
+    for (const url of researchTargets) {
+      try {
+        const sourceText = await webFetch(url, { maxRetries: 1, timeout: 12000 });
+        researchBundle.push({ url, text: sourceText.slice(0, 5000) });
+      } catch (e) {
+        log('warn', `write-blog: research source unavailable ${url}: ${e.message}`);
+      }
+    }
+    if (researchBundle.length < 2) {
+      log('warn', 'write-blog: fewer than two authoritative research sources available; refusing to draft');
+      return 0;
+    }
+  }
+
   const existingTitles = allTitles('blog');
   const existingNewsTitles = [...allTitles('news'), ...allTitles('legal')];
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
@@ -421,6 +463,9 @@ ${existingTitles.map((t) => `- ${t}`).join('\n') || '(none yet)'}
 EXISTING NEWS TOPICS (avoid overlap — blog is evergreen, news is time-sensitive):
 ${existingNewsTitles.slice(0, 20).map((t) => `- ${t}`).join('\n') || '(none yet)'}
 
+AUTHORITATIVE RESEARCH SOURCES:
+${JSON.stringify(researchBundle, null, 2)}
+
 INSTRUCTIONS:
 1. Write ${available} evergreen educational blog post(s) about peptide therapy
 2. Choose topics that fill gaps — what would a patient researching peptide therapy want to know?
@@ -430,6 +475,8 @@ INSTRUCTIONS:
    description: "..."
    category: "beginners" | "guides" | "comparisons" | "science" | "cost" | "safety"
    tags: ["tag1", "tag2"]
+   sources: ["authoritative-url-1", "authoritative-url-2"]
+   author: "Peptide Atlas Editorial Team"
    publishDate: YYYY-MM-DD
    ---
 4. Separate each post with: <!-- POST SEPARATOR -->
@@ -566,7 +613,6 @@ async function runPublish() {
   const files = findFiles(humanisedDir, /\.md$/, /\.diff\.md/);
   if (files.length === 0) {
     log('info', 'publish: nothing to publish');
-    advanceQueues();
     return 0;
   }
 
@@ -575,6 +621,9 @@ async function runPublish() {
   const todayDirCount = countToday('clinics') + countToday('doctors');
   const todayNewsCount = countToday('news') + countToday('legal');
   const todayBlogCount = countToday('blog');
+  let selectedDir = 0;
+  let selectedNews = 0;
+  let selectedBlog = 0;
 
   const toMove = [];
 
@@ -600,16 +649,27 @@ async function runPublish() {
     const isNews = collection === 'news' || collection === 'legal';
     const isBlog = collection === 'blog';
 
-    if (isDir && todayDirCount >= CONFIG.velocity.maxDirPerDay) {
-      log('info', `publish: directory cap reached (${todayDirCount}/${CONFIG.velocity.maxDirPerDay})`);
+    const guard = validateContent({
+      text,
+      collection,
+      filename: file,
+      verifiedRoot: join(PIPELINE, 'data', 'verified'),
+    });
+    if (!guard.ok) {
+      log('warn', `publish: blocked ${basename(file)}: ${guard.errors.join('; ')}`);
       continue;
     }
-    if (isNews && todayNewsCount >= CONFIG.velocity.maxNewsPerDay) {
-      log('info', `publish: news cap reached (${todayNewsCount}/${CONFIG.velocity.maxNewsPerDay})`);
+
+    if (isDir && todayDirCount + selectedDir >= CONFIG.velocity.maxDirPerDay) {
+      log('info', `publish: directory cap reached (${todayDirCount + selectedDir}/${CONFIG.velocity.maxDirPerDay})`);
       continue;
     }
-    if (isBlog && todayBlogCount >= CONFIG.velocity.maxBlogPerDay) {
-      log('info', `publish: blog cap reached (${todayBlogCount}/${CONFIG.velocity.maxBlogPerDay})`);
+    if (isNews && todayNewsCount + selectedNews >= CONFIG.velocity.maxNewsPerDay) {
+      log('info', `publish: news cap reached (${todayNewsCount + selectedNews}/${CONFIG.velocity.maxNewsPerDay})`);
+      continue;
+    }
+    if (isBlog && todayBlogCount + selectedBlog >= CONFIG.velocity.maxBlogPerDay) {
+      log('info', `publish: blog cap reached (${todayBlogCount + selectedBlog}/${CONFIG.velocity.maxBlogPerDay})`);
       continue;
     }
 
@@ -632,7 +692,13 @@ async function runPublish() {
       continue;
     }
 
-    toMove.push({ file, targetPath, collection, title: fm.data.title, isDir, isNews, isBlog });
+    const imageFile = typeof fm.data.image === 'string' && /^\/images\/[A-Za-z0-9_./-]+$/.test(fm.data.image)
+      ? join(siteDirFor(collection), 'public', fm.data.image.replace(/^\//, ''))
+      : null;
+    toMove.push({ file, targetPath, imageFile, collection, title: fm.data.title, isDir, isNews, isBlog });
+    if (isDir) selectedDir++;
+    if (isNews) selectedNews++;
+    if (isBlog) selectedBlog++;
   }
 
   if (DRY_RUN) {
@@ -642,13 +708,11 @@ async function runPublish() {
         log('info', `  - ${item.title} → ${item.collection}`);
       }
     }
-    advanceQueues();
     return toMove.length;
   }
 
   if (toMove.length === 0) {
     log('info', 'publish: no files passed validation');
-    advanceQueues();
     return 0;
   }
 
@@ -683,15 +747,38 @@ async function runPublish() {
     }
   }
 
-  log('info', 'publish: committing');
+  advanceQueues();
+  log('info', 'publish: committing scoped publication files');
   try {
-    execSync(`git add -A && git commit -m "publish: auto-posts ${today}"`, { cwd: ROOT, stdio: 'pipe' });
-    log('info', 'publish: committed. Run `git push` to deploy to Vercel.');
+    const stagePaths = [
+      ...toMove.flatMap((item) => [item.targetPath, item.imageFile].filter((path) => path && existsSync(path))),
+      join(PIPELINE, 'queue', 'cities.json'),
+      join(PIPELINE, 'queue', 'states.json'),
+      join(PIPELINE, 'queue', 'keywords.json'),
+    ].map((path) => relative(ROOT, path));
+    execFileSync('git', ['add', '--', ...stagePaths], { cwd: ROOT, stdio: 'pipe' });
+    const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
+    if (!staged) throw new Error('No scoped publication changes were staged');
+    execFileSync('git', ['commit', '-m', `publish: auto-posts ${today}`], { cwd: ROOT, stdio: 'pipe' });
+    if (process.env.AUTO_PUSH === 'true') {
+      let pushed = false;
+      for (let attempt = 1; attempt <= 2 && !pushed; attempt++) {
+        try {
+          execSync('git push', { cwd: ROOT, stdio: 'pipe' });
+          pushed = true;
+          log('info', 'publish: pushed to remote; Vercel deployment triggered');
+        } catch (pushError) {
+          log('warn', `publish: push attempt ${attempt}/2 failed: ${pushError.message}`);
+        }
+      }
+      if (!pushed) log('error', 'publish: local commit retained; manual git push required');
+    } else {
+      log('info', 'publish: committed locally. Set AUTO_PUSH=true to deploy automatically.');
+    }
   } catch (e) {
     log('warn', `publish: git commit issue: ${e.message}`);
   }
 
-  advanceQueues();
   return toMove.length;
 }
 
@@ -796,7 +883,9 @@ async function runMonitor() {
   const summaryPath = join(PIPELINE, 'logs', 'daily-summary.md');
   const today = new Date().toISOString().slice(0, 10);
   const logPath = join(PIPELINE, 'logs', `${today}.log`);
-  const logs = readText(logPath) || 'No logs today.';
+  const rawLogLines = (readText(logPath) || 'No logs today.').split(/\r?\n/).filter(Boolean);
+  const warningLines = rawLogLines.filter((line) => /\[(warn|error)\]/i.test(line));
+  const logs = rawLogLines.slice(-80).join('\n');
 
   // Count published posts today
   const todayNews = countToday('news') + countToday('legal');
@@ -804,7 +893,30 @@ async function runMonitor() {
   const todayClinics = countToday('clinics');
   const todayDoctors = countToday('doctors');
 
+  const reverify = [];
+  const cutoff = Date.now() - 90 * 86_400_000;
+  for (const collection of ['clinics', 'doctors']) {
+    for (const file of findFiles(contentDirFor(collection), /\.md$/, /_sample/)) {
+      const text = readText(file) || '';
+      const date = text.match(/updatedDate:\s*(\d{4}-\d{2}-\d{2})/)?.[1] || extractDate(text);
+      if (date && new Date(`${date}T00:00:00Z`).getTime() < cutoff) {
+        reverify.push({ collection, slug: basename(file, '.md'), lastVerified: date });
+      }
+    }
+  }
+  if (!DRY_RUN) writeJson(join(PIPELINE, 'queue', 'reverify.json'), { generatedAt: new Date().toISOString(), items: reverify });
+
+  let weeklyStatus = '';
+  if (new Date().getDay() === 0) {
+    const cities = readJson(join(PIPELINE, 'queue', 'cities.json'), { cities: [], next: 0 });
+    const states = readJson(join(PIPELINE, 'queue', 'states.json'), { states: [], next: 0 });
+    weeklyStatus = `\n### Weekly check\n- Cities remaining: ${Math.max(0, (cities.cities?.length || 0) - (cities.next || 0))}\n- Doctor queue items remaining: ${Math.max(0, (states.states?.length || 0) - (states.next || 0))}\n`;
+  }
+
   const summary = `## Daily Summary — ${today}
+
+### Attention required
+${warningLines.length ? warningLines.slice(-20).map((line) => `- ${line}`).join('\n') : '- No warnings or errors recorded today.'}
 
 ### Pipeline Activity
 ${logs}
@@ -817,12 +929,13 @@ ${logs}
 
 ### Status
 - Site: ${SITE_DOMAIN}
-- Next run: check cron schedule
+- Re-verification queue: ${reverify.length}
+${weeklyStatus}
 
 ---
 
 `;
-  writeText(summaryPath, summary);
+  if (!DRY_RUN) writeText(summaryPath, summary.split(/\r?\n/).slice(0, 200).join('\n') + '\n');
   log('info', 'monitor: summary written');
 }
 
@@ -846,8 +959,10 @@ async function runVerify() {
 
     const data = readJson(file);
     if (!data || !data.results || data.results.length === 0) {
-      clinicProcessed.files.push(fileName);
-      writeJson(clinicProcessedPath, clinicProcessed);
+      if (!DRY_RUN) {
+        clinicProcessed.files.push(fileName);
+        writeJson(clinicProcessedPath, clinicProcessed);
+      }
       continue;
     }
 
@@ -856,8 +971,6 @@ async function runVerify() {
 
     if (DRY_RUN) {
       log('info', `DRY RUN: would extract clinics from ${fileName}`);
-      clinicProcessed.files.push(fileName);
-      writeJson(clinicProcessedPath, clinicProcessed);
       continue;
     }
 
@@ -884,8 +997,10 @@ async function runVerify() {
 
     const data = readJson(file);
     if (!data || !data.results || data.results.length === 0) {
-      doctorProcessed.files.push(fileName);
-      writeJson(doctorProcessedPath, doctorProcessed);
+      if (!DRY_RUN) {
+        doctorProcessed.files.push(fileName);
+        writeJson(doctorProcessedPath, doctorProcessed);
+      }
       continue;
     }
 
@@ -894,8 +1009,6 @@ async function runVerify() {
 
     if (DRY_RUN) {
       log('info', `DRY RUN: would extract doctors from ${fileName}`);
-      doctorProcessed.files.push(fileName);
-      writeJson(doctorProcessedPath, doctorProcessed);
       continue;
     }
 
@@ -1015,13 +1128,16 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
     }
 
     // Website verification
-    const siteUrl = type === 'clinic' ? record.website : record.website;
+    const siteUrl = record.website;
+    let websiteConfirmed = false;
     if (siteUrl) {
       try {
         const siteText = await webFetch(siteUrl, { maxRetries: 1, timeout: 8000 });
         const hasPeptide = /peptide|GLP-1|semaglutide|tirzepatide/i.test(siteText);
-        if (!hasPeptide) {
-          record.verificationNotes.push('Website does not mention peptide therapy');
+        if (!hasPeptide) record.verificationNotes.push('Website does not mention peptide therapy');
+        else {
+          websiteConfirmed = true;
+          record.verificationNotes.push('Website confirms peptide-related services');
         }
       } catch (e) {
         record.verificationNotes.push(`Website unreachable: ${e.message}`);
@@ -1031,7 +1147,8 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
     }
 
     // NPI verification for named doctor
-    const doctorToCheck = type === 'clinic' ? record.doctorName : record.doctorName;
+    const doctorToCheck = record.doctorName;
+    let npiConfirmed = false;
     if (doctorToCheck) {
       const cleanName = doctorToCheck.replace(/\b(Dr|MD|DO|NP|PA|DVM|PhD)\.?\b/gi, '').trim();
       const nameParts = cleanName.split(/\s+/).filter((p) => p.length > 1);
@@ -1059,6 +1176,7 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
 
           if (matches.length === 1) {
             record.npi = matches[0].npi;
+            npiConfirmed = true;
             record.verificationNotes.push(`NPI verified: ${record.npi}`);
           } else if (matches.length > 1) {
             record.verificationNotes.push('NPI ambiguous — multiple matches');
@@ -1077,7 +1195,9 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
     // Decide: verified or rejected
     const hasWebsite = record.website && record.website.startsWith('http');
     const hasPeptideService = record.services.some((s) => /peptide|GLP-1|hormone|longevity/i.test(s));
-    const isVerifiable = hasWebsite && (hasPeptideService || record.verificationNotes.some((n) => n.includes('peptide')));
+    const isVerifiable = type === 'doctor'
+      ? Boolean(hasWebsite && websiteConfirmed && hasPeptideService && npiConfirmed && record.doctorName && record.npi)
+      : Boolean(hasWebsite && websiteConfirmed && hasPeptideService);
 
     if (isVerifiable) {
       record.verified = true;
@@ -1169,6 +1289,7 @@ doctorName: "..."
 services: ["..."]
 verified: true
 sources: ["..."]
+author: "Peptide Atlas Editorial Team"
 publishDate: YYYY-MM-DD
 ---
 
@@ -1259,7 +1380,7 @@ async function runWriteDoctors() {
   const existingSlugs = new Set([
     ...findFiles(join(PIPELINE, 'drafts', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
     ...findFiles(join(PIPELINE, 'humanised', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
-    ...findFiles(join(ROOT, 'site', 'src', 'content', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
+    ...findFiles(join(ROOT, 'sites', 'doctors', 'src', 'content', 'doctors'), /\.md$/).map((p) => basename(p, '.md')),
   ]);
 
   // Group verified doctors by state+specialty for roundups
@@ -1277,7 +1398,7 @@ async function runWriteDoctors() {
 
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-doctors.md')) || '';
-  const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'doctors', '_sample-florida-top-glp1.md')) || '';
+  const samplePost = readText(join(ROOT, 'sites', 'doctors', 'src', 'content', 'doctors', '_sample-florida-top-glp1.md')) || '';
 
   // Write roundups for groups with 3+ doctors, profiles for singletons
   for (const [groupKey, doctors] of Object.entries(byGroup)) {
@@ -1321,6 +1442,7 @@ specialty: "${specialty}"
 methodology: "Compiled from public physician directories, the NPI registry, state licensing records, and published patient ratings. Ranked by verified ${specialty} service offering, years in practice, and volume of public patient ratings. No physician paid for inclusion."
 sources: ["https://npiregistry.cms.hhs.gov"]
 verified: true
+author: "Peptide Atlas Editorial Team"
 publishDate: ${today}
 ---
 
@@ -1335,7 +1457,7 @@ Today's date: ${today}
 
 Output a markdown post with YAML frontmatter matching the doctors schema:
 ---
-title: "${doctors[0].doctorName || 'Doctor Profile'} — ${doctors[0].city || ''}, ${state}"
+title: "${doctors[0].doctorName || 'Doctor Profile'} | ${doctors[0].city || ''}, ${state}"
 description: "..."
 kind: "profile"
 state: "${state}"
@@ -1344,6 +1466,7 @@ doctorName: "${doctors[0].doctorName || ''}"
 npi: "${doctors[0].npi || ''}"
 sources: ["https://npiregistry.cms.hhs.gov"]
 verified: true
+author: "Peptide Atlas Editorial Team"
 publishDate: ${today}
 ---
 
@@ -1400,8 +1523,49 @@ Body: opening → credentials → services → patient reviews (attributed or "n
   return written;
 }
 async function runWriteUpdates() {
-  log('info', 'orchestrator: write-updates (stub — needs published posts)');
-  return 0;
+  const now = new Date();
+  const explicit = process.argv[2] === 'write-updates';
+  if (!explicit && now.getDay() !== 0) {
+    log('info', 'write-updates: weekly digest runs on Sunday');
+    return 0;
+  }
+  const cutoff = now.getTime() - 7 * 86_400_000;
+  const recent = [];
+  for (const collection of ['news', 'legal', 'blog', 'clinics', 'doctors']) {
+    for (const file of findFiles(contentDirFor(collection), /\.md$/, /_sample/)) {
+      const text = readText(file) || '';
+      const parsed = parseFrontmatter(text);
+      const date = extractDate(text);
+      if (!parsed?.data?.title || !date || new Date(`${date}T00:00:00Z`).getTime() < cutoff) continue;
+      const slug = basename(file, '.md');
+      const domain = collection === 'clinics' ? 'https://peptides-three-phi.vercel.app' : collection === 'doctors' ? 'https://peptides-doctors-and-experts.vercel.app' : '';
+      const path = collection === 'doctors' ? `/${slug}/` : `/${collection}/${slug}/`;
+      recent.push({ collection, title: parsed.data.title, url: `${domain}${path}` });
+    }
+  }
+  if (recent.length < 3) {
+    log('info', `write-updates: only ${recent.length} eligible items; minimum is 3`);
+    return 0;
+  }
+  const start = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((now - start) / 86_400_000) + start.getUTCDay() + 1) / 7);
+  const slug = `${now.getUTCFullYear()}-w${String(week).padStart(2, '0')}`;
+  const outPath = join(PIPELINE, 'drafts', 'updates', `${slug}.md`);
+  if (existsSync(outPath) || existsSync(join(contentDirFor('updates'), `${slug}.md`))) return 0;
+  const sections = [];
+  for (const [heading, collections] of [['News and analysis', ['news', 'blog']], ['Laws and legal', ['legal']], ['New clinics', ['clinics']], ['Doctor research', ['doctors']]]) {
+    const items = recent.filter((item) => collections.includes(item.collection));
+    if (items.length) sections.push(`## ${heading}\n\n${items.map((item) => `- [${item.title}](${item.url})`).join('\n')}`);
+  }
+  const weekOf = new Date(now.getTime() - now.getDay() * 86_400_000).toISOString().slice(0, 10);
+  const body = `---\ntitle: "Peptide Atlas weekly review: ${weekOf}"\ndescription: "A source-led summary of this week's peptide reporting, directory additions, and regulatory coverage."\nweekOf: ${weekOf}\npublishDate: ${now.toISOString().slice(0, 10)}\nauthor: "Peptide Atlas Editorial Team"\n---\n\nThis weekly review gathers the material published across Peptide Atlas during the last seven days. Follow each link for full sourcing and context.\n\n${sections.join('\n\n')}\n\n## Editorial note\n\nThis digest is informational. It does not provide medical or legal advice. Readers should use the linked primary sources and consult qualified professionals for individual decisions.\n`;
+  if (DRY_RUN) {
+    log('info', `DRY RUN: would create weekly digest ${slug}`);
+    return 1;
+  }
+  writeText(outPath, body);
+  log('info', `write-updates: drafted ${slug} with ${recent.length} links`);
+  return 1;
 }
 
 // ── Main ───────────────────────────────────────────────────────
@@ -1428,8 +1592,7 @@ async function main() {
 
   if (stage === 'all' || stage === 'publish') await runPublish();
 
-  if (stage === 'all' && hour >= 6 && hour < 8) await runMonitor();
-  if (stage === 'all' || stage === 'monitor') await runMonitor();
+  if (stage === 'monitor' || (stage === 'all' && hour >= 6 && hour < 8)) await runMonitor();
 
   log('info', '=== Orchestrator finished ===');
 }

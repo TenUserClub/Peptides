@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
+---
+<Base title="Corrections | Peptide Atlas" description="Request a factual correction, listing update, or removal from Peptide Atlas." currentSection="">
+  <article>
+    <p class="eyebrow">Corrections</p>
+    <h1>Help us correct the record.</h1>
+    <p>Include the page URL, the specific statement that needs attention, the requested correction, and a source that supports the change. Clinic and clinician representatives may also request listing updates or removal.</p>
+    {correctionsEmail ? <p><a class="cta" href={`mailto:${correctionsEmail}?subject=Peptide%20Atlas%20correction%20request`}>Email the corrections desk</a></p> : <div class="methodology"><strong>Contact setup pending</strong><p>The site owner must set <code>PUBLIC_CORRECTIONS_EMAIL</code> in each Vercel project before correction requests can be accepted by email.</p></div>}
+    <p class="meta">We target a response within five business days. Requests are evaluated against authoritative public records and the source supplied.</p>
+  </article>
+</Base>

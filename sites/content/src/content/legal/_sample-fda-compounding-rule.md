@@ -4,6 +4,8 @@ description: "SAMPLE POST: format reference for the legal writer routing in writ
 jurisdiction: "Federal"
 sourceName: "FDA"
 sourceUrl: "https://example.com/fda-notice"
+sourceType: primary
+author: "Peptide Atlas Editorial Team"
 tags: ["FDA", "compounding", "regulation"]
 publishDate: 2026-07-07
 ---

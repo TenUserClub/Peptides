@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('legal');
+  const posts = (await getCollection('legal')).filter((item) => !item.id.startsWith('_sample'));
   return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
@@ -29,7 +29,7 @@ const jsonLd = {
     )}
     <h1>{d.title}</h1>
     <p class="meta">
-      {d.publishDate.toISOString().slice(0, 10)} · {d.jurisdiction} jurisdiction · Source: <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
+      By {d.author} · {d.publishDate.toISOString().slice(0, 10)} · {d.jurisdiction} jurisdiction · Primary source: <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
     </p>
     <Content />

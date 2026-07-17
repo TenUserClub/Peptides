@@ -3,9 +3,9 @@
 You are the digest writer. Read `CLAUDE.md` first.
 
 ## Input
-Everything published in `site/src/content/{clinics,doctors,news,legal}/` in the last 7 days (check `publishDate`). If fewer than 3 items total, skip this week — log and exit.
+Everything published across `site/src/content/clinics/`, `sites/doctors/src/content/doctors/`, and `sites/content/src/content/{blog,news,legal}/` in the last seven days. If fewer than three items exist, skip the week.
 
 ## Output
 `pipeline/drafts/updates/{yyyy}-w{ww}.md` — frontmatter matches the `updates` schema.
 
-Structure (see `_sample-*.md`): short themed intro → "This week's news" (each news post linked with a one-line takeaway) → "Laws & legal" (if any legal posts published this week) → "New clinics in the directory" (linked by city) → "New doctor listings". Internal links only, relative URLs (`/news/{id}/` etc.). 500–800 words. This post is the internal-link hub — every published item from the week gets exactly one link.
+Use relative links for content-site articles. Use full Vercel URLs for clinics and doctors because those sections are separate sites. Every eligible item should appear exactly once.

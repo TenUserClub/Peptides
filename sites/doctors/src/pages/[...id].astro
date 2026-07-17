@@ -4,7 +4,7 @@ import { getCollection, render } from 'astro:content';
 import { stateName, stateSlug } from '../lib/states';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('doctors');
+  const posts = (await getCollection('doctors')).filter((item) => !item.id.startsWith('_sample'));
   return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
 }
 const { post } = Astro.props;
@@ -13,7 +13,7 @@ const d = post.data;
 
 const stateCode = d.state.toUpperCase();
 const related = (await getCollection('doctors')).filter(
-  (p) => p.id !== post.id && p.data.state.toUpperCase() === stateCode
+  (p) => !p.id.startsWith('_sample') && p.id !== post.id && p.data.state.toUpperCase() === stateCode
 ).slice(0, 5);
 
 if (d.kind === 'roundup' && !d.methodology) {
@@ -42,7 +42,7 @@ const jsonLd: Record<string, unknown> =
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Doctors</a><span class="sep">/</span><span aria-current="page">{d.title}</span></nav>
     <h1>{d.title}</h1>
     <p class="meta">
-      {d.specialty} · {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
+      By {d.author} · {d.specialty} · {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
     </p>
     {d.kind === 'roundup' && (

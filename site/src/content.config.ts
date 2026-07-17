@@ -19,6 +19,8 @@ const clinics = defineCollection({
     ratingSource: z.string().optional(),
     sources: z.array(z.string().url()).min(1),
     verified: z.literal(true),
+    author: z.string().default('Peptide Atlas Editorial Team'),
+    reviewedBy: z.string().optional(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     image: z.string().optional(),

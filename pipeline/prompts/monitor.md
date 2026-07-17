@@ -1,9 +1,11 @@
-# Stage: Monitor (runs daily 06:30)
+# Stage: monitor
 
-You are the monitoring agent. Read `CLAUDE.md` first.
+Read `CLAUDE.md` first.
 
-1. Scan `pipeline/logs/` for today's errors. If anything is blocked, summarize it at the top of `pipeline/logs/daily-summary.md`.
-2. Staleness: list published clinic/doctor posts with `publishDate` (or `updatedDate`) older than 90 days → write them to `pipeline/queue/reverify.json` so the verify stage re-checks facts on its next run.
-3. Weekly (Sundays): append a short section to `pipeline/logs/daily-summary.md` — posts published this week by engine, queue depth (cities/states remaining), and the top 3 suggested next actions.
+1. Summarise today's warnings and errors at the top of `pipeline/logs/daily-summary.md`.
+2. Include the latest relevant log lines without exposing secrets.
+3. Queue clinic and doctor posts older than 90 days in `pipeline/queue/reverify.json`.
+4. On Sundays, report posts published in the last seven days, remaining city and state queue depth, and three concrete next actions.
+5. Keep the summary under 200 lines.
 
-Keep `daily-summary.md` under 200 lines (trim oldest entries). This file is the human's morning read.
+A dry run may report intended monitoring work but must not write the summary or reverify queue.

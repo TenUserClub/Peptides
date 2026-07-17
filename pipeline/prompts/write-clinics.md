@@ -8,7 +8,7 @@ Verified records in `pipeline/data/verified/clinics/` that don't yet have a draf
 ## Output
 One markdown file per clinic → `pipeline/drafts/clinics/{city}-{state}-{clinic-slug}.md`
 
-Frontmatter must exactly match the `clinics` schema in `site/src/content.config.ts` (`verified: true` only because the record came from `data/verified/` — never hand-set it otherwise). Slug format: `{city}-{state}-{clinic-name}`, lowercase, hyphenated.
+Frontmatter must exactly match the `clinics` schema in `site/src/content.config.ts` (`verified: true` only because the record came from `data/verified/`; never hand-set it otherwise). Set `author: "Peptide Atlas Editorial Team"`. Slug format: `{city}-{state}-{clinic-name}`, lowercase, hyphenated.
 
 ## Structure (see site/src/content/clinics/_sample-*.md for format)
 1. Opening: who, where, what they're known for — verified facts only.

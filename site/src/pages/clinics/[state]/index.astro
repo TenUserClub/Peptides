@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 import { clinicsByState, stateName, stateSlug, HUB_MIN_CLINICS } from '../../../lib/states';
 
 export async function getStaticPaths() {
-  const all = await getCollection('clinics');
+  const all = (await getCollection('clinics')).filter((clinic) => !clinic.id.startsWith('_sample'));
   return Object.entries(clinicsByState(all))
     .filter(([, posts]) => posts.length >= HUB_MIN_CLINICS)
     .map(([code, posts]) => ({ params: { state: stateSlug(code) }, props: { code, posts } }));

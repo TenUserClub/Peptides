@@ -1,15 +1,17 @@
 ---
 import Base from '../layouts/Base.astro';
+const contactEmail = import.meta.env.PUBLIC_CONTACT_EMAIL;
+const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
 ---
 <Base title="Contact | Peptide Clinics Directory" description="Request a consultation referral or a listing correction.">
   <h1>Contact</h1>
   <p>
     <strong>Consultation referrals:</strong> tell us your city and what you're exploring, and we'll point you to
-    verified clinics from our directory. Email <a href="mailto:hello@peptide-clinics.vercel.app">hello@peptide-clinics.vercel.app</a>.
+    verified clinics from our directory. {contactEmail ? <span>Email <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.</span> : <span>Contact intake is temporarily paused while the directory completes its editorial review.</span>}
   </p>
   <p>
     <strong>Clinics:</strong> to correct or remove a listing, email
-    <a href="mailto:corrections@peptide-clinics.vercel.app">corrections@peptide-clinics.vercel.app</a>.
+    {correctionsEmail ? <a href={`mailto:${correctionsEmail}`}>{correctionsEmail}</a> : <a href="https://peptides-content.vercel.app/corrections/">use the corrections page</a>}.
   </p>
   <p class="meta">
     We do not sell placements. Listings are editorial and compiled from public sources.

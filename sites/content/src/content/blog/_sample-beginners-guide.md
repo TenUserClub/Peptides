@@ -3,6 +3,8 @@ title: "What Is Peptide Therapy? A Beginner's Guide"
 description: "Peptide therapy uses short chains of amino acids to signal specific biological processes. Learn how it works, what conditions it's used for, and what to know before starting."
 category: "beginners"
 tags: ["peptide therapy", "beginners", "overview"]
+sources: ["https://www.fda.gov/", "https://clinicaltrials.gov/"]
+author: "Peptide Atlas Editorial Team"
 publishDate: 2026-07-07
 ---
 
