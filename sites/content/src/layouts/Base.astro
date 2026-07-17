@@ -29,7 +29,7 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
     <meta property="og:type" content="article" />
     <meta property="og:url" content={Astro.url.href} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
-    <meta property="og:site_name" content="Peptide Atlas — News & Guides" />
+    <meta property="og:site_name" content="Peptide Atlas | News & Guides" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -64,11 +64,19 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
       <div class="container"><slot /></div>
       <div class="container trust-footer">
         <div class="disclaimer"><strong>Medical disclaimer</strong><span>This content is for informational purposes only and is not medical advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA review. Always consult a licensed physician before starting any therapy.</span></div>
-        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified at the time of publication. If you spot an inaccuracy, email <a href="mailto:corrections@example.com">corrections@example.com</a> — we act on requests within 5 business days.</span></div>}
+        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified at the time of publication. If you spot an inaccuracy, email <a href="mailto:corrections@example.com">corrections@example.com</a>. We act on requests within 5 business days.</span></div>}
       </div>
     </main>
     <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><p>© {new Date().getFullYear()} Peptide Atlas Journal.<br />No sponsored posts.</p></div></footer>
-    <div class="theme-control"><button id="theme-switcher" type="button" aria-label="Change color theme"><span class="theme-dot"></span><span id="theme-label">Clinical</span></button></div>
+    <div class="theme-control">
+      <div class="theme-menu" id="theme-menu" role="menu" aria-label="Choose a color theme" hidden>
+        <button type="button" role="menuitemradio" data-theme-option="clinical"><span class="swatch swatch-clinical"></span><span><strong>Clinical</strong><small>Clean and calm</small></span></button>
+        <button type="button" role="menuitemradio" data-theme-option="lab"><span class="swatch swatch-lab"></span><span><strong>Lab</strong><small>Dark and technical</small></span></button>
+        <button type="button" role="menuitemradio" data-theme-option="wellness"><span class="swatch swatch-wellness"></span><span><strong>Wellness</strong><small>Warm and natural</small></span></button>
+        <button type="button" role="menuitemradio" data-theme-option="editorial"><span class="swatch swatch-editorial"></span><span><strong>Editorial</strong><small>Paper and blue ink</small></span></button>
+      </div>
+      <button class="theme-trigger" id="theme-switcher" type="button" aria-label="Choose color theme" aria-haspopup="menu" aria-controls="theme-menu" aria-expanded="false"><span class="theme-dot"></span><span id="theme-label">Clinical</span><span class="theme-chevron" aria-hidden="true">⌃</span></button>
+    </div>
     <script is:inline>
       (() => {
         const navButton = document.getElementById('nav-toggle');
@@ -78,13 +86,23 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
           navButton.setAttribute('aria-expanded', String(open));
           navButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
         });
-        const themes = ['clinical', 'lab', 'wellness'];
-        const labels = { clinical: 'Clinical', lab: 'Lab', wellness: 'Wellness' };
+        const labels = { clinical: 'Clinical', lab: 'Lab', wellness: 'Wellness', editorial: 'Editorial' };
         const button = document.getElementById('theme-switcher');
+        const menu = document.getElementById('theme-menu');
         const label = document.getElementById('theme-label');
-        const sync = (theme) => { document.documentElement.dataset.theme = theme; localStorage.setItem('peptide-theme', theme); if (label) label.textContent = labels[theme]; };
+        const options = document.querySelectorAll('[data-theme-option]');
+        const closeMenu = () => { if (menu) menu.hidden = true; button?.setAttribute('aria-expanded', 'false'); };
+        const sync = (theme) => {
+          document.documentElement.dataset.theme = theme;
+          localStorage.setItem('peptide-theme', theme);
+          if (label) label.textContent = labels[theme];
+          options.forEach((option) => option.setAttribute('aria-checked', String(option.dataset.themeOption === theme)));
+        };
         sync(document.documentElement.dataset.theme || 'clinical');
-        button?.addEventListener('click', () => { const current = document.documentElement.dataset.theme || 'clinical'; sync(themes[(themes.indexOf(current) + 1) % themes.length]); });
+        button?.addEventListener('click', () => { if (menu) menu.hidden = !menu.hidden; button.setAttribute('aria-expanded', String(menu && !menu.hidden)); });
+        options.forEach((option) => option.addEventListener('click', () => { sync(option.dataset.themeOption); closeMenu(); button?.focus(); }));
+        document.addEventListener('click', (event) => { if (!event.target.closest('.theme-control')) closeMenu(); });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeMenu(); button?.focus(); } });
       })();
     </script>
   </body>

@@ -1,6 +1,6 @@
 ---
-title: "SAMPLE: Peptide Week in Review — July 6–12, 2026"
-description: "SAMPLE POST — format reference for the updates writer agent. Delete before deploying."
+title: "SAMPLE: Peptide Week in Review, July 6–12, 2026"
+description: "SAMPLE POST: format reference for the updates writer agent. Delete before deploying."
 weekOf: 2026-07-06
 publishDate: 2026-07-12
 ---

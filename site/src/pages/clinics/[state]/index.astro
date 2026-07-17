@@ -39,7 +39,7 @@ const cities = Object.keys(byCity).sort();
         {byCity[city]
           .sort((a, b) => a.data.clinicName.localeCompare(b.data.clinicName))
           .map((p) => (
-            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a>{p.data.services.length > 0 && ` — ${p.data.services.slice(0, 3).join(', ')}`}</li>
+            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a>{p.data.services.length > 0 && `: ${p.data.services.slice(0, 3).join(', ')}`}</li>
           ))}
       </ul>
     </section>

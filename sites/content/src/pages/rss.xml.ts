@@ -32,7 +32,7 @@ export async function GET(context: APIContext) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Peptide Hub — News &amp; Guides</title>
+    <title>Peptide Hub | News &amp; Guides</title>
     <link>${site}/</link>
     <description>Verified peptide therapy clinics, doctor listings, educational guides, and daily industry news.</description>
     <language>en-us</language>

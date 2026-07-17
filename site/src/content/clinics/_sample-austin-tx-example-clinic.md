@@ -1,6 +1,6 @@
 ---
 title: "Example Longevity Clinic in Austin, TX: Services, Doctor, and Patient Reviews"
-description: "SAMPLE POST — format reference for the clinic writer agent. Delete before deploying."
+description: "SAMPLE POST: format reference for the clinic writer agent. Delete before deploying."
 clinicName: "Example Longevity Clinic"
 city: "Austin"
 state: "TX"
@@ -19,11 +19,11 @@ publishDate: 2026-07-07
 
 > **SAMPLE POST.** This file shows writer agents the required structure. It uses fictional data. Delete it before the first deploy.
 
-Example Longevity Clinic sits in downtown Austin and focuses on physician-supervised peptide and hormone programs. This is the opening paragraph: who they are, where, and what they're known for — grounded only in verified facts.
+Example Longevity Clinic sits in downtown Austin and focuses on physician-supervised peptide and hormone programs. This is the opening paragraph: who they are, where, and what they're known for, grounded only in verified facts.
 
 ## Services
 
-Describe each verified service in a sentence or two. Only services listed on the clinic's own site or verified records. No efficacy claims — describe what's offered, not what it "will do for you."
+Describe each verified service in a sentence or two. Only services listed on the clinic's own site or verified records. Make no efficacy claims. Describe what's offered, not what it "will do for you."
 
 ## About the doctor
 

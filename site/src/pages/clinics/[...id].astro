@@ -86,7 +86,7 @@ const jsonLd: Record<string, unknown> = {
         <h2>More peptide clinics nearby</h2>
         <ul>
           {sameCity.map((p) => (
-            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a> — also in {d.city}</li>
+            <li><a href={`/clinics/${p.id}/`}>{p.data.clinicName}</a>, also in {d.city}</li>
           ))}
           {hasHub && (
             <li><a href={`/clinics/${stateSlug(stateCode)}/`}>All peptide clinics in {stateName(stateCode)}</a></li>

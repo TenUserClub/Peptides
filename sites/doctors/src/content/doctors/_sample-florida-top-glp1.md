@@ -1,6 +1,6 @@
 ---
 title: "Top 5 GLP-1 Doctors in Florida (2026)"
-description: "SAMPLE POST — format reference for the doctor writer agent. Delete before deploying."
+description: "SAMPLE POST: format reference for the doctor writer agent. Delete before deploying."
 kind: "roundup"
 state: "FL"
 specialty: "GLP-1 therapy"
@@ -14,11 +14,11 @@ publishDate: 2026-07-07
 
 One-paragraph intro: what GLP-1 therapy is (neutral, no claims), why finding a supervising physician matters, what this list covers.
 
-## 1. Dr. Jane Example, MD — Miami
+## 1. Dr. Jane Example, MD, Miami
 
 Two or three sentences per doctor: verified specialty, clinic affiliation, city, and platform-attributed rating if available ("4.9★ across 210 Google reviews"). Nothing unverified.
 
-## 2. Dr. John Sample, DO — Tampa
+## 2. Dr. John Sample, DO, Tampa
 
 Same pattern.
 
