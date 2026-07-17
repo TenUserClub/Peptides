@@ -171,7 +171,11 @@ export async function generateImage(type, context, slug) {
     ? join(ROOT, 'site')
     : type === 'doctors'
       ? join(ROOT, 'sites', 'doctors')
-      : join(ROOT, 'sites', 'content');
+      : type === 'news'
+        ? join(ROOT, 'sites', 'news')
+        : type === 'updates'
+          ? join(ROOT, 'sites', 'updates')
+          : join(ROOT, 'sites', 'content');
   const outputPath = join(siteRoot, 'public', 'images', type, `${slug}.jpg`);
 
   log('info', `images: generating ${type} image for ${slug}`);

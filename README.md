@@ -1,20 +1,23 @@
 # Peptide Atlas
 
-Peptide Atlas is a three-site Astro publishing system for clinic listings, doctor profiles, evidence-led guides, primary-source news, legal coverage, and weekly reviews. A Node.js pipeline fetches source material, verifies records, drafts content, humanises it, applies deterministic safety checks, and publishes within daily velocity limits.
+Peptide Atlas is a five-site Astro publishing system for clinic listings, doctor profiles, evidence-led guides, primary-source news, legal coverage, and weekly reviews. A Node.js pipeline fetches source material, verifies records, drafts content, humanises it, applies deterministic safety checks, and publishes within daily velocity limits.
 
-## Live sites
+## Public domain map
 
-| Site | Current Vercel URL | Project directory |
+| Header section | Public URL | Vercel project directory |
 | --- | --- | --- |
-| Clinics | https://peptides-three-phi.vercel.app | `site/` |
-| Doctors | https://peptides-doctors-and-experts.vercel.app | `sites/doctors/` |
-| Journal | https://peptides-content.vercel.app | `sites/content/` |
+| Clinics | https://mypeptide.club | `site/` |
+| Doctors & experts | https://toppeptideslist.com | `sites/doctors/` |
+| Blog | https://safepeptides.us/blog/ | `sites/content/` |
+| News | https://peptidesnews.us/ | `sites/news/` |
+| Laws & legal | https://safepeptides.us/legal/ | `sites/content/` |
+| Updates | https://peptidesupdates.com/ | `sites/updates/` |
 
-The shared header links directly to these current deployments. Future custom domains only require updating each `astro.config.mjs` and the three `src/lib/sections.ts` files.
+The shared header contains no public `vercel.app` links. Each domain has its own Vercel project root, canonical host, robots file, and sitemap.
 
 ## Current launch status
 
-The UI overhaul is complete across all three sites. It includes responsive editorial layouts, accessible navigation, trust and correction pages, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
+The UI overhaul is shared across all five sites. It includes responsive editorial layouts, accessible navigation, trust and correction pages, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
 
 Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` after review found weak sourcing and unverifiable claims. Sample markdown remains as schema documentation but is excluded from routes and sitemaps. Production publication should resume only with content that passes the new guard.
 
@@ -27,7 +30,7 @@ Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` 
 
 Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation and Supabase are optional. The orchestrator currently uses the filesystem as its source of truth; `pipeline/lib/db.mjs` is an optional helper and is not wired into the main workflow.
 
-Public site settings should be added to all three Vercel projects:
+Public site settings should be added to all five Vercel projects:
 
 - `PUBLIC_CONTACT_EMAIL`
 - `PUBLIC_CORRECTIONS_EMAIL`
@@ -44,7 +47,7 @@ node pipeline/orchestrator.mjs all --dry-run
 node pipeline/orchestrator.mjs all
 ```
 
-`npm run check` runs guard tests, builds all three sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, and diverged shared CSS.
+`npm run check` runs guard tests, builds all five sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, wrong canonical hosts, and diverged shared CSS.
 
 ## Pipeline stages
 
@@ -63,7 +66,9 @@ GitHub Actions runs the repository check on pushes and pull requests. The schedu
 ```text
 site/                    clinics Astro site
 sites/doctors/           doctors Astro site
-sites/content/           journal Astro site
+sites/content/           Safe Peptides blog and legal Astro site
+sites/news/              Peptides News Astro site
+sites/updates/           Peptides Updates Astro site
 pipeline/orchestrator.mjs
 pipeline/lib/            LLM, image, database, and content guard helpers
 pipeline/prompts/        stage instructions

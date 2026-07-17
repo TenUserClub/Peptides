@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://peptides-content.vercel.app/sitemap-index.xml
+Sitemap: https://safepeptides.us/sitemap-safe.xml

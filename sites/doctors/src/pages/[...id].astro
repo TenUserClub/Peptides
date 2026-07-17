@@ -37,7 +37,7 @@ const jsonLd: Record<string, unknown> =
         datePublished: d.publishDate.toISOString(),
       };
 ---
-<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true} currentSection="Doctors">
+<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true} currentSection="Doctors & experts">
   <article>
     <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Doctors</a><span class="sep">/</span><span aria-current="page">{d.title}</span></nav>
     <h1>{d.title}</h1>

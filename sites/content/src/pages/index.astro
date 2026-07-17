@@ -2,34 +2,27 @@
 import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
-const news = (await getCollection('news')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 5);
-const blog = (await getCollection('blog')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 4);
-const legal = (await getCollection('legal')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 3);
-const updates = (await getCollection('updates')).filter((p) => !p.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 3);
-const hasPublishedContent = news.length + blog.length + legal.length + updates.length > 0;
+const blog = (await getCollection('blog')).filter((post) => !post.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 6);
+const legal = (await getCollection('legal')).filter((post) => !post.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate).slice(0, 5);
+const hasPublishedContent = blog.length + legal.length > 0;
 ---
-<Base title="Peptide Atlas | News, Guides & Legal Updates" description="Daily peptide industry news, science-backed educational guides, and plain-English coverage of laws and regulations." currentSection="Blog">
+<Base title="Safe Peptides | Evidence-led Guides & Legal Coverage" description="Evidence-led peptide guides, safety information, and primary-source legal and regulatory coverage." currentSection="Blog">
   <section class="hero journal-hero">
-    <p class="eyebrow">Research, regulation, and real-world context</p>
-    <h1>Clear reporting for a fast-moving field.</h1>
-    <p>Follow peptide research, FDA regulation, compounding policy, and industry developments. Then go deeper with calm, source-led educational guides.</p>
-    <div class="hero-actions"><a class="cta" href="/news/">Read the latest news →</a><a class="text-link" href="/blog/">Explore guides</a></div>
+    <p class="eyebrow">Safety, evidence, and regulation</p>
+    <h1>Understand peptides beyond the hype.</h1>
+    <p>Explore source-led educational guides and plain-English coverage of FDA regulation, compounding policy, enforcement, and legal developments.</p>
+    <div class="hero-actions"><a class="cta" href="/blog/">Explore guides</a><a class="text-link" href="/legal/">Read legal coverage</a></div>
   </section>
 
-  {!hasPublishedContent && <section class="empty-state"><p class="eyebrow">Editorial review</p><h2>New reporting is being prepared.</h2><p>Earlier material has been withdrawn while sources and claims are rechecked. New articles will appear only after they pass the updated editorial and source review.</p><a class="text-link" href="/editorial-policy/">Read the editorial policy</a></section>}
-
-  {news.length > 0 && <section class="editorial-section">
-    <div class="section-heading"><div><p class="eyebrow">News desk</p><h2>Latest developments</h2></div><a href="/news/">All news →</a></div>
-    <div class="story-list">{news.map((p, i) => <article class:list={["story-row", { lead: i === 0 }]}><span class="story-number">{String(i + 1).padStart(2, '0')}</span><div><p class="meta">{p.data.publishDate.toISOString().slice(0, 10)} · {p.data.sourceName}</p><h3><a href={`/news/${p.id}/`}>{p.data.title}</a></h3></div></article>)}</div>
-  </section>}
+  {!hasPublishedContent && <section class="empty-state"><p class="eyebrow">Editorial review</p><h2>New material is being prepared.</h2><p>Articles will appear only after their claims and primary sources pass editorial review.</p><a class="text-link" href="/editorial-policy/">Read the editorial policy</a></section>}
 
   {blog.length > 0 && <section class="editorial-section">
-    <div class="section-heading"><div><p class="eyebrow">Learn</p><h2>Evidence-led guides</h2></div><a href="/blog/">All guides →</a></div>
-    <div class="card-grid">{blog.map((p) => <article class="card">{p.data.image && <img class="card-image" src={p.data.image} alt="" loading="lazy" />}<div class="card-body"><span class="tag">{p.data.category}</span><h3><a href={`/blog/${p.id}/`}>{p.data.title}</a></h3><p class="meta">{p.data.publishDate.toISOString().slice(0, 10)}</p></div></article>)}</div>
+    <div class="section-heading"><div><p class="eyebrow">Learn</p><h2>Evidence-led guides</h2></div><a href="/blog/">All guides</a></div>
+    <div class="card-grid">{blog.map((post) => <article class="card"><div class="card-body"><span class="tag">{post.data.category}</span><h3><a href={`/blog/${post.id}/`}>{post.data.title}</a></h3><p class="meta">{post.data.publishDate.toISOString().slice(0, 10)}</p></div></article>)}</div>
   </section>}
 
-  <div class="split-sections">
-    {legal.length > 0 && <section><p class="eyebrow">Policy watch</p><h2>Laws &amp; legal</h2><div class="compact-list">{legal.map((p) => <article><p class="meta">{p.data.jurisdiction} · {p.data.publishDate.toISOString().slice(0, 10)}</p><h3><a href={`/legal/${p.id}/`}>{p.data.title}</a></h3></article>)}</div><a href="/legal/">All legal coverage →</a></section>}
-    {updates.length > 0 && <section><p class="eyebrow">In review</p><h2>Weekly updates</h2><div class="compact-list">{updates.map((p) => <article><p class="meta">Week of {p.data.weekOf.toISOString().slice(0, 10)}</p><h3><a href={`/updates/${p.id}/`}>{p.data.title}</a></h3></article>)}</div><a href="/updates/">All updates →</a></section>}
-  </div>
+  {legal.length > 0 && <section class="editorial-section">
+    <div class="section-heading"><div><p class="eyebrow">Policy watch</p><h2>Laws &amp; legal</h2></div><a href="/legal/">All legal coverage</a></div>
+    <div class="compact-list">{legal.map((post) => <article><p class="meta">{post.data.jurisdiction} · {post.data.publishDate.toISOString().slice(0, 10)}</p><h3><a href={`/legal/${post.id}/`}>{post.data.title}</a></h3></article>)}</div>
+  </section>}
 </Base>

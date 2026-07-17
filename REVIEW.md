@@ -4,11 +4,11 @@ Last reviewed: 2026-07-17
 
 ## Outcome
 
-The repository now has a coherent three-site UI, correct cross-project header navigation, four accessible themes, explicit editorial trust pages, safer contact handling, and a deterministic content publication gate. Previously published generated posts were withdrawn into `pipeline/quarantine/2026-07-17/` because their source quality and factual support were not strong enough for a health-related site.
+The repository now has five independent deployable sites, coherent shared UI, correct cross-project header navigation, four accessible themes, explicit editorial trust pages, safer contact handling, and a deterministic content publication gate. Previously published generated posts were withdrawn into `pipeline/quarantine/2026-07-17/` because their source quality and factual support were not strong enough for a health-related site.
 
 ## Improvements completed
 
-- Header links resolve to the three existing Vercel deployments.
+- Header links resolve to the five public custom domains and contain no public Vercel deployment URLs.
 - All projects share the same responsive design system and four-theme switcher.
 - Sample markdown is excluded from generated pages, related content, RSS, and sitemaps.
 - Site-facing em dashes are rejected during built-output checks.
@@ -20,14 +20,14 @@ The repository now has a coherent three-site UI, correct cross-project header na
 - Dry runs no longer advance queues or processed markers.
 - Weekly review generation and monitoring are implemented.
 - About, editorial policy, corrections, robots, 404, bylines, and source displays are present.
-- CI builds and scans all three sites.
+- CI builds and scans all five sites.
 
 ## Remaining owner actions
 
 - Set real public contact and corrections email values in all Vercel projects.
 - Add repository secrets before enabling scheduled live pipeline runs.
 - Supervise several full runs and manually review every proposed post before relying on automation.
-- Add custom domains later, then update the documented domain map.
+- Create or update the five Vercel projects, then attach and verify one mapped domain per project.
 - Obtain legal review before monetisation, referrals, sponsored placement, or lead capture.
 - Configure Search Console and privacy-respecting analytics after launch content is approved.
 

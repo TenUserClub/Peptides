@@ -1,113 +1,83 @@
 {
-  "$ref": "#/definitions/doctors",
-  "definitions": {
-    "doctors": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "kind": {
-          "type": "string",
-          "enum": [
-            "roundup",
-            "profile"
-          ]
-        },
-        "state": {
-          "type": "string"
-        },
-        "city": {
-          "type": "string"
-        },
-        "specialty": {
-          "type": "string"
-        },
-        "doctorName": {
-          "type": "string"
-        },
-        "npi": {
-          "type": "string"
-        },
-        "methodology": {
-          "type": "string"
-        },
-        "sources": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "uri"
-          },
-          "minItems": 1
-        },
-        "verified": {
-          "type": "boolean",
-          "const": true
-        },
-        "author": {
-          "type": "string",
-          "default": "Peptide Atlas Editorial Team"
-        },
-        "reviewedBy": {
-          "type": "string"
-        },
-        "publishDate": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "date-time"
-            },
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "integer",
-              "format": "unix-time"
-            }
-          ]
-        },
-        "updatedDate": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "date-time"
-            },
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "integer",
-              "format": "unix-time"
-            }
-          ]
-        },
-        "image": {
-          "type": "string"
-        },
-        "ogImage": {
-          "type": "string"
-        },
-        "$schema": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "title",
-        "description",
-        "kind",
-        "state",
-        "specialty",
-        "sources",
-        "verified",
-        "publishDate"
-      ],
-      "additionalProperties": false
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "roundup",
+        "profile"
+      ]
+    },
+    "state": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "specialty": {
+      "type": "string"
+    },
+    "doctorName": {
+      "type": "string"
+    },
+    "npi": {
+      "type": "string"
+    },
+    "methodology": {
+      "type": "string"
+    },
+    "sources": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "verified": {
+      "type": "boolean",
+      "const": true
+    },
+    "author": {
+      "default": "Peptide Atlas Editorial Team",
+      "type": "string"
+    },
+    "reviewedBy": {
+      "type": "string"
+    },
+    "publishDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "image": {
+      "type": "string"
+    },
+    "ogImage": {
+      "type": "string"
+    },
+    "$schema": {
+      "type": "string"
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "required": [
+    "title",
+    "description",
+    "kind",
+    "state",
+    "specialty",
+    "sources",
+    "verified",
+    "publishDate"
+  ]
 }

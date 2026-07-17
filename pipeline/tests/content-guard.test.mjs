@@ -27,6 +27,13 @@ test('blocks sample files', () => {
   assert.match(result.errors.join(' '), /sample/i);
 });
 
+test('blocks legacy section paths on the standalone news and updates domains', () => {
+  const text = `---\ntitle: "Weekly review"\ndescription: "Weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\n[News](https://peptidesnews.us/news/fda-update/) [Updates](https://peptidesupdates.com/updates/week-28/) ${words(200)}`;
+  const result = validateContent({ text, collection: 'updates', filename: 'week-28.md' });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /root path/i);
+});
+
 test('requires a matching verified clinic record', () => {
   const root = mkdtempSync(join(tmpdir(), 'peptide-guard-'));
   mkdirSync(join(root, 'clinics'));

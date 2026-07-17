@@ -11,7 +11,9 @@ interface Props {
   currentSection?: string;
 }
 const { title, description, jsonLd, showCorrections = false, image, ogImage, currentSection = 'Blog' } = Astro.props;
-const siteUrl = Astro.site?.toString().replace(/\/$/, '') || SITES.content;
+const canonicalBase = SITES.blog;
+const siteUrl = canonicalBase;
+const canonicalUrl = new URL(Astro.url.pathname, `${canonicalBase}/`).toString();
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
 const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
@@ -24,12 +26,12 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <meta name="theme-color" content="#f7f9f6" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={Astro.url.href} />
+    <link rel="canonical" href={canonicalUrl} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content={Astro.url.href} />
+    <meta property="og:url" content={canonicalUrl} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     <meta property="og:site_name" content="Peptide Atlas | News & Guides" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -51,7 +53,7 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
       <div class="header-inner">
-        <a href={SITES.content} class="brand" aria-label="Peptide Atlas journal home">
+        <a href={SITES.blog} class="brand" aria-label="Peptide Atlas journal home">
           <span class="brand-mark" aria-hidden="true">P</span>
           <span><strong>Peptide Atlas</strong><small>Journal & regulation</small></span>
         </a>

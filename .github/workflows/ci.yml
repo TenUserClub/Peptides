@@ -22,8 +22,12 @@ jobs:
             site/package-lock.json
             sites/doctors/package-lock.json
             sites/content/package-lock.json
+            sites/news/package-lock.json
+            sites/updates/package-lock.json
       - run: npm ci
       - run: npm ci --prefix site
       - run: npm ci --prefix sites/doctors
       - run: npm ci --prefix sites/content
+      - run: npm ci --prefix sites/news
+      - run: npm ci --prefix sites/updates
       - run: npm run check

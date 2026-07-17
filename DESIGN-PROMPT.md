@@ -8,7 +8,7 @@ Peptide Atlas should feel evidence-first, calm, precise, and editorial. Avoid su
 
 ## Shared design system
 
-All three Astro sites use the same dependency-free stylesheet and layout pattern. The canonical stylesheet is `sites/doctors/public/styles/global.css`; copies in the other projects must remain identical.
+All five Astro sites use the same dependency-free stylesheet and layout pattern. The canonical stylesheet is `sites/doctors/public/styles/global.css`; copies in the other projects must remain identical.
 
 The bottom-left theme control provides four choices:
 
@@ -21,7 +21,7 @@ The chosen theme persists in `localStorage`, applies before first paint, exposes
 
 ## Navigation
 
-The header is a shared network navigation. Clinics, Doctors, News, Laws & legal, Blog, and Updates must point to the actual project that owns the section. Use absolute URLs for cross-project destinations and local paths only within the current project. When custom domains arrive, update the shared `SITES` maps rather than adding redirect workarounds.
+The header is a shared network navigation. Clinics, Doctors & experts, News, Laws & legal, Blog, and Updates point to the public custom-domain map in `src/lib/sections.ts`. Use absolute URLs across domains and local paths only within the current canonical domain.
 
 ## Content patterns
 

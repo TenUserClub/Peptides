@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "peptides-doctors-and-experts.vercel.app" }],
+      "destination": "https://toppeptideslist.com/:path*",
+      "permanent": true
+    }
+  ]
+}

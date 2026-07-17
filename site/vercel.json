@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "peptides-three-phi.vercel.app" }],
+      "destination": "https://mypeptide.club/:path*",
+      "permanent": true
+    }
+  ]
+}

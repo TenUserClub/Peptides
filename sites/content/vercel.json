@@ -1,0 +1,32 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/news",
+      "destination": "https://peptidesnews.us/",
+      "permanent": true
+    },
+    {
+      "source": "/news/:path*",
+      "destination": "https://peptidesnews.us/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/updates",
+      "destination": "https://peptidesupdates.com/",
+      "permanent": true
+    },
+    {
+      "source": "/updates/:path*",
+      "destination": "https://peptidesupdates.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "peptides-content.vercel.app" }],
+      "destination": "https://safepeptides.us/:path*",
+      "permanent": true
+    }
+  ]
+}

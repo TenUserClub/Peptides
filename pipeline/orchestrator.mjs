@@ -26,7 +26,7 @@ loadEnv();
 const rawDomain = process.env.SITE_DOMAIN || '';
 const SITE_DOMAIN = rawDomain && !rawDomain.startsWith('#')
   ? rawDomain.trim()
-  : 'peptides-three-phi.vercel.app';
+  : 'mypeptide.club';
 
 // ── Configuration ──────────────────────────────────────────────
 const CONFIG = {
@@ -179,12 +179,16 @@ async function webFetch(url, opts = {}) {
 function contentDirFor(collection) {
   if (collection === 'clinics') return join(ROOT, 'site', 'src', 'content', 'clinics');
   if (collection === 'doctors') return join(ROOT, 'sites', 'doctors', 'src', 'content', 'doctors');
+  if (collection === 'news') return join(ROOT, 'sites', 'news', 'src', 'content', 'news');
+  if (collection === 'updates') return join(ROOT, 'sites', 'updates', 'src', 'content', 'updates');
   return join(ROOT, 'sites', 'content', 'src', 'content', collection);
 }
 
 function siteDirFor(collection) {
   if (collection === 'clinics') return join(ROOT, 'site');
   if (collection === 'doctors') return join(ROOT, 'sites', 'doctors');
+  if (collection === 'news') return join(ROOT, 'sites', 'news');
+  if (collection === 'updates') return join(ROOT, 'sites', 'updates');
   return join(ROOT, 'sites', 'content');
 }
 
@@ -289,7 +293,7 @@ async function runWriteNews() {
   const existingTitles = [...allTitles('news'), ...allTitles('legal')];
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-news.md')) || '';
-  const samplePost = readText(join(ROOT, 'sites', 'content', 'src', 'content', 'news', '_sample-fda-reclassification.md')) || '';
+  const samplePost = readText(join(ROOT, 'sites', 'news', 'src', 'content', 'news', '_sample-fda-reclassification.md')) || '';
 
   const systemPrompt = `You are an autonomous peptide news writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
 
@@ -1538,8 +1542,8 @@ async function runWriteUpdates() {
       const date = extractDate(text);
       if (!parsed?.data?.title || !date || new Date(`${date}T00:00:00Z`).getTime() < cutoff) continue;
       const slug = basename(file, '.md');
-      const domain = collection === 'clinics' ? 'https://peptides-three-phi.vercel.app' : collection === 'doctors' ? 'https://peptides-doctors-and-experts.vercel.app' : '';
-      const path = collection === 'doctors' ? `/${slug}/` : `/${collection}/${slug}/`;
+      const domain = collection === 'clinics' ? 'https://mypeptide.club' : collection === 'doctors' ? 'https://toppeptideslist.com' : collection === 'news' ? 'https://peptidesnews.us' : collection === 'updates' ? 'https://peptidesupdates.com' : 'https://safepeptides.us';
+      const path = collection === 'doctors' || collection === 'news' ? `/${slug}/` : `/${collection}/${slug}/`;
       recent.push({ collection, title: parsed.data.title, url: `${domain}${path}` });
     }
   }

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://peptides-three-phi.vercel.app/sitemap-index.xml
+Sitemap: https://mypeptide.club/sitemap-index.xml

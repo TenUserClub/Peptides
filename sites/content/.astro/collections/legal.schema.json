@@ -1,96 +1,66 @@
 {
-  "$ref": "#/definitions/legal",
-  "definitions": {
-    "legal": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "jurisdiction": {
-          "type": "string",
-          "default": "Federal"
-        },
-        "sourceName": {
-          "type": "string"
-        },
-        "sourceUrl": {
-          "type": "string",
-          "format": "uri"
-        },
-        "sourceType": {
-          "type": "string",
-          "const": "primary"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "author": {
-          "type": "string",
-          "default": "Peptide Atlas Editorial Team"
-        },
-        "reviewedBy": {
-          "type": "string"
-        },
-        "publishDate": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "date-time"
-            },
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "integer",
-              "format": "unix-time"
-            }
-          ]
-        },
-        "updatedDate": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "date-time"
-            },
-            {
-              "type": "string",
-              "format": "date"
-            },
-            {
-              "type": "integer",
-              "format": "unix-time"
-            }
-          ]
-        },
-        "image": {
-          "type": "string"
-        },
-        "ogImage": {
-          "type": "string"
-        },
-        "$schema": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "title",
-        "description",
-        "sourceName",
-        "sourceUrl",
-        "sourceType",
-        "publishDate"
-      ],
-      "additionalProperties": false
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "jurisdiction": {
+      "default": "Federal",
+      "type": "string"
+    },
+    "sourceName": {
+      "type": "string"
+    },
+    "sourceUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sourceType": {
+      "type": "string",
+      "const": "primary"
+    },
+    "tags": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "author": {
+      "default": "Peptide Atlas Editorial Team",
+      "type": "string"
+    },
+    "reviewedBy": {
+      "type": "string"
+    },
+    "publishDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "image": {
+      "type": "string"
+    },
+    "ogImage": {
+      "type": "string"
+    },
+    "$schema": {
+      "type": "string"
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "required": [
+    "title",
+    "description",
+    "sourceName",
+    "sourceUrl",
+    "sourceType",
+    "publishDate"
+  ]
 }

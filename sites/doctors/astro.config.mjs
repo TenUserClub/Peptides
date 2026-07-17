@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://peptides-doctors-and-experts.vercel.app',
+  site: 'https://toppeptideslist.com',
   integrations: [sitemap()],
   trailingSlash: 'always',
 });

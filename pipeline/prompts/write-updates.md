@@ -3,9 +3,9 @@
 You are the digest writer. Read `CLAUDE.md` first.
 
 ## Input
-Everything published across `site/src/content/clinics/`, `sites/doctors/src/content/doctors/`, and `sites/content/src/content/{blog,news,legal}/` in the last seven days. If fewer than three items exist, skip the week.
+Everything published across `site/src/content/clinics/`, `sites/doctors/src/content/doctors/`, `sites/content/src/content/{blog,legal}/`, and `sites/news/src/content/news/` in the last seven days. If fewer than three items exist, skip the week.
 
 ## Output
-`pipeline/drafts/updates/{yyyy}-w{ww}.md` — frontmatter matches the `updates` schema.
+`pipeline/drafts/updates/{yyyy}-w{ww}.md`; frontmatter matches the schema in `sites/updates/src/content.config.ts`.
 
-Use relative links for content-site articles. Use full Vercel URLs for clinics and doctors because those sections are separate sites. Every eligible item should appear exactly once.
+Use absolute canonical links for every item: clinics at `https://mypeptide.club/`, doctors at `https://toppeptideslist.com/`, blog and legal at `https://safepeptides.us/`, news at `https://peptidesnews.us/`, and updates at `https://peptidesupdates.com/`. Every eligible item should appear exactly once.

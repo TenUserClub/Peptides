@@ -27,6 +27,8 @@ jobs:
       - run: npm ci --prefix site
       - run: npm ci --prefix sites/doctors
       - run: npm ci --prefix sites/content
+      - run: npm ci --prefix sites/news
+      - run: npm ci --prefix sites/updates
       - name: Configure publication identity
         run: |
           git config user.name "Peptide Atlas Bot"
@@ -40,7 +42,7 @@ jobs:
           OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
           OPENAI_HUMANISE_MODEL: ${{ vars.OPENAI_HUMANISE_MODEL }}
           OPENAI_VERIFY_MODEL: ${{ vars.OPENAI_VERIFY_MODEL }}
-          SITE_DOMAIN: peptides-three-phi.vercel.app
+          SITE_DOMAIN: mypeptide.club
           AUTO_PUSH: "true"
         if: ${{ env.OPENAI_API_KEY != '' && env.EXA_API_KEY != '' }}
         run: node pipeline/orchestrator.mjs all

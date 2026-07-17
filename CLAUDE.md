@@ -4,12 +4,14 @@ Every automated stage and human contributor must follow these rules. When a prom
 
 ## Scope
 
-Peptide Atlas operates five content engines across three sites: clinics, doctors, news and legal, blog, and weekly updates. The orchestrator is `pipeline/orchestrator.mjs`. Content moves through fetched data, verified records, drafts, humanised drafts, deterministic validation, and the appropriate Astro collection.
+Peptide Atlas operates six content collections across five sites: clinics, doctors, blog, legal, news, and weekly updates. The orchestrator is `pipeline/orchestrator.mjs`. Content moves through fetched data, verified records, drafts, humanised drafts, deterministic validation, and the appropriate Astro collection.
 
 ```text
 clinics -> site/src/content/clinics/
 doctors -> sites/doctors/src/content/doctors/
-news, legal, blog, updates -> sites/content/src/content/<collection>/
+blog, legal -> sites/content/src/content/<collection>/
+news -> sites/news/src/content/news/
+updates -> sites/updates/src/content/updates/
 ```
 
 Do not skip a stage. Never fabricate input when an upstream directory is empty. Dry runs must not advance queues, write processed markers, move content, commit, or push.

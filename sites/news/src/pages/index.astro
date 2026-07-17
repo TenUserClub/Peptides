@@ -1,5 +1,5 @@
 ---
-import Base from '../../layouts/Base.astro';
+import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
 
 const posts = (await getCollection('news')).filter((item) => !item.id.startsWith('_sample')).sort((a, b) => +b.data.publishDate - +a.data.publishDate);
@@ -10,7 +10,7 @@ const posts = (await getCollection('news')).filter((item) => !item.id.startsWith
   {posts.length === 0 ? <div class="empty-state"><h2>Reporting is under editorial review.</h2><p>New stories will appear here after their primary sources and claims have been checked.</p></div> : <ul class="feed-list">
     {posts.map((p) => (
       <li>
-        <a href={`/news/${p.id}/`}>{p.data.title}</a>
+        <a href={`/${p.id}/`}>{p.data.title}</a>
         <span class="meta"> · {p.data.publishDate.toISOString().slice(0, 10)} · via {p.data.sourceName}</span>
       </li>
     ))}

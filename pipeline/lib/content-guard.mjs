@@ -105,6 +105,7 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');
   if (/research chemical|for research use only|not for human consumption/i.test(text)) errors.push('Contains research-chemical vendor language');
   if (/https?:\/\/(?:www\.)?example\.com/i.test(text)) errors.push('Contains an example.com source');
+  if (/https?:\/\/[^\s)"']+\.vercel\.app/i.test(text)) errors.push('Contains a legacy Vercel deployment URL');
 
   if ((collection === 'news' || collection === 'legal')) {
     if (data.sourceType !== 'primary') errors.push('News and legal posts require sourceType: primary');
@@ -148,6 +149,11 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
   if (collection !== 'doctors' && /\]\(\/doctors\//.test(body)) {
     errors.push('Cross-site doctor links must use the full doctors domain');
   }
+  if (/https:\/\/mypeptide\.club\/doctors\//i.test(body)) errors.push('Doctor links must use toppeptideslist.com');
+  if (/https:\/\/safepeptides\.us\/news\//i.test(body)) errors.push('News links must use peptidesnews.us');
+  if (/https:\/\/safepeptides\.us\/updates\//i.test(body)) errors.push('Update links must use peptidesupdates.com');
+  if (/https:\/\/peptidesnews\.us\/news\//i.test(body)) errors.push('News links must use the peptidesnews.us root path');
+  if (/https:\/\/peptidesupdates\.com\/updates\//i.test(body)) errors.push('Update links must use the peptidesupdates.com root path');
 
   return { ok: errors.length === 0, errors, data, words };
 }

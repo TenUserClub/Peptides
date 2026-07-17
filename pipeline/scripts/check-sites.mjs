@@ -1,14 +1,17 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const projects = [
-  { name: 'clinics', root: join(ROOT, 'site'), sitemap: 'https://peptides-three-phi.vercel.app/sitemap-index.xml' },
-  { name: 'doctors', root: join(ROOT, 'sites', 'doctors'), sitemap: 'https://peptides-doctors-and-experts.vercel.app/sitemap-index.xml' },
-  { name: 'content', root: join(ROOT, 'sites', 'content'), sitemap: 'https://peptides-content.vercel.app/sitemap-index.xml' },
+  { name: 'clinics', root: join(ROOT, 'site'), canonical: 'https://mypeptide.club/', sitemaps: ['https://mypeptide.club/sitemap-index.xml'] },
+  { name: 'doctors', root: join(ROOT, 'sites', 'doctors'), canonical: 'https://toppeptideslist.com/', sitemaps: ['https://toppeptideslist.com/sitemap-index.xml'] },
+  { name: 'content', root: join(ROOT, 'sites', 'content'), canonical: 'https://safepeptides.us/', sitemaps: ['https://safepeptides.us/sitemap-safe.xml'] },
+  { name: 'news', root: join(ROOT, 'sites', 'news'), canonical: 'https://peptidesnews.us/', sitemaps: ['https://peptidesnews.us/sitemap-index.xml'] },
+  { name: 'updates', root: join(ROOT, 'sites', 'updates'), canonical: 'https://peptidesupdates.com/', sitemaps: ['https://peptidesupdates.com/sitemap-index.xml'] },
 ];
 const errors = [];
+const publicDomains = ['https://mypeptide.club', 'https://toppeptideslist.com', 'https://safepeptides.us', 'https://peptidesnews.us', 'https://peptidesupdates.com'];
 
 function filesUnder(dir) {
   if (!existsSync(dir)) return [];
@@ -34,13 +37,22 @@ for (const project of projects) {
   }
   const robotsPath = join(project.root, 'public', 'robots.txt');
   const robots = existsSync(robotsPath) ? readFileSync(robotsPath, 'utf8') : '';
-  if (!robots.includes(project.sitemap)) errors.push(`${project.name}: robots.txt has the wrong sitemap`);
+  for (const sitemap of project.sitemaps) {
+    if (!robots.includes(sitemap)) errors.push(`${project.name}: robots.txt is missing ${sitemap}`);
+  }
 
   for (const file of filesUnder(dist).filter((path) => /\.(html|xml)$/i.test(path))) {
     const text = readFileSync(file, 'utf8');
     if (/_sample|example\.com/i.test(text)) errors.push(`${project.name}: sample or example content leaked into ${file}`);
     if (/—|â€”/.test(text)) errors.push(`${project.name}: em dash found in ${file}`);
+    if (/https:\/\/[^"'<\s]*\.vercel\.app/i.test(text)) errors.push(`${project.name}: legacy Vercel hostname leaked into ${file}`);
     if (file.endsWith('.html')) {
+      for (const domain of publicDomains) {
+        if (!text.includes(domain)) errors.push(`${project.name}: header domain ${domain} is missing from ${file}`);
+      }
+      if (!text.includes(`<link rel="canonical" href="${project.canonical}`)) {
+        errors.push(`${project.name}: wrong canonical domain in ${file}`);
+      }
       for (const match of text.matchAll(/href="([^"]+)"/g)) {
         const href = match[1];
         if (!href.startsWith('/') || href.startsWith('//')) continue;

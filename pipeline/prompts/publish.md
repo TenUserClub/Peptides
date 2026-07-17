@@ -16,7 +16,9 @@ For every humanised markdown file, excluding diff files:
 
 - Clinics: `site/src/content/clinics/`
 - Doctors: `sites/doctors/src/content/doctors/`
-- Blog, news, legal, updates: `sites/content/src/content/<collection>/`
+- Blog and legal: `sites/content/src/content/<collection>/`
+- News: `sites/news/src/content/news/`
+- Updates: `sites/updates/src/content/updates/`
 
 Build the Astro project that owns each published collection. If any build fails, revert the files moved by that publication attempt and stop. Do not modify unrelated working-tree changes.
 

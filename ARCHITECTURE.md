@@ -2,13 +2,15 @@
 
 ## System boundary
 
-Peptide Atlas is one repository with three independently deployed Astro sites and one file-based content pipeline.
+Peptide Atlas is one repository with five independently deployed Astro sites and one file-based content pipeline.
 
-| Concern | Clinics | Doctors | Journal |
+| Project | Directory | Content | Public domain |
 | --- | --- | --- | --- |
-| Directory | `site/` | `sites/doctors/` | `sites/content/` |
-| Content | `src/content/clinics/` | `src/content/doctors/` | `src/content/{blog,news,legal,updates}/` |
-| Vercel host | `peptides-three-phi.vercel.app` | `peptides-doctors-and-experts.vercel.app` | `peptides-content.vercel.app` |
+| Clinics | `site/` | `src/content/clinics/` | `mypeptide.club` |
+| Doctors | `sites/doctors/` | `src/content/doctors/` | `toppeptideslist.com` |
+| Safe Peptides | `sites/content/` | `src/content/{blog,legal}/` | `safepeptides.us` |
+| News | `sites/news/` | `src/content/news/` | `peptidesnews.us` |
+| Updates | `sites/updates/` | `src/content/updates/` | `peptidesupdates.com` |
 
 Each project has its own canonical site URL, sitemap, robots file, 404 page, and build. Shared top navigation uses absolute URLs so moving between projects never resolves against the wrong host.
 
@@ -36,7 +38,7 @@ Markdown, JSON, and logs are the current source of truth. `pipeline/lib/db.mjs` 
 
 ## Deployment
 
-Vercel builds each Astro project from its own root. A local publish creates a git commit. A push only occurs when `AUTO_PUSH=true`; failed pushes retry twice and leave the local commit intact. No custom domain assumptions are encoded yet.
+Vercel builds each Astro project from its own root and each project owns one apex custom domain. News and Updates publish at their domain roots. Their project-level redirect files permanently move legacy `/news/...` and `/updates/...` URLs to the matching root paths. A local publish creates a git commit. A push only occurs when `AUTO_PUSH=true`; failed pushes retry twice and leave the local commit intact.
 
 ## Automation and checks
 
@@ -44,16 +46,17 @@ Vercel builds each Astro project from its own root. A local publish creates a gi
 
 ## Shared presentation
 
-The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other two projects. The integrity check rejects drift. All layouts expose four persisted themes and use the current Vercel URLs from `src/lib/sections.ts`.
+The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other four projects. The integrity check rejects drift. All layouts expose four persisted themes and use the public domain map from `src/lib/sections.ts`.
 
-## Future custom domains
+## Domain deployment map
 
-When domains are attached in Vercel, update:
+Attach the domains in Vercel as follows:
 
-1. `site/astro.config.mjs`, `sites/doctors/astro.config.mjs`, and `sites/content/astro.config.mjs`.
-2. The `SITES` map in each `src/lib/sections.ts`.
-3. Each robots sitemap URL.
-4. The weekly review domain map in `pipeline/orchestrator.mjs`.
-5. The live-site table in `README.md`.
+1. Clinics project (`site/`): `mypeptide.club`.
+2. Doctors project (`sites/doctors/`): `toppeptideslist.com`.
+3. Safe Peptides project (`sites/content/`): `safepeptides.us`.
+4. News project (`sites/news/`): `peptidesnews.us`.
+5. Updates project (`sites/updates/`): `peptidesupdates.com`.
+6. Redirect each `www` hostname to its apex hostname in Vercel.
 
 Run `npm run check` before deployment.

@@ -28,7 +28,7 @@ Every draft passes humanising and deterministic validation before publication. D
 5. Run one supervised live cycle with automatic push disabled.
 6. Review facts, sources, wording, mobile layouts, and cross-site navigation.
 7. Publish the approved set and monitor indexing and corrections.
-8. Add custom domains only after the UI and first compliant content set are stable.
+8. Activate the mapped custom domains after the UI and first compliant content set are stable.
 
 ## Success measures
 
