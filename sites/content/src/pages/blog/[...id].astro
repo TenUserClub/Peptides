@@ -23,7 +23,7 @@ const jsonLd = {
   ...(d.image ? { image: `${siteUrl}${d.image}` } : {}),
 };
 ---
-<Base title={d.title} description={d.description} jsonLd={jsonLd} image={d.image} ogImage={d.ogImage}>
+<Base title={d.title} description={d.description} jsonLd={jsonLd} image={d.image} ogImage={d.ogImage} currentSection="Blog">
   <article>
     {d.image && (
       <div class="featured-image">

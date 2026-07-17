@@ -10,7 +10,7 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
 ---
-<Base title={d.title} description={d.description}>
+<Base title={d.title} description={d.description} currentSection="Updates">
   <article>
     <h1>{d.title}</h1>
     <p class="meta">Week of {d.weekOf.toISOString().slice(0, 10)}</p>

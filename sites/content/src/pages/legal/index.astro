@@ -6,8 +6,9 @@ const posts = (await getCollection('legal')).sort((a, b) => +b.data.publishDate 
 const federal = posts.filter((p) => p.data.jurisdiction === 'Federal');
 const state = posts.filter((p) => p.data.jurisdiction !== 'Federal');
 ---
-<Base title="Peptide Laws & Legal | Peptide Hub" description="Plain-English coverage of peptide laws, FDA and HHS regulation, compounding policy, and enforcement actions — federal and state.">
-  <h1>Laws &amp; legal</h1>
+<Base title="Peptide Laws & Legal | Peptide Hub" description="Plain-English coverage of peptide laws, FDA and HHS regulation, compounding policy, and enforcement actions — federal and state." currentSection="Laws & legal">
+  <p class="eyebrow">Policy watch</p>
+  <h1>Regulation, translated into plain English.</h1>
   <p>How peptides are regulated in the United States: FDA and HHS actions, compounding policy, enforcement, and state rules — reported from primary sources. General information, not legal advice.</p>
   {posts.length === 0 && <p>Coverage is being added. Check back soon.</p>}
   {federal.length > 0 && (

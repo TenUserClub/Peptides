@@ -11,8 +11,7 @@ interface Props {
   currentSection?: string;
 }
 const { title, description, jsonLd, showCorrections = false, image, ogImage, currentSection = 'Clinics' } = Astro.props;
-
-const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://peptide-clinics.vercel.app';
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || SITES.clinics;
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 ---
 <!doctype html>
@@ -20,11 +19,11 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f9f6" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={Astro.url.href} />
     <link rel="sitemap" href="/sitemap-index.xml" />
-
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="article" />
@@ -35,108 +34,57 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
-
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
-
-    <!-- Theme init — must run before first paint to prevent flash -->
     <script is:inline>
-      (function() {
-        var saved = localStorage.getItem('theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = saved || (prefersDark ? 'lab' : 'clinical');
-        document.documentElement.setAttribute('data-theme', theme);
+      (() => {
+        const saved = localStorage.getItem('peptide-theme');
+        const theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'lab' : 'clinical');
+        document.documentElement.dataset.theme = theme;
       })();
     </script>
-
     <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
-      <div class="container">
-        <a href="/" class="brand">Peptide Clinics Directory</a>
-        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-        <nav class="site-nav" id="site-nav" aria-label="Main navigation">
-          {SECTIONS.map((s) => (
-            <a
-              href={sectionHref(s)}
-              aria-current={s.label === currentSection ? 'true' : undefined}
-              {...(s.domain && s.domain !== SITES.clinics ? { rel: 'noopener', target: '_blank' } : {})}
-            >
-              {s.label}
-            </a>
+      <div class="header-inner">
+        <a href={SITES.clinics} class="brand" aria-label="Peptide Atlas clinics home">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span><strong>Peptide Atlas</strong><small>Verified clinics</small></span>
+        </a>
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav"><span></span><span></span><span></span></button>
+        <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+          {SECTIONS.map((section) => (
+            <a href={sectionHref(section)} aria-current={section.label === currentSection ? 'page' : undefined}>{section.label}</a>
           ))}
         </nav>
       </div>
     </header>
-
-    <main>
-      <div class="container">
-        <slot />
-      </div>
-      <div class="container">
-        <div class="disclaimer">
-          <strong>Medical disclaimer:</strong> This content is for informational purposes only and is not medical
-          advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA
-          review. Always consult a licensed physician before starting any therapy.
-        </div>
-        {showCorrections && (
-          <div class="corrections">
-            <strong>Corrections:</strong> Information on this page was compiled from public sources and verified
-            against official records at the time of publication. If you represent this clinic and
-            something is inaccurate or you'd like the listing updated or removed, email
-            <a href="mailto:corrections@peptide-clinics.vercel.app">corrections@peptide-clinics.vercel.app</a> — we act on requests within 5 business days.
-          </div>
-        )}
+    <main id="main-content" class="site-main">
+      <div class="container"><slot /></div>
+      <div class="container trust-footer">
+        <div class="disclaimer"><strong>Medical disclaimer</strong><span>This content is for informational purposes only and is not medical advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA review. Always consult a licensed physician before starting any therapy.</span></div>
+        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified against official records at the time of publication. If you represent this clinic and something is inaccurate or you'd like the listing updated or removed, email <a href="mailto:corrections@peptide-clinics.vercel.app">corrections@peptide-clinics.vercel.app</a> — we act on requests within 5 business days.</span></div>}
       </div>
     </main>
-
-    <footer class="site-footer">
-      <div class="container">
-        <p>&copy; {new Date().getFullYear()} Peptide Clinics Directory. Listings are editorial; no clinic pays for placement.</p>
-      </div>
-    </footer>
-
-    <!-- Theme switcher -->
-    <button class="theme-switcher" id="theme-switcher" aria-label="Switch theme">
-      <span class="theme-dot" aria-hidden="true"></span>
-      <span class="theme-label" id="theme-label">Theme</span>
-    </button>
-
-    <!-- Nav toggle + theme switcher scripts (vanilla JS, < 1KB) -->
+    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><p>© {new Date().getFullYear()} Peptide Clinics Directory.<br />No clinic pays for placement.</p></div></footer>
+    <div class="theme-control"><button id="theme-switcher" type="button" aria-label="Change color theme"><span class="theme-dot"></span><span id="theme-label">Clinical</span></button></div>
     <script is:inline>
-      (function() {
-        // Nav toggle
-        var toggle = document.getElementById('nav-toggle');
-        var nav = document.getElementById('site-nav');
-        if (toggle && nav) {
-          toggle.addEventListener('click', function() {
-            var open = nav.classList.toggle('is-open');
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-          });
-        }
-
-        // Theme switcher
-        var themes = ['clinical', 'lab', 'wellness'];
-        var btn = document.getElementById('theme-switcher');
-        var label = document.getElementById('theme-label');
-        function applyTheme(t) {
-          document.documentElement.setAttribute('data-theme', t);
-          localStorage.setItem('theme', t);
-          if (label) label.textContent = t;
-        }
-        var current = document.documentElement.getAttribute('data-theme') || 'clinical';
-        if (label) label.textContent = current;
-        btn?.addEventListener('click', function() {
-          var now = document.documentElement.getAttribute('data-theme') || 'clinical';
-          var next = themes[(themes.indexOf(now) + 1) % themes.length];
-          applyTheme(next);
+      (() => {
+        const navButton = document.getElementById('nav-toggle');
+        const nav = document.getElementById('site-nav');
+        navButton?.addEventListener('click', () => {
+          const open = nav?.classList.toggle('is-open') || false;
+          navButton.setAttribute('aria-expanded', String(open));
+          navButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
         });
+        const themes = ['clinical', 'lab', 'wellness'];
+        const labels = { clinical: 'Clinical', lab: 'Lab', wellness: 'Wellness' };
+        const button = document.getElementById('theme-switcher');
+        const label = document.getElementById('theme-label');
+        const sync = (theme) => { document.documentElement.dataset.theme = theme; localStorage.setItem('peptide-theme', theme); if (label) label.textContent = labels[theme]; };
+        sync(document.documentElement.dataset.theme || 'clinical');
+        button?.addEventListener('click', () => { const current = document.documentElement.dataset.theme || 'clinical'; sync(themes[(themes.indexOf(current) + 1) % themes.length]); });
       })();
     </script>
   </body>

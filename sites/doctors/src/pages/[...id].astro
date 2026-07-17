@@ -37,23 +37,24 @@ const jsonLd: Record<string, unknown> =
         datePublished: d.publishDate.toISOString(),
       };
 ---
-<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true}>
+<Base title={d.title} description={d.description} jsonLd={jsonLd} showCorrections={true} currentSection="Doctors">
   <article>
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Doctors</a><span class="sep">/</span><span aria-current="page">{d.title}</span></nav>
     <h1>{d.title}</h1>
     <p class="meta">
       {d.specialty} · {d.state} · Published {d.publishDate.toISOString().slice(0, 10)}
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
     </p>
     {d.kind === 'roundup' && (
-      <p class="meta"><strong>How this list was compiled:</strong> {d.methodology}</p>
+      <div class="methodology"><strong>How this list was compiled</strong><p>{d.methodology}</p></div>
     )}
     <Content />
     {related.length > 0 && (
       <section>
         <h2>Related listings in {stateName(stateCode)}</h2>
-        <ul>{related.map((p) => (<li><a href={`/doctors/${p.id}/`}>{p.data.title}</a></li>))}</ul>
+        <ul>{related.map((p) => (<li><a href={`/${p.id}/`}>{p.data.title}</a></li>))}</ul>
       </section>
     )}
-    <p class="meta">Sources: {d.sources.map((s: string, i: number) => (<span><a href={s} rel="nofollow">[{i + 1}]</a> </span>))}</p>
+    <p class="sources">Sources {d.sources.map((s: string, i: number) => (<a href={s} rel="nofollow">{i + 1}</a>))}</p>
   </article>
 </Base>

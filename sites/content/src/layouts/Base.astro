@@ -1,5 +1,5 @@
 ---
-import { SECTIONS, sectionHref } from '../lib/sections';
+import { SECTIONS, sectionHref, SITES } from '../lib/sections';
 
 interface Props {
   title: string;
@@ -8,10 +8,10 @@ interface Props {
   showCorrections?: boolean;
   image?: string;
   ogImage?: string;
+  currentSection?: string;
 }
-const { title, description, jsonLd, showCorrections = false, image, ogImage } = Astro.props;
-
-const siteUrl = Astro.site?.toString().replace(/\/$/, '') || 'https://peptide-hub.vercel.app';
+const { title, description, jsonLd, showCorrections = false, image, ogImage, currentSection = 'Blog' } = Astro.props;
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') || SITES.content;
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 ---
 <!doctype html>
@@ -19,70 +19,73 @@ const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f9f6" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={Astro.url.href} />
     <link rel="sitemap" href="/sitemap-index.xml" />
-
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="article" />
     <meta property="og:url" content={Astro.url.href} />
     {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
-    <meta property="og:site_name" content="Peptide Hub — News & Guides" />
+    <meta property="og:site_name" content="Peptide Atlas — News & Guides" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
-
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
-
-    <style>
-      :root { --ink: #1c2333; --muted: #5a6478; --accent: #0f6e5c; --bg: #fdfdfb; --rule: #e6e4dc; }
-      * { box-sizing: border-box; }
-      body { margin: 0; font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background: var(--bg); line-height: 1.65; }
-      header, main, footer { max-width: 760px; margin: 0 auto; padding: 0 1.25rem; }
-      header { padding-top: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--rule); margin-bottom: 2rem; }
-      header a { color: var(--ink); text-decoration: none; font-weight: bold; font-size: 1.15rem; }
-      nav a { color: var(--muted); text-decoration: none; margin-right: 1rem; font-size: .9rem; font-family: system-ui, sans-serif; }
-      nav a:hover { color: var(--accent); }
-      h1 { font-size: 1.9rem; line-height: 1.25; }
-      a { color: var(--accent); }
-      .meta { color: var(--muted); font-size: .85rem; font-family: system-ui, sans-serif; }
-      .disclaimer, .corrections { font-family: system-ui, sans-serif; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--rule); margin-top: 3rem; padding: 1.25rem 0; }
-      .cta { background: var(--accent); color: #fff; padding: .7rem 1.2rem; border-radius: 6px; text-decoration: none; display: inline-block; font-family: system-ui, sans-serif; }
-      footer { padding-bottom: 2.5rem; }
-      .featured-image { width: 100%; margin-bottom: 1.5rem; border-radius: 8px; }
-      .featured-image img { width: 100%; height: auto; border-radius: 8px; display: block; }
-      .card-image { width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0; }
-    </style>
+    <script is:inline>
+      (() => {
+        const saved = localStorage.getItem('peptide-theme');
+        const theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'lab' : 'clinical');
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body>
-    <header>
-      <a href="/">Peptide Hub — News &amp; Guides</a>
-      <nav>
-        {SECTIONS.map((s) => (
-          <a href={sectionHref(s)} {...(s.domain ? { rel: 'noopener' } : {})}>{s.label}</a>
-        ))}
-      </nav>
-    </header>
-    <main>
-      <slot />
-      <div class="disclaimer">
-        <strong>Medical disclaimer:</strong> This content is for informational purposes only and is not medical
-        advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA
-        review. Always consult a licensed physician before starting any therapy.
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href={SITES.content} class="brand" aria-label="Peptide Atlas journal home">
+          <span class="brand-mark" aria-hidden="true">P</span>
+          <span><strong>Peptide Atlas</strong><small>Journal & regulation</small></span>
+        </a>
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav"><span></span><span></span><span></span></button>
+        <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+          {SECTIONS.map((section) => (
+            <a href={sectionHref(section)} aria-current={section.label === currentSection ? 'page' : undefined}>{section.label}</a>
+          ))}
+        </nav>
       </div>
-      {showCorrections && (
-        <div class="corrections">
-          <strong>Corrections:</strong> Information on this page was compiled from public sources and verified
-          at the time of publication. If you spot an inaccuracy, email
-          <a href="mailto:corrections@example.com">corrections@example.com</a> — we act on requests within 5 business days.
-        </div>
-      )}
+    </header>
+    <main id="main-content" class="site-main">
+      <div class="container"><slot /></div>
+      <div class="container trust-footer">
+        <div class="disclaimer"><strong>Medical disclaimer</strong><span>This content is for informational purposes only and is not medical advice, diagnosis, or treatment. Peptide therapies vary in regulatory status; several remain under FDA review. Always consult a licensed physician before starting any therapy.</span></div>
+        {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified at the time of publication. If you spot an inaccuracy, email <a href="mailto:corrections@example.com">corrections@example.com</a> — we act on requests within 5 business days.</span></div>}
+      </div>
     </main>
-    <footer class="meta">
-      <p>&copy; {new Date().getFullYear()} Peptide Hub — News &amp; Guides. Editorial content; no sponsored posts.</p>
-    </footer>
+    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><p>© {new Date().getFullYear()} Peptide Atlas Journal.<br />No sponsored posts.</p></div></footer>
+    <div class="theme-control"><button id="theme-switcher" type="button" aria-label="Change color theme"><span class="theme-dot"></span><span id="theme-label">Clinical</span></button></div>
+    <script is:inline>
+      (() => {
+        const navButton = document.getElementById('nav-toggle');
+        const nav = document.getElementById('site-nav');
+        navButton?.addEventListener('click', () => {
+          const open = nav?.classList.toggle('is-open') || false;
+          navButton.setAttribute('aria-expanded', String(open));
+          navButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+        });
+        const themes = ['clinical', 'lab', 'wellness'];
+        const labels = { clinical: 'Clinical', lab: 'Lab', wellness: 'Wellness' };
+        const button = document.getElementById('theme-switcher');
+        const label = document.getElementById('theme-label');
+        const sync = (theme) => { document.documentElement.dataset.theme = theme; localStorage.setItem('peptide-theme', theme); if (label) label.textContent = labels[theme]; };
+        sync(document.documentElement.dataset.theme || 'clinical');
+        button?.addEventListener('click', () => { const current = document.documentElement.dataset.theme || 'clinical'; sync(themes[(themes.indexOf(current) + 1) % themes.length]); });
+      })();
+    </script>
   </body>
 </html>

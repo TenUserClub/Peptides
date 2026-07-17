@@ -17,11 +17,11 @@ const avgRating = rated.length > 0
   : null;
 ---
 <Base title="Peptide Therapy Clinics Directory | Find Verified Clinics" description={`Browse ${totalClinics} verified peptide therapy clinics across ${states.length} US states. Filter by city, state, services, and ratings.`}>
-  <h1>Find peptide therapy clinics</h1>
-  <p>
-    Browse verified clinics offering peptide therapy, GLP-1 treatments, hormone optimization,
-    and longevity medicine across the United States. Every listing is fact-checked before publication.
-  </p>
+  <section class="hero">
+    <p class="eyebrow">Verified clinic research</p>
+    <h1>Compare clinics with the facts in view.</h1>
+    <p>Filter fact-checked listings by location, services, and attributed public ratings. No paid placements.</p>
+  </section>
 
   {totalClinics === 0 ? (
     <div class="empty-state">

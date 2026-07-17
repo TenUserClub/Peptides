@@ -11,9 +11,10 @@ const recent = clinics.sort((a, b) => +b.data.publishDate - +a.data.publishDate)
 ---
 <Base title="Peptide Clinics Directory | Find Verified Peptide Therapy Clinics" description={`Browse ${totalClinics} verified peptide therapy clinics across ${states.length} US states. Filter by city, state, and services.`}>
   <div class="hero">
-    <h1>Find verified peptide therapy clinics</h1>
-    <p>Browse verified clinics offering peptide therapy, GLP-1 treatments, hormone optimization, and longevity medicine across the United States.</p>
-    <a class="cta" href="/clinics/" style="margin-top: var(--space-lg);">Browse all clinics →</a>
+    <p class="eyebrow">Independent, evidence-first directory</p>
+    <h1>Find care you can research with confidence.</h1>
+    <p>Explore verified clinics offering peptide therapy, GLP-1 care, hormone optimization, and longevity medicine across the United States.</p>
+    <a class="cta" href="/clinics/">Browse verified clinics →</a>
   </div>
 
   <div class="stats-grid">
@@ -45,7 +46,7 @@ const recent = clinics.sort((a, b) => +b.data.publishDate - +a.data.publishDate)
   {recent.length > 0 && (
     <>
       <h2>Recently added clinics</h2>
-      <div class="card-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+      <div class="card-grid">
         {recent.map((p) => (
           <article class="card">
             {p.data.image && <img class="card-image" src={p.data.image} alt="" loading="lazy" />}

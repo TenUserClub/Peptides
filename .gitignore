@@ -2,6 +2,8 @@
 node_modules/
 site/dist/
 site/.astro/
+sites/*/dist/
+sites/*/.astro/
 pipeline/logs/
 pipeline/data/exa/
 pipeline/data/rejected/
