@@ -7,7 +7,7 @@ export const WORD_LIMITS = {
   news: [400, 700],
   legal: [400, 700],
   blog: [1000, 1500],
-  updates: [150, 800],
+  updates: [75, 800],
 };
 
 const REQUIRED = {
@@ -206,9 +206,15 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
 
   const prohibitedClaim = /\b(peptides?|semaglutide|tirzepatide|BPC-157|thymosin)\b[^.!?\n]{0,100}\b(cures?|heals?|fixes?|reverses?|prevents?)\b/gi;
   const unsupportedOutcome = /\b(significant benefits|successful therapy|effectiveness of your treatment|enhance immune function|support tissue repair)\b/i;
-  const positiveTreatmentClaim = [...body.matchAll(prohibitedClaim)].some((match) =>
-    !/\b(?:not|never|no evidence|cannot|can't|doesn't|does not|do not|isn't|is not|aren't|are not|without evidence|claims?|advertis(?:e|es|ed)|market(?:s|ed|ing))\b/i.test(match[0])
-  );
+  const positiveTreatmentClaim = [...body.matchAll(prohibitedClaim)].some((match) => {
+    const before = body.slice(0, match.index);
+    const after = body.slice(match.index + match[0].length);
+    const sentenceStart = Math.max(before.lastIndexOf('.'), before.lastIndexOf('!'), before.lastIndexOf('?'), before.lastIndexOf('\n')) + 1;
+    const nextStops = [after.indexOf('.'), after.indexOf('!'), after.indexOf('?'), after.indexOf('\n')].filter((index) => index >= 0);
+    const sentenceEnd = match.index + match[0].length + (nextStops.length ? Math.min(...nextStops) : after.length);
+    const sentence = body.slice(sentenceStart, sentenceEnd);
+    return !/\b(?:not|never|no evidence|cannot|can't|doesn't|does not|do not|isn't|is not|aren't|are not|without evidence|claims?|claiming|advertis(?:e|es|ed|ing)|market(?:s|ed|ing)|describ(?:e|es|ed|ing)|promot(?:e|es|ed|ing)|warn(?:s|ed|ing)?|misleading)\b/i.test(sentence);
+  });
   if (positiveTreatmentClaim) errors.push('Contains a prohibited treatment claim');
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');
   if (/\b(?:buy|shop|order) research chemicals?\b/i.test(text)) errors.push('Contains research-chemical vendor language');

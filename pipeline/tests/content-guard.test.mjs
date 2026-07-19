@@ -26,6 +26,18 @@ test('allows neutral discussion of research chemicals and approved treatment ind
   assert.equal(result.ok, true, result.errors.join('; '));
 });
 
+test('allows sourced discussion of misleading cure claims', () => {
+  const text = `---\ntitle: "Claim review"\ndescription: "A sourced review"\ncategory: "safety"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} Some sellers market peptide therapy as a cure for chronic disease, but the FDA warns readers to check whether a product is approved.`;
+  const result = validateContent({ text, collection: 'blog', filename: 'claim-review.md' });
+  assert.equal(result.ok, true, result.errors.join('; '));
+});
+
+test('accepts a concise link-based weekly digest', () => {
+  const text = `---\ntitle: "Weekly review"\ndescription: "A concise weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-19\nauthor: "Peptide Atlas Editorial Team"\n---\n${words(90)}`;
+  const result = validateContent({ text, collection: 'updates', filename: '2026-w30.md' });
+  assert.equal(result.ok, true, result.errors.join('; '));
+});
+
 test('blocks appended humaniser audits and decorative separators', () => {
   const text = `---\ntitle: "Weekly review"\ndescription: "Weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\n${words(200)}\n\n---\n\nWord count (input): 193`;
   const result = validateContent({ text, collection: 'updates', filename: 'week-28.md' });

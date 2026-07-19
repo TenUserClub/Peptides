@@ -6,6 +6,12 @@ function withoutEmDash(value) {
   return String(value || '').replace(/\u2014/g, ',').trim();
 }
 
+function neutralServiceLabel(value) {
+  return withoutEmDash(value)
+    .replace(/\s+(?:to|designed to|intended to|aimed at)\s+(?:improve|enhance|support|promote|boost|address)\b[\s\S]*$/i, '')
+    .trim();
+}
+
 export function normalizeHttpUrl(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
@@ -82,10 +88,12 @@ export function canonicalClinicPost({ parsed, record, today }) {
   const city = withoutEmDash(record.city);
   const state = withoutEmDash(record.state);
   const title = `${clinicName}: verified clinic profile for ${city}, ${state}`;
+  const description = `A sourced directory profile of ${clinicName} in ${city}, ${state}, including services and contact details from its verified record.`;
+  const services = Array.isArray(record.services) ? record.services.map(neutralServiceLabel).filter(Boolean) : [];
   const frontmatter = [
     '---',
     `title: ${JSON.stringify(title)}`,
-    `description: ${JSON.stringify(withoutEmDash(parsed.data.description))}`,
+    `description: ${JSON.stringify(description)}`,
     `clinicName: ${JSON.stringify(clinicName)}`,
     `city: ${JSON.stringify(city)}`,
     `state: ${JSON.stringify(state)}`,
@@ -93,7 +101,7 @@ export function canonicalClinicPost({ parsed, record, today }) {
     `website: ${JSON.stringify(normalizeHttpUrl(record.website))}`,
     `phone: ${JSON.stringify(withoutEmDash(record.phone))}`,
     `doctorName: ${JSON.stringify(withoutEmDash(record.doctorName))}`,
-    `services: ${JSON.stringify(Array.isArray(record.services) ? record.services.map(withoutEmDash) : [])}`,
+    `services: ${JSON.stringify(services)}`,
     'verified: true',
     `sources: ${JSON.stringify(sources)}`,
     'author: "Peptide Atlas Editorial Team"',

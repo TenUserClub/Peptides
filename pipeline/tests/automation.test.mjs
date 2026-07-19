@@ -97,3 +97,9 @@ test('generated clinic images cannot masquerade as verified premises', () => {
   assert.match(images, /Do not invent signage/);
   assert.match(clinicPage, /not a verified photograph of the clinic or its premises/);
 });
+
+test('clinic frontmatter strips promotional outcome language from service labels', () => {
+  const utils = read('pipeline/lib/pipeline-utils.mjs');
+  assert.match(utils, /function neutralServiceLabel/);
+  assert.match(utils, /including services and contact details from its verified record/);
+});
