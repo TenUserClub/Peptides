@@ -9,7 +9,7 @@ const read = (path) => readFileSync(resolve(root, path), 'utf8');
 test('the all stage verifies and monitors on the three-times-daily schedule', () => {
   const orchestrator = read('pipeline/orchestrator.mjs');
   const workflow = read('.github/workflows/pipeline.yml');
-  assert.match(orchestrator, /stage === 'all' \|\| stage === 'verify'\) await runVerify\(\)/);
+  assert.match(orchestrator, /stage === 'all' \|\| stage === 'verify'\) outcome\.verified \+= await runVerify\(\)/);
   assert.match(orchestrator, /stage === 'all' \|\| stage === 'monitor'\) await runMonitor\(\)/);
   assert.doesNotMatch(orchestrator, /stage === 'all' && hour [<>]=?/);
   assert.match(workflow, /cron: "23 2,10,18 \* \* \*"/);
@@ -66,4 +66,11 @@ test('Supabase and the free Search Console registry are wired into live runs', (
   assert.match(workflow, /SUPABASE_SECRET_KEY/);
   assert.match(workflow, /GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64/);
   assert.match(migration, /create table if not exists keyword_registry/);
+});
+
+test('zero-publication runs checkpoint verification and queue progress', () => {
+  const orchestrator = read('pipeline/orchestrator.mjs');
+  assert.match(orchestrator, /publish: committed verification and queue checkpoint/);
+  assert.match(orchestrator, /pipeline: checkpoint/);
+  assert.match(orchestrator, /published=\$\{outcome\.published\}/);
 });

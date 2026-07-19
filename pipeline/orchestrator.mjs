@@ -20,6 +20,7 @@ import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
 import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
+import { canonicalBlogPost, chooseSingleNpiMatch, normalizeHttpUrl } from './lib/pipeline-utils.mjs';
 import {
   startRun, finishRun, upsertClinic, upsertDoctor, upsertPublishedPost,
   upsertKeywordMetrics, getKeywordSignals, pruneKeywordMetrics, setQueueState,
@@ -171,11 +172,13 @@ function readableText(html) {
 // ── Web fetch ──────────────────────────────────────────────────
 async function webFetch(url, opts = {}) {
   const { maxRetries = CONFIG.web.maxRetries, timeout = CONFIG.web.timeout } = opts;
+  const normalizedUrl = normalizeHttpUrl(url);
+  if (!normalizedUrl) throw new Error(`Invalid HTTP URL: ${url}`);
   for (let i = 0; i <= maxRetries; i++) {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeout);
-      const res = await fetch(url, {
+      const res = await fetch(normalizedUrl, {
         signal: controller.signal,
         headers: {
           'User-Agent': CONFIG.web.userAgent,
@@ -188,11 +191,11 @@ async function webFetch(url, opts = {}) {
       return await res.text();
     } catch (e) {
       if (i === maxRetries) throw e;
-      log('warn', `webFetch retry ${i + 1} for ${url}: ${e.message}`);
+      log('warn', `webFetch retry ${i + 1} for ${normalizedUrl}: ${e.message}`);
       await new Promise((r) => setTimeout(r, 1000 * (i + 1)));
     }
   }
-  throw new Error(`Failed to fetch ${url}`);
+  throw new Error(`Failed to fetch ${normalizedUrl}`);
 }
 
 // ── Content directory routing (multi-site) ──────────────────────
@@ -611,25 +614,27 @@ INSTRUCTIONS:
         model: CONFIG.models.writing,
         temperature: 0.65,
       });
-      const post = stripMarkdownFences(response);
-      const fm = parseFrontmatter(post);
+      const generatedPost = stripMarkdownFences(response);
+      const fm = parseFrontmatter(generatedPost);
       if (!fm || !fm.data.title) {
-        const preview = post.slice(0, 200).replace(/\n/g, '\\n');
+        const preview = generatedPost.slice(0, 200).replace(/\n/g, '\\n');
         log('warn', `write-blog: skipping malformed ${topic.id} (preview: ${preview}...)`);
         const debugPath = join(PIPELINE, 'drafts', 'blog', `_malformed-${topic.id}-${Date.now()}.md`);
-        writeText(debugPath, post);
+        writeText(debugPath, generatedPost);
         continue;
       }
-      const returnedSources = Array.isArray(fm.data.sources) ? fm.data.sources : [];
-      if (slugify(fm.data.title) !== slugify(topic.title) || fm.data.category !== topic.category ||
-          returnedSources.length < 2 || returnedSources.some((source) => !approvedSources.includes(source))) {
-        log('warn', `write-blog: ${topic.id} did not follow its fixed title, category, or source brief`);
+      const post = canonicalBlogPost({ parsed: fm, topic, approvedSources, today });
+      if (!post) {
+        log('warn', `write-blog: ${topic.id} returned an empty body or description`);
         continue;
+      }
+      if (slugify(fm.data.title) !== slugify(topic.title) || fm.data.category !== topic.category) {
+        log('info', `write-blog: corrected generated frontmatter to the assigned brief for ${topic.id}`);
       }
       const outPath = join(PIPELINE, 'drafts', 'blog', `${topic.id}.md`);
 
       const imagePath = await generateImage('blog', {
-        title: fm.data.title,
+        title: topic.title,
         description: fm.data.description,
       }, topic.id);
 
@@ -735,12 +740,43 @@ async function runHumanise() {
 }
 
 // ── Stage: Publish ─────────────────────────────────────────────
+function pipelineStatePaths() {
+  return [
+    join(PIPELINE, 'data', 'verified'),
+    join(PIPELINE, 'data', '.processed-news.json'),
+    join(PIPELINE, 'data', '.processed-clinics.json'),
+    join(PIPELINE, 'data', '.processed-doctors.json'),
+    join(PIPELINE, 'queue', 'cities.json'),
+    join(PIPELINE, 'queue', 'states.json'),
+    join(PIPELINE, 'queue', 'keywords.json'),
+  ];
+}
+
+function commitScopedChanges(extraPaths, message) {
+  const preExistingStaged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  if (preExistingStaged) throw new Error('Refusing to mix pipeline output with pre-existing staged changes');
+  const stagePaths = [...extraPaths, ...pipelineStatePaths()]
+    .filter((path) => path && existsSync(path))
+    .map((path) => relative(ROOT, path));
+  execFileSync('git', ['add', '--', ...stagePaths], { cwd: ROOT, stdio: 'pipe' });
+  const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
+  if (!staged) return false;
+  execFileSync('git', ['commit', '-m', message], { cwd: ROOT, stdio: 'pipe' });
+  return true;
+}
+
 async function runPublish() {
   log('info', 'orchestrator: publish');
   const humanisedDir = join(PIPELINE, 'humanised');
   const files = findFiles(humanisedDir, /\.md$/, /\.diff\.md/);
   if (files.length === 0) {
     log('info', 'publish: nothing to publish');
+    if (!DRY_RUN) {
+      await advanceQueues();
+      if (commitScopedChanges([], `pipeline: checkpoint ${new Date().toISOString().slice(0, 10)}`)) {
+        log('info', 'publish: committed verification and queue checkpoint');
+      }
+    }
     return 0;
   }
 
@@ -844,6 +880,10 @@ async function runPublish() {
 
   if (toMove.length === 0) {
     log('info', 'publish: no files passed validation');
+    await advanceQueues();
+    if (commitScopedChanges([], `pipeline: checkpoint ${today}`)) {
+      log('info', 'publish: committed verification and queue checkpoint');
+    }
     return 0;
   }
 
@@ -881,22 +921,10 @@ async function runPublish() {
   await advanceQueues();
   log('info', 'publish: committing scoped publication files');
   try {
-    const preExistingStaged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
-    if (preExistingStaged) throw new Error('Refusing to mix publication output with pre-existing staged changes');
-    const stagePaths = [
-      ...toMove.flatMap((item) => [item.targetPath, item.imageFile].filter((path) => path && existsSync(path))),
-      join(PIPELINE, 'data', 'verified'),
-      join(PIPELINE, 'data', '.processed-news.json'),
-      join(PIPELINE, 'data', '.processed-clinics.json'),
-      join(PIPELINE, 'data', '.processed-doctors.json'),
-      join(PIPELINE, 'queue', 'cities.json'),
-      join(PIPELINE, 'queue', 'states.json'),
-      join(PIPELINE, 'queue', 'keywords.json'),
-    ].filter((path) => existsSync(path)).map((path) => relative(ROOT, path));
-    execFileSync('git', ['add', '--', ...stagePaths], { cwd: ROOT, stdio: 'pipe' });
-    const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
-    if (!staged) throw new Error('No scoped publication changes were staged');
-    execFileSync('git', ['commit', '-m', `publish: auto-posts ${today}`], { cwd: ROOT, stdio: 'pipe' });
+    const publicationPaths = toMove.flatMap((item) => [item.targetPath, item.imageFile].filter((path) => path && existsSync(path)));
+    if (!commitScopedChanges(publicationPaths, `publish: auto-posts ${today}`)) {
+      throw new Error('No scoped publication changes were staged');
+    }
     const topicQueue = readJson(join(PIPELINE, 'queue', 'blog-topics.json'), { topics: [] });
     for (const item of toMove) {
       const slug = basename(item.targetPath, '.md');
@@ -1263,8 +1291,8 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
       jsonMode: true,
     });
     const parsed = JSON.parse(response);
-    candidates = parsed.candidates || [];
-    rejects = parsed.rejected || [];
+    candidates = Array.isArray(parsed.candidates) ? parsed.candidates : [];
+    rejects = Array.isArray(parsed.rejected) ? parsed.rejected : [];
   } catch (e) {
     log('error', `verify: extraction failed: ${e.message}`);
     return { verified: 0, rejected: 0 };
@@ -1279,13 +1307,13 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
           state: c.state || context.state || '',
           address: c.address || '',
           phone: c.phone || '',
-          website: c.website || '',
+          website: normalizeHttpUrl(c.website) || '',
           doctorName: c.doctorName || '',
           services: Array.isArray(c.services) ? c.services : [],
           ratingValue: c.ratingValue || null,
           ratingCount: c.ratingCount || null,
           ratingSource: c.ratingSource || '',
-          sourceUrls: [c.sourceUrl].filter(Boolean),
+          sourceUrls: [normalizeHttpUrl(c.sourceUrl), normalizeHttpUrl(c.website)].filter(Boolean),
           verified: false,
           verificationNotes: [],
         }
@@ -1296,14 +1324,14 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
           credentials: c.credentials || '',
           specialty: c.specialty || context.specialty || '',
           clinicName: c.clinicName || '',
-          website: c.clinicWebsite || c.website || '',
+          website: normalizeHttpUrl(c.clinicWebsite || c.website) || '',
           phone: c.phone || '',
           services: Array.isArray(c.services) ? c.services : [],
           ratingValue: c.ratingValue || null,
           ratingCount: c.ratingCount || null,
           ratingSource: c.ratingSource || '',
           yearsInPractice: c.yearsInPractice || null,
-          sourceUrls: [c.sourceUrl].filter(Boolean),
+          sourceUrls: [normalizeHttpUrl(c.sourceUrl), normalizeHttpUrl(c.clinicWebsite || c.website)].filter(Boolean),
           verified: false,
           verificationNotes: [],
         };
@@ -1315,15 +1343,27 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
     }
 
     // Website verification
-    const siteUrl = record.website;
+    const sourceFallback = normalizeHttpUrl(c.sourceUrl);
+    const fallbackHost = (() => {
+      try { return new URL(sourceFallback).hostname.toLowerCase(); } catch { return ''; }
+    })();
+    const isDirectoryFallback = /(^|\.)(yelp|healthgrades|zocdoc|webmd|vitals|facebook|instagram|linkedin|mapquest)\./i.test(fallbackHost);
+    const identityTokens = nameField.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length >= 4 && !['clinic', 'health', 'wellness', 'medical', 'doctor'].includes(token));
+    const fallbackMatchesIdentity = identityTokens.some((token) => fallbackHost.includes(token));
+    const siteUrl = record.website || (!isDirectoryFallback && fallbackMatchesIdentity ? sourceFallback : '');
     let websiteConfirmed = false;
     if (siteUrl) {
       try {
         const siteText = await webFetch(siteUrl, { maxRetries: 1, timeout: 8000 });
-        const hasPeptide = /peptide|GLP-1|semaglutide|tirzepatide/i.test(siteText);
-        if (!hasPeptide) record.verificationNotes.push('Website does not mention peptide therapy');
+        const pageText = readableText(siteText);
+        const hasPeptide = /peptide|GLP-?1|semaglutide|tirzepatide/i.test(pageText);
+        const hasIdentity = identityTokens.length === 0 || identityTokens.some((token) => pageText.toLowerCase().includes(token));
+        if (!hasPeptide) record.verificationNotes.push('Website does not mention peptide-related services');
+        else if (!hasIdentity) record.verificationNotes.push(`Website does not clearly identify the ${type}`);
         else {
           websiteConfirmed = true;
+          record.website = siteUrl;
+          record.sourceUrls = [...new Set([...record.sourceUrls, siteUrl])];
           record.verificationNotes.push('Website confirms peptide-related services');
         }
       } catch (e) {
@@ -1343,13 +1383,15 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
       const lastName = nameParts[nameParts.length - 1];
       if (firstName && lastName && record.state) {
         try {
+          const stateCode = stateNameToCode(record.state).toUpperCase();
           const params = new URLSearchParams({
             version: '2.1',
             first_name: firstName,
             last_name: lastName,
-            state: record.state,
+            state: stateCode,
             limit: '10',
           });
+          if (record.city) params.set('city', record.city);
           const npiRes = await fetch(`https://npiregistry.cms.hhs.gov/api/?${params}`);
           if (!npiRes.ok) throw new Error(`HTTP ${npiRes.status}`);
           const npiData = await npiRes.json();
@@ -1361,8 +1403,10 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
             addresses: (r.addresses ?? []).map((a) => ({ city: a.city, state: a.state })),
           }));
 
-          if (matches.length === 1) {
-            record.npi = matches[0].npi;
+          const selectedMatch = chooseSingleNpiMatch(matches, { state: stateCode, city: record.city });
+          if (selectedMatch) {
+            record.npi = selectedMatch.npi;
+            record.taxonomies = selectedMatch.taxonomies;
             npiConfirmed = true;
             record.verificationNotes.push(`NPI verified: ${record.npi}`);
           } else if (matches.length > 1) {
@@ -1381,7 +1425,7 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
 
     // Decide: verified or rejected
     const hasWebsite = record.website && record.website.startsWith('http');
-    const hasPeptideService = record.services.some((s) => /peptide|GLP-1|hormone|longevity/i.test(s));
+    const hasPeptideService = websiteConfirmed || record.services.some((s) => /peptide|GLP-?1|semaglutide|tirzepatide|hormone|longevity/i.test(s));
     const isVerifiable = type === 'doctor'
       ? Boolean(hasWebsite && websiteConfirmed && hasPeptideService && npiConfirmed && record.doctorName && record.npi)
       : Boolean(hasWebsite && websiteConfirmed && hasPeptideService);
@@ -1817,24 +1861,29 @@ async function main() {
   log('info', `=== Orchestrator started: stage=${stage}, hour=${hour}, dry-run=${DRY_RUN}, site=${SITE_DOMAIN} ===`);
 
   try {
+    const outcome = { verified: 0, drafted: 0, humanised: 0, published: 0 };
     if (stage === 'all' || stage === 'sync-keywords') await runSyncKeywords();
     if (stage === 'all' || stage === 'fetch-news') await runFetch('news');
     if (stage === 'all' || stage === 'fetch-clinics') await runFetch('clinics');
     if (stage === 'all' || stage === 'fetch-doctors') await runFetch('doctors');
 
-    if (stage === 'all' || stage === 'verify') await runVerify();
+    if (stage === 'all' || stage === 'verify') outcome.verified += await runVerify();
 
-    if (stage === 'all' || stage === 'write-news') await runWriteNews();
-    if (stage === 'all' || stage === 'write-blog') await runWriteBlog();
-    if (stage === 'all' || stage === 'write-clinics') await runWriteClinics();
-    if (stage === 'all' || stage === 'write-doctors') await runWriteDoctors();
-    if (stage === 'all' || stage === 'write-updates') await runWriteUpdates();
+    if (stage === 'all' || stage === 'write-news') outcome.drafted += await runWriteNews();
+    if (stage === 'all' || stage === 'write-blog') outcome.drafted += await runWriteBlog();
+    if (stage === 'all' || stage === 'write-clinics') outcome.drafted += await runWriteClinics();
+    if (stage === 'all' || stage === 'write-doctors') outcome.drafted += await runWriteDoctors();
+    if (stage === 'all' || stage === 'write-updates') outcome.drafted += await runWriteUpdates();
 
-    if (stage === 'all' || stage === 'humanise') await runHumanise();
-    if (stage === 'all' || stage === 'publish') await runPublish();
+    if (stage === 'all' || stage === 'humanise') outcome.humanised += await runHumanise();
+    if (stage === 'all' || stage === 'publish') outcome.published += await runPublish();
     if (stage === 'all' || stage === 'monitor') await runMonitor();
 
-    if (!DRY_RUN) await finishRun(runRecord?.id, 'success', `Completed stage ${stage}`);
+    const outcomeSummary = `Completed stage ${stage}: verified=${outcome.verified}, drafted=${outcome.drafted}, humanised=${outcome.humanised}, published=${outcome.published}`;
+    if (stage === 'all' && !DRY_RUN && outcome.published === 0) {
+      log('warn', `orchestrator: completed safely with zero publications (${outcomeSummary})`);
+    }
+    if (!DRY_RUN) await finishRun(runRecord?.id, 'success', outcomeSummary);
     log('info', '=== Orchestrator finished ===');
   } catch (error) {
     if (!DRY_RUN) await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message);
