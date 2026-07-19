@@ -69,6 +69,8 @@ GitHub Actions runs the repository check on pushes and pull requests. The guarde
 
 Maximum publication if every source, verification, human edit, and build passes: 3 combined news/legal posts, 1 blog guide, and 5 combined clinic/doctor entries per day. Sunday can also add 1 weekly update. That is at most 9 ordinary-day items, 10 on Sunday, or 64 in a full seven-day week. Actual output is normally lower because unverified or weak material is refused.
 
+Clinic discovery begins with one representative metro in every US state. The queue finishes all verified, publishable records for its current metro before advancing, so a city with several valid clinics can span multiple daily runs. After this first 50-state pass, additional cities can be appended for deeper state coverage without changing the workflow.
+
 The seed editorial map contains at least 30 source-led topics, ordered by priority. It is a topic and intent plan, not a claim of measured search volume. The pipeline publishes at most one evergreen guide per day, skips briefs already present in drafts or published content, and refuses to write when fewer than two approved authoritative sources are reachable.
 
 ## Repository map

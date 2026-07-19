@@ -1,86 +1,57 @@
 {
   "next": 1,
+  "coveragePlan": "One starter metro in every US state before a second geographic pass",
   "cities": [
-    {
-      "city": "Miami",
-      "state": "FL"
-    },
-    {
-      "city": "Austin",
-      "state": "TX"
-    },
-    {
-      "city": "Scottsdale",
-      "state": "AZ"
-    },
-    {
-      "city": "Los Angeles",
-      "state": "CA"
-    },
-    {
-      "city": "Dallas",
-      "state": "TX"
-    },
-    {
-      "city": "Tampa",
-      "state": "FL"
-    },
-    {
-      "city": "Denver",
-      "state": "CO"
-    },
-    {
-      "city": "Nashville",
-      "state": "TN"
-    },
-    {
-      "city": "San Diego",
-      "state": "CA"
-    },
-    {
-      "city": "Houston",
-      "state": "TX"
-    },
-    {
-      "city": "Phoenix",
-      "state": "AZ"
-    },
-    {
-      "city": "Atlanta",
-      "state": "GA"
-    },
-    {
-      "city": "Las Vegas",
-      "state": "NV"
-    },
-    {
-      "city": "Orlando",
-      "state": "FL"
-    },
-    {
-      "city": "Charlotte",
-      "state": "NC"
-    },
-    {
-      "city": "Salt Lake City",
-      "state": "UT"
-    },
-    {
-      "city": "Boise",
-      "state": "ID"
-    },
-    {
-      "city": "New York",
-      "state": "NY"
-    },
-    {
-      "city": "Chicago",
-      "state": "IL"
-    },
-    {
-      "city": "Seattle",
-      "state": "WA"
-    }
+    { "city": "Miami", "state": "FL" },
+    { "city": "Austin", "state": "TX" },
+    { "city": "Scottsdale", "state": "AZ" },
+    { "city": "Los Angeles", "state": "CA" },
+    { "city": "Denver", "state": "CO" },
+    { "city": "Nashville", "state": "TN" },
+    { "city": "Atlanta", "state": "GA" },
+    { "city": "Las Vegas", "state": "NV" },
+    { "city": "Charlotte", "state": "NC" },
+    { "city": "Salt Lake City", "state": "UT" },
+    { "city": "Boise", "state": "ID" },
+    { "city": "New York", "state": "NY" },
+    { "city": "Chicago", "state": "IL" },
+    { "city": "Seattle", "state": "WA" },
+    { "city": "Birmingham", "state": "AL" },
+    { "city": "Anchorage", "state": "AK" },
+    { "city": "Little Rock", "state": "AR" },
+    { "city": "Hartford", "state": "CT" },
+    { "city": "Wilmington", "state": "DE" },
+    { "city": "Honolulu", "state": "HI" },
+    { "city": "Indianapolis", "state": "IN" },
+    { "city": "Des Moines", "state": "IA" },
+    { "city": "Wichita", "state": "KS" },
+    { "city": "Louisville", "state": "KY" },
+    { "city": "New Orleans", "state": "LA" },
+    { "city": "Portland", "state": "ME" },
+    { "city": "Baltimore", "state": "MD" },
+    { "city": "Boston", "state": "MA" },
+    { "city": "Detroit", "state": "MI" },
+    { "city": "Minneapolis", "state": "MN" },
+    { "city": "Jackson", "state": "MS" },
+    { "city": "St. Louis", "state": "MO" },
+    { "city": "Billings", "state": "MT" },
+    { "city": "Omaha", "state": "NE" },
+    { "city": "Manchester", "state": "NH" },
+    { "city": "Newark", "state": "NJ" },
+    { "city": "Albuquerque", "state": "NM" },
+    { "city": "Fargo", "state": "ND" },
+    { "city": "Columbus", "state": "OH" },
+    { "city": "Oklahoma City", "state": "OK" },
+    { "city": "Portland", "state": "OR" },
+    { "city": "Philadelphia", "state": "PA" },
+    { "city": "Providence", "state": "RI" },
+    { "city": "Charleston", "state": "SC" },
+    { "city": "Sioux Falls", "state": "SD" },
+    { "city": "Burlington", "state": "VT" },
+    { "city": "Richmond", "state": "VA" },
+    { "city": "Charleston", "state": "WV" },
+    { "city": "Milwaukee", "state": "WI" },
+    { "city": "Cheyenne", "state": "WY" }
   ],
   "inFlight": {
     "label": "Austin, TX",

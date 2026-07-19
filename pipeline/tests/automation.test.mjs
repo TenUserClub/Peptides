@@ -103,3 +103,11 @@ test('clinic frontmatter strips promotional outcome language from service labels
   assert.match(utils, /function neutralServiceLabel/);
   assert.match(utils, /including services and contact details from its verified record/);
 });
+
+test('the starter clinic queue covers all 50 US states once', () => {
+  const queue = JSON.parse(read('pipeline/queue/cities.json'));
+  const states = queue.cities.map((item) => item.state);
+  assert.equal(queue.cities.length, 50);
+  assert.equal(new Set(states).size, 50);
+  assert.equal(queue.coveragePlan, 'One starter metro in every US state before a second geographic pass');
+});
