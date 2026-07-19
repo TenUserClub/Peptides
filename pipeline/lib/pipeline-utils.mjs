@@ -2,6 +2,10 @@ function normalizedPlace(value) {
   return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
 }
 
+function withoutEmDash(value) {
+  return String(value || '').replace(/\u2014/g, ',').trim();
+}
+
 export function normalizeHttpUrl(value) {
   const raw = String(value || '').trim();
   if (!raw) return '';
@@ -48,10 +52,39 @@ export function canonicalBlogPost({ parsed, topic, approvedSources, today }) {
   const frontmatter = [
     '---',
     `title: ${JSON.stringify(topic.title)}`,
-    `description: ${JSON.stringify(String(parsed.data.description).trim())}`,
+    `description: ${JSON.stringify(withoutEmDash(parsed.data.description))}`,
     `category: ${JSON.stringify(topic.category)}`,
     `tags: ${JSON.stringify(tags)}`,
     `sources: ${JSON.stringify(approvedSources)}`,
+    'author: "Peptide Atlas Editorial Team"',
+    `publishDate: ${today}`,
+    '---',
+  ].join('\n');
+  return `${frontmatter}\n${String(parsed.body).trim()}\n`;
+}
+
+export function canonicalClinicPost({ parsed, record, today }) {
+  if (!parsed?.data?.description || !String(parsed.body || '').trim()) return null;
+  const sources = [...new Set((record.sourceUrls || []).map(normalizeHttpUrl).filter(Boolean))];
+  if (!record.clinicName || !record.city || !record.state || sources.length === 0) return null;
+  const clinicName = withoutEmDash(record.clinicName);
+  const city = withoutEmDash(record.city);
+  const state = withoutEmDash(record.state);
+  const title = `${clinicName}: verified clinic profile for ${city}, ${state}`;
+  const frontmatter = [
+    '---',
+    `title: ${JSON.stringify(title)}`,
+    `description: ${JSON.stringify(withoutEmDash(parsed.data.description))}`,
+    `clinicName: ${JSON.stringify(clinicName)}`,
+    `city: ${JSON.stringify(city)}`,
+    `state: ${JSON.stringify(state)}`,
+    `address: ${JSON.stringify(withoutEmDash(record.address))}`,
+    `website: ${JSON.stringify(normalizeHttpUrl(record.website))}`,
+    `phone: ${JSON.stringify(withoutEmDash(record.phone))}`,
+    `doctorName: ${JSON.stringify(withoutEmDash(record.doctorName))}`,
+    `services: ${JSON.stringify(Array.isArray(record.services) ? record.services.map(withoutEmDash) : [])}`,
+    'verified: true',
+    `sources: ${JSON.stringify(sources)}`,
     'author: "Peptide Atlas Editorial Team"',
     `publishDate: ${today}`,
     '---',

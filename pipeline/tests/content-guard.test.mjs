@@ -20,6 +20,12 @@ test('blocks unsupported outcomes and weak news sources', () => {
   assert.match(result.errors.join(' '), /unsupported|authoritative|example/i);
 });
 
+test('allows neutral discussion of research chemicals and approved treatment indications', () => {
+  const text = `---\ntitle: "Research and approved products"\ndescription: "A sourced regulatory explanation"\ncategory: "beginners"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} The term research chemical appears in regulatory discussions. An FDA-approved medicine may treat a labeled condition.`;
+  const result = validateContent({ text, collection: 'blog', filename: 'research-products.md' });
+  assert.equal(result.ok, true, result.errors.join('; '));
+});
+
 test('blocks sample files', () => {
   const text = `---\ntitle: "Sample"\ndescription: "Sample"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\n${words(200)}`;
   const result = validateContent({ text, collection: 'updates', filename: '_sample.md' });

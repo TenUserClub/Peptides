@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canonicalBlogPost, chooseSingleNpiMatch, normalizeHttpUrl } from '../lib/pipeline-utils.mjs';
+import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeHttpUrl } from '../lib/pipeline-utils.mjs';
 
 test('normalizes bare and protocol-relative website URLs', () => {
   assert.equal(normalizeHttpUrl('www.example.com/path'), 'https://www.example.com/path');
@@ -31,4 +31,19 @@ test('locks generated blog frontmatter to the approved editorial brief', () => {
   assert.match(result, /category: "beginners"/);
   assert.match(result, /sources: \["https:\/\/www\.fda\.gov\/example","https:\/\/clinicaltrials\.gov\/example"\]/);
   assert.doesNotMatch(result, /Changed title|category: "wrong"/);
+});
+
+test('builds clinic frontmatter from the verified record, not model output', () => {
+  const result = canonicalClinicPost({
+    parsed: { data: { description: 'A factual clinic profile — with sources.' }, body: 'Clinic body.' },
+    record: {
+      clinicName: 'Test Health', city: 'Austin', state: 'TX', website: 'testhealth.example/path',
+      sourceUrls: ['https://testhealth.example/path'], services: ['Peptide consultations'], verified: true,
+    },
+    today: '2026-07-19',
+  });
+  assert.match(result, /clinicName: "Test Health"/);
+  assert.match(result, /sources: \["https:\/\/testhealth\.example\/path"\]/);
+  assert.match(result, /verified: true/);
+  assert.doesNotMatch(result, /—/);
 });

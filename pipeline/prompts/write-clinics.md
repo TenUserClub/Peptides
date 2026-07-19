@@ -17,4 +17,4 @@ Frontmatter must exactly match the `clinics` schema in `site/src/content.config.
 4. **What patients say** — summarize real platform reviews with attribution ("Patients on Google (4.8★, 120 reviews) mention…"). If the verified record has no rating data, write that substantial public reviews weren't found. NEVER invent sentiment (CLAUDE.md rule 1).
 5. **Location and contact** — verified address/phone/site.
 
-700–1,100 words. `sources` frontmatter = the record's sourceUrls. Log output count.
+350-800 words. Prefer a concise factual listing over padding when the verified record is sparse. `sources` frontmatter = the record's sourceUrls. Log output count.

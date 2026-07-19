@@ -20,7 +20,7 @@ import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
 import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
-import { canonicalBlogPost, chooseSingleNpiMatch, normalizeHttpUrl } from './lib/pipeline-utils.mjs';
+import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeHttpUrl } from './lib/pipeline-utils.mjs';
 import {
   startRun, finishRun, upsertClinic, upsertDoctor, upsertPublishedPost,
   upsertKeywordMetrics, getKeywordSignals, pruneKeywordMetrics, setQueueState,
@@ -704,21 +704,41 @@ async function runHumanise() {
       const diffPath = outPath.replace(/\.md$/, '.diff.md');
 
       const original = stripMarkdownFences(draftText).replace(/\r\n/g, '\n');
-      const edited = stripMarkdownFences(response).replace(/\r\n/g, '\n');
+      let edited = stripMarkdownFences(response).replace(/\r\n/g, '\n');
       const originalParts = original.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
-      const editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
+      let editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
       if (!originalParts || !editedParts) {
         log('warn', `humanise: rejected ${relativePath}; editor returned malformed frontmatter`);
         continue;
       }
-      const cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
+      let cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
       const collection = relativePath.split(/[\\/]/)[0];
-      const guard = validateContent({
+      let guard = validateContent({
         text: cleanedResponse,
         collection,
         filename: draftPath,
         verifiedRoot: join(PIPELINE, 'data', 'verified'),
       });
+      if (!guard.ok) {
+        log('info', `humanise: corrective pass for ${relativePath}: ${guard.errors.join('; ')}`);
+        const correction = await chat({
+          system: systemPrompt,
+          user: `The edited draft failed deterministic publication checks. Fix every listed issue without adding facts or changing frontmatter.\n\nCHECK FAILURES:\n${guard.errors.map((error) => `- ${error}`).join('\n')}\n\nCURRENT EDITED DRAFT:\n${cleanedResponse}`,
+          model: CONFIG.models.humanise,
+          temperature: 0.25,
+        });
+        edited = stripMarkdownFences(correction).replace(/\r\n/g, '\n');
+        editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
+        if (editedParts) {
+          cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
+          guard = validateContent({
+            text: cleanedResponse,
+            collection,
+            filename: draftPath,
+            verifiedRoot: join(PIPELINE, 'data', 'verified'),
+          });
+        }
+      }
       if (!guard.ok) {
         log('warn', `humanise: rejected ${relativePath}: ${guard.errors.join('; ')}`);
         continue;
@@ -1574,7 +1594,7 @@ Then the article body with these sections:
 4. What patients say (summarize real reviews with platform attribution, or state none found)
 5. Location and contact
 
-700–1,100 words. US English. No treatment claims. Every fact from the verified record.`;
+350-800 words. US English. No treatment claims. Every fact from the verified record.`;
 
     if (DRY_RUN) {
       log('info', `DRY RUN: would write clinic ${slug}`);
@@ -1590,12 +1610,18 @@ Then the article body with these sections:
         temperature: 0.6,
       });
 
-      const cleaned = stripMarkdownFences(response);
-      const fm = parseFrontmatter(cleaned);
+      const generatedPost = stripMarkdownFences(response);
+      const fm = parseFrontmatter(generatedPost);
       if (!fm || !fm.data.clinicName) {
         log('warn', `write-clinics: skipping malformed post for ${slug}`);
         const debugPath = join(PIPELINE, 'drafts', 'clinics', `_malformed-${Date.now()}.md`);
-        writeText(debugPath, cleaned);
+        writeText(debugPath, generatedPost);
+        continue;
+      }
+
+      const cleaned = canonicalClinicPost({ parsed: fm, record, today });
+      if (!cleaned) {
+        log('warn', `write-clinics: ${slug} returned an empty body, description, or source list`);
         continue;
       }
 
