@@ -1,11 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeHttpUrl } from '../lib/pipeline-utils.mjs';
+import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeEditorialText, normalizeHttpUrl } from '../lib/pipeline-utils.mjs';
 
 test('normalizes bare and protocol-relative website URLs', () => {
   assert.equal(normalizeHttpUrl('www.example.com/path'), 'https://www.example.com/path');
   assert.equal(normalizeHttpUrl('//example.com/path'), 'https://example.com/path');
   assert.equal(normalizeHttpUrl('javascript:alert(1)'), '');
+});
+
+test('normalizes cross-site routes and removes em dashes after editing', () => {
+  const result = normalizeEditorialText('Read [news](https://peptidesnews.us/news/update/) — then [clinics](/clinics/austin/).');
+  assert.equal(result, 'Read [news](https://peptidesnews.us/update/) , then [clinics](https://mypeptide.club/clinics/austin/).');
 });
 
 test('selects only an unambiguous NPI match for the requested place', () => {

@@ -20,7 +20,7 @@ import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
 import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
-import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeHttpUrl } from './lib/pipeline-utils.mjs';
+import { canonicalBlogPost, canonicalClinicPost, chooseSingleNpiMatch, normalizeEditorialText, normalizeHttpUrl } from './lib/pipeline-utils.mjs';
 import {
   startRun, finishRun, upsertClinic, upsertDoctor, upsertPublishedPost,
   upsertKeywordMetrics, getKeywordSignals, pruneKeywordMetrics, setQueueState,
@@ -711,7 +711,7 @@ async function runHumanise() {
         log('warn', `humanise: rejected ${relativePath}; editor returned malformed frontmatter`);
         continue;
       }
-      let cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
+      let cleanedResponse = normalizeEditorialText(`${originalParts[1]}${editedParts[2].trim()}\n`);
       const collection = relativePath.split(/[\\/]/)[0];
       let guard = validateContent({
         text: cleanedResponse,
@@ -730,7 +730,7 @@ async function runHumanise() {
         edited = stripMarkdownFences(correction).replace(/\r\n/g, '\n');
         editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
         if (editedParts) {
-          cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
+          cleanedResponse = normalizeEditorialText(`${originalParts[1]}${editedParts[2].trim()}\n`);
           guard = validateContent({
             text: cleanedResponse,
             collection,

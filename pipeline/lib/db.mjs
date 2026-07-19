@@ -276,7 +276,7 @@ export async function setQueueState(queueName, data) {
   if (!enabled) return null;
   const { data: record, error } = await supabase
     .from('queue_state')
-    .upsert({ queue_name: queueName, ...data, updated_at: new Date().toISOString() })
+    .upsert({ queue_name: queueName, ...data, updated_at: new Date().toISOString() }, { onConflict: 'queue_name' })
     .select()
     .single();
   if (error) return dbFailure('setQueueState', error);

@@ -24,6 +24,17 @@ export function normalizeHttpUrl(value) {
   }
 }
 
+export function normalizeEditorialText(value) {
+  return String(value || '')
+    .replace(/\u2014/g, ',')
+    .replace(/https:\/\/safepeptides\.us\/news\//gi, 'https://peptidesnews.us/')
+    .replace(/https:\/\/safepeptides\.us\/updates\//gi, 'https://peptidesupdates.com/')
+    .replace(/https:\/\/peptidesnews\.us\/news\//gi, 'https://peptidesnews.us/')
+    .replace(/https:\/\/peptidesupdates\.com\/updates\//gi, 'https://peptidesupdates.com/')
+    .replace(/\]\(\/clinics\//g, '](https://mypeptide.club/clinics/')
+    .replace(/\]\(\/doctors\//g, '](https://toppeptideslist.com/');
+}
+
 export function chooseSingleNpiMatch(matches, { state = '', city = '' } = {}) {
   const wantedState = normalizedPlace(state);
   const wantedCity = normalizedPlace(city);

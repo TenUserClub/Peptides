@@ -74,3 +74,8 @@ test('zero-publication runs checkpoint verification and queue progress', () => {
   assert.match(orchestrator, /pipeline: checkpoint/);
   assert.match(orchestrator, /published=\$\{outcome\.published\}/);
 });
+
+test('Supabase queue checkpoints upsert on the queue name', () => {
+  const db = read('pipeline/lib/db.mjs');
+  assert.match(db, /onConflict: 'queue_name'/);
+});

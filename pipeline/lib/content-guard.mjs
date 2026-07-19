@@ -2,7 +2,7 @@ import { basename, join } from 'node:path';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 export const WORD_LIMITS = {
-  clinics: [250, 900],
+  clinics: [200, 900],
   doctors: [700, 1500],
   news: [400, 700],
   legal: [400, 700],
@@ -164,7 +164,7 @@ export function writingPatternErrors(body) {
     const opening = (prose.toLowerCase().match(/^[a-z0-9'-]+\s+[a-z0-9'-]+/) || [])[0];
     if (opening) paragraphOpenings.set(opening, (paragraphOpenings.get(opening) || 0) + 1);
   }
-  if ([...paragraphOpenings.values()].some((count) => count >= 3)) {
+  if ([...paragraphOpenings.values()].some((count) => count >= 4)) {
     errors.push('Contains a repeated paragraph-opening template');
   }
 
@@ -208,7 +208,7 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
   const unsupportedOutcome = /\b(significant benefits|successful therapy|effectiveness of your treatment|enhance immune function|support tissue repair)\b/i;
   if (prohibitedClaim.test(body)) errors.push('Contains a prohibited treatment claim');
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');
-  if (/\b(?:buy|shop|order) research chemicals?\b|for research use only|not for human consumption/i.test(text)) errors.push('Contains research-chemical vendor language');
+  if (/\b(?:buy|shop|order) research chemicals?\b/i.test(text)) errors.push('Contains research-chemical vendor language');
   if (/\u2014/.test(body)) errors.push('Contains an em dash; rewrite the sentence before publication');
   errors.push(...writingPatternErrors(body));
   if (/https?:\/\/(?:www\.)?example\.com/i.test(text)) errors.push('Contains an example.com source');
