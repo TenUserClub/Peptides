@@ -1,0 +1,30 @@
+{
+  "doctorName": "Dr. Jeffrey Zigman",
+  "city": "Dallas",
+  "state": "TX",
+  "credentials": "MD",
+  "specialty": "Endocrinology, Diabetes & Metabolism (related to GLP-1 therapy)",
+  "clinicName": "Not explicitly stated",
+  "website": "https://www.healthgrades.com/physician/dr-jeffrey-zigman-22dsv",
+  "phone": "(214) 645-2868",
+  "services": [],
+  "ratingValue": 5,
+  "ratingCount": 9,
+  "ratingSource": "Healthgrades",
+  "yearsInPractice": "25+",
+  "sourceUrls": [
+    "https://www.healthgrades.com/physician/dr-jeffrey-zigman-22dsv"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1437162914"
+  ],
+  "npi": "1437162914",
+  "taxonomies": [
+    {
+      "desc": "Internal Medicine, Endocrinology, Diabetes & Metabolism",
+      "state": "TX"
+    }
+  ]
+}

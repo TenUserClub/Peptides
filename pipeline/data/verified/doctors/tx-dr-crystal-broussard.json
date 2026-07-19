@@ -1,0 +1,34 @@
+{
+  "doctorName": "Dr. Crystal Broussard",
+  "city": "Spring",
+  "state": "TX",
+  "credentials": "MD",
+  "specialty": "GLP-1 therapy",
+  "clinicName": "Harmony Aesthetics Medical Spa",
+  "website": "https://harmonyaestheticsspa.com/expert-glp-1-doctor-in-spring-tx/",
+  "phone": "",
+  "services": [
+    "GLP-1 medication prescription and management",
+    "Nutrition and activity integration",
+    "Personalized hormone evaluation"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": 20,
+  "sourceUrls": [
+    "https://harmonyaestheticsspa.com/expert-glp-1-doctor-in-spring-tx/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1588688576"
+  ],
+  "npi": "1588688576",
+  "taxonomies": [
+    {
+      "desc": "Family Medicine",
+      "state": "TX"
+    }
+  ]
+}

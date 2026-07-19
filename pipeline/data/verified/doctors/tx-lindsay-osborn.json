@@ -1,0 +1,37 @@
+{
+  "doctorName": "Lindsay Osborn",
+  "city": "Austin",
+  "state": "TX",
+  "credentials": "NP",
+  "specialty": "GLP-1 therapy and peptide therapy",
+  "clinicName": "TrueBalance Telehealth PLLC",
+  "website": "https://www.linkedin.com/company/truebalance-telehealth-pllc",
+  "phone": "",
+  "services": [
+    "Hormone optimization",
+    "Metabolic health",
+    "Weight management",
+    "GLP-1 therapy",
+    "Peptide therapy"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": 19,
+  "sourceUrls": [
+    "https://www.linkedin.com/in/lindsay-osborn",
+    "https://www.linkedin.com/company/truebalance-telehealth-pllc"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1245427087"
+  ],
+  "npi": "1245427087",
+  "taxonomies": [
+    {
+      "desc": "Nurse Practitioner, Family",
+      "state": "TX"
+    }
+  ]
+}
