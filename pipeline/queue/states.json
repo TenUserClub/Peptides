@@ -1,15 +1,45 @@
 {
-  "next": 0,
+  "next": 1,
   "states": [
-    { "state": "Florida", "specialty": "GLP-1 therapy" },
-    { "state": "Texas", "specialty": "GLP-1 therapy" },
-    { "state": "California", "specialty": "peptide therapy" },
-    { "state": "Arizona", "specialty": "peptide therapy" },
-    { "state": "Florida", "specialty": "hormone and longevity medicine" },
-    { "state": "Colorado", "specialty": "GLP-1 therapy" },
-    { "state": "Tennessee", "specialty": "peptide therapy" },
-    { "state": "Georgia", "specialty": "GLP-1 therapy" },
-    { "state": "Nevada", "specialty": "longevity medicine" },
-    { "state": "New York", "specialty": "GLP-1 therapy" }
+    {
+      "state": "Florida",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Texas",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "California",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Arizona",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Florida",
+      "specialty": "hormone and longevity medicine"
+    },
+    {
+      "state": "Colorado",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Tennessee",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Georgia",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Nevada",
+      "specialty": "longevity medicine"
+    },
+    {
+      "state": "New York",
+      "specialty": "GLP-1 therapy"
+    }
   ]
 }

@@ -1,0 +1,28 @@
+{
+  "clinicName": "Victory Rejuvenate",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://www.victoryrejuvenate.com/services/peptides",
+  "doctorName": "",
+  "services": [
+    "Cognitive Enhancement (Semax)",
+    "Growth Hormone Optimization (CJC-1295 + Ipamorelin)",
+    "Healing & Recovery (BPC-157)",
+    "Visceral Fat Reduction (Tesamorelin)",
+    "Non-Hormonal Fat Loss (AOD-9604)",
+    "Skin & Tissue Rejuvenation (GHK-CU)",
+    "Natural GH Release (Sermorelin)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.victoryrejuvenate.com/services/peptides"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

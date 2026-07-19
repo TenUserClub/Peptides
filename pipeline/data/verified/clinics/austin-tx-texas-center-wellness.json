@@ -1,0 +1,23 @@
+{
+  "clinicName": "Texas Center Wellness",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://www.texascenterwellness.com/peptide-therapy-austin",
+  "doctorName": "",
+  "services": [
+    "Physician-guided peptide therapy to improve energy, metabolism, recovery, and vitality"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.texascenterwellness.com/peptide-therapy-austin"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

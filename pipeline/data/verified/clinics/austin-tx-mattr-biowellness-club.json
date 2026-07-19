@@ -1,0 +1,28 @@
+{
+  "clinicName": "MATTR Biowellness Club",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://www.mattrbiowellnessclub.com/peptide-therapy",
+  "doctorName": "",
+  "services": [
+    "GLP-1 Medical Weight Loss (Semaglutide)",
+    "Weight Loss + Body Recomp",
+    "Regenerative Recovery",
+    "Vitality & Longevity",
+    "Immune Support",
+    "Cognitive Clarity & Mood",
+    "Aesthetics / Intimate Wellness"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.mattrbiowellnessclub.com/peptide-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

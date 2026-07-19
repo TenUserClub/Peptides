@@ -1,0 +1,29 @@
+{
+  "clinicName": "Wholeness Collective Austin",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://wholenesscollectiveaustin.com/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Metabolic & Fat Loss Peptides",
+    "Cognitive & Sleep Peptides",
+    "Tissue repair and injury recovery",
+    "Muscle growth and fat metabolism",
+    "Brain clarity and sleep quality",
+    "Immune system balance",
+    "Skin, joint, and connective tissue health",
+    "Longevity and cellular resilience"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://wholenesscollectiveaustin.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

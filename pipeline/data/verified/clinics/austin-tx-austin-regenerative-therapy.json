@@ -1,0 +1,25 @@
+{
+  "clinicName": "Austin Regenerative Therapy",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://austinregen.com/regenerative-medicine/tailored-peptides/",
+  "doctorName": "",
+  "services": [
+    "AI-designed personalized peptides tailored from blood and urine",
+    "Targeting 8 hallmarks of aging",
+    "Boost body’s resilience, promote longevity",
+    "Support individuals facing active disease or cancer"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://austinregen.com/regenerative-medicine/tailored-peptides/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

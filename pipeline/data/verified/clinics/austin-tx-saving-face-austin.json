@@ -1,0 +1,29 @@
+{
+  "clinicName": "Saving Face Austin",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://www.savingfaceaustin.com/longevity/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Peptide protocols for metabolic function and fat loss",
+    "Faster recovery and reduced inflammation",
+    "Enhanced libido and sexual performance",
+    "Clearer skin and reduced signs of aging",
+    "Better sleep quality and circadian rhythm support",
+    "Stronger immune response",
+    "Heightened energy, mood, and cognitive sharpness",
+    "Increased lean muscle mass and endurance"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.savingfaceaustin.com/longevity/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

@@ -81,5 +81,10 @@
       "city": "Seattle",
       "state": "WA"
     }
-  ]
+  ],
+  "inFlight": {
+    "label": "Austin, TX",
+    "file": "/home/runner/work/Peptides/Peptides/pipeline/data/exa/clinics/austin-tx-2026-07-19T16-24-41-426Z.json",
+    "fetchedAt": "2026-07-19T16:24:41.428Z"
+  }
 }

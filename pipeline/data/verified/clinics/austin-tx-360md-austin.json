@@ -1,0 +1,32 @@
+{
+  "clinicName": "360MD Austin",
+  "city": "Austin",
+  "state": "TX",
+  "address": "",
+  "phone": "",
+  "website": "https://360mdaustin.com/performance-optimization-peptides",
+  "doctorName": "",
+  "services": [
+    "Performance optimization peptides",
+    "CJC-1295 / Ipamorelin",
+    "Sermorelin",
+    "BPC-157",
+    "PT-141",
+    "NAD+",
+    "Kisspeptin",
+    "Thymosin Beta 4 (TB500)",
+    "Tesamorelin",
+    "Gonadorelin",
+    "GLPs (tirzepatide and semaglutide)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://360mdaustin.com/performance-optimization-peptides"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}
