@@ -2,7 +2,7 @@ name: Editorial pipeline
 
 on:
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "23 2,10,18 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -28,6 +28,8 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
+      GOOGLE_SEARCH_CONSOLE_PROPERTIES: ${{ vars.GOOGLE_SEARCH_CONSOLE_PROPERTIES }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
       OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
       OPENAI_HUMANISE_MODEL: ${{ vars.OPENAI_HUMANISE_MODEL }}
@@ -35,6 +37,7 @@ jobs:
       OPENAI_SUMMARY_MODEL: ${{ vars.OPENAI_SUMMARY_MODEL }}
       SITE_DOMAIN: mypeptide.club
       AUTO_PUSH: "false"
+      REQUIRE_SUPABASE: "true"
     steps:
       - uses: actions/checkout@v4
         with:

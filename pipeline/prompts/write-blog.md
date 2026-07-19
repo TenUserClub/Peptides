@@ -8,10 +8,7 @@ Blog posts are **evergreen educational content** — not news, not time-sensitiv
 
 ## Input
 
-Generate blog post ideas based on:
-1. Gaps in the existing blog — what topics don't we have yet?
-2. Common patient questions ("Is peptide therapy safe?", "How much does it cost?")
-3. Keyword opportunities (head terms the directory pages won't rank for)
+The orchestrator assigns one fixed brief from `pipeline/queue/blog-topics.json`. Follow its exact title, primary keyword, reader intent, category, and approved source list. Do not invent a replacement topic. Use the keyword naturally and write for the reader, not for keyword density.
 
 ## Output
 

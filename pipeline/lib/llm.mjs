@@ -10,7 +10,7 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
  * Call the OpenAI Chat Completions API.
  * Retries with exponential backoff on 429 (rate limit) and 5xx errors.
  */
-export async function chat({ system, user, model = 'gpt-4o', temperature = 0.7, jsonMode = false, maxTokens = 4000 }) {
+export async function chat({ system, user, model = 'gpt-4.1', temperature = 0.7, jsonMode = false, maxTokens = 4000 }) {
   const openAIKey = process.env.OPENAI_API_KEY || '';
   if (!openAIKey) throw new Error('OPENAI_API_KEY is required for this stage');
   const body = {

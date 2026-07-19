@@ -20,7 +20,11 @@ import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
 import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
-import { startRun, finishRun } from './lib/db.mjs';
+import {
+  startRun, finishRun, upsertClinic, upsertDoctor, upsertPublishedPost,
+  upsertKeywordMetrics, getKeywordSignals, pruneKeywordMetrics, setQueueState,
+} from './lib/db.mjs';
+import { fetchSearchQueries, isConfigured as isSearchConsoleConfigured } from './lib/search-console.mjs';
 
 loadEnv();
 
@@ -32,16 +36,16 @@ const SITE_DOMAIN = rawDomain && !rawDomain.startsWith('#')
 // ── Configuration ──────────────────────────────────────────────
 const CONFIG = {
   models: {
-    writing: process.env.OPENAI_WRITING_MODEL || 'gpt-4o',
-    humanise: process.env.OPENAI_HUMANISE_MODEL || 'gpt-4o-mini',
-    verify: process.env.OPENAI_VERIFY_MODEL || 'gpt-4o-mini',
-    summary: process.env.OPENAI_SUMMARY_MODEL || 'gpt-4o-mini',
+    writing: process.env.OPENAI_WRITING_MODEL || 'gpt-4.1',
+    humanise: process.env.OPENAI_HUMANISE_MODEL || 'gpt-4.1',
+    verify: process.env.OPENAI_VERIFY_MODEL || 'gpt-4.1-mini',
+    summary: process.env.OPENAI_SUMMARY_MODEL || 'gpt-4.1-mini',
   },
   velocity: {
     maxNewsPerDay: 3,
     maxLegalPerDay: 3,
     maxDirPerDay: 5,
-    maxBlogPerDay: 2,
+    maxBlogPerDay: 1,
     maxHumanisePerRun: 10,
     maxPublishPerRun: 10,
   },
@@ -149,6 +153,21 @@ function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 }
 
+function readableText(html) {
+  return String(html || '')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<(script|style|svg|noscript)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;|&#34;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── Web fetch ──────────────────────────────────────────────────
 async function webFetch(url, opts = {}) {
   const { maxRetries = CONFIG.web.maxRetries, timeout = CONFIG.web.timeout } = opts;
@@ -212,6 +231,66 @@ function allTitles(collection) {
 }
 
 // ── Stage: Fetch ───────────────────────────────────────────────
+function keywordOpportunityScore(topic, signals) {
+  const phrases = [topic.keyword, ...(topic.supportingKeywords || [])]
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+  return signals.reduce((score, signal) => {
+    const query = String(signal.keyword || '').trim().toLowerCase();
+    const matches = query && phrases.some((phrase) => query === phrase ||
+      (query.length >= 12 && (query.includes(phrase) || phrase.includes(query))));
+    if (!matches) return score;
+    const impressions = Number(signal.impressions || 0);
+    const ctr = Math.max(0, Math.min(1, Number(signal.ctr || 0)));
+    const position = Number(signal.position || 100);
+    const positionWeight = position >= 4 && position <= 30 ? 1.5 : 1;
+    return score + impressions * (1 - ctr) * positionWeight;
+  }, 0);
+}
+
+async function runSyncKeywords() {
+  log('info', 'orchestrator: sync-keywords');
+  if (DRY_RUN) {
+    log('info', `DRY RUN: would sync ${isSearchConsoleConfigured() ? 'Search Console queries' : 'editorial seed keywords'} into Supabase`);
+    return 0;
+  }
+  if (!isSearchConsoleConfigured()) {
+    const today = new Date().toISOString().slice(0, 10);
+    const checkedAt = new Date().toISOString();
+    const topicQueue = readJson(join(PIPELINE, 'queue', 'blog-topics.json'), { topics: [] });
+    const keywords = new Set((topicQueue.topics || []).flatMap((topic) =>
+      [topic.keyword, ...(topic.supportingKeywords || [])].map((value) => String(value || '').trim().toLowerCase())
+    ).filter(Boolean));
+    const seedRows = [...keywords].map((keyword) => ({
+      source: 'editorial_seed',
+      property: 'network',
+      keyword,
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: null,
+      period_start: today,
+      period_end: today,
+      checked_at: checkedAt,
+      updated_at: checkedAt,
+    }));
+    const saved = await upsertKeywordMetrics(seedRows);
+    log('info', `sync-keywords: saved ${saved} editorial seed keywords to Supabase`);
+    return saved;
+  }
+  const existing = await getKeywordSignals(1);
+  const today = new Date().toISOString().slice(0, 10);
+  if (existing[0]?.checked_at?.slice(0, 10) === today) {
+    log('info', 'sync-keywords: today\'s Search Console snapshot already exists');
+    return 0;
+  }
+  const metrics = await fetchSearchQueries();
+  const saved = await upsertKeywordMetrics(metrics);
+  const pruned = await pruneKeywordMetrics(90);
+  log('info', `sync-keywords: saved ${saved} query metrics and pruned ${pruned} expired rows in Supabase`);
+  return saved;
+}
+
 async function runFetch(mode) {
   log('info', `orchestrator: fetch-${mode}`);
   if (DRY_RUN) {
@@ -278,7 +357,7 @@ async function runWriteNews() {
     if (!story.url || !isAuthoritativeUrl(story.url)) continue;
     try {
       const primaryText = await webFetch(story.url, { maxRetries: 1, timeout: 12000 });
-      allStories.push({ ...story, primaryText: primaryText.slice(0, 6000) });
+      allStories.push({ ...story, primaryText: readableText(primaryText).slice(0, 6000) });
     } catch (e) {
       log('warn', `write-news: primary source unavailable ${story.url}: ${e.message}`);
     }
@@ -428,104 +507,131 @@ async function runWriteBlog() {
     return 0;
   }
 
-  const researchTargets = [
-    'https://www.fda.gov/drugs/human-drug-compounding',
-    'https://clinicaltrials.gov/search?term=peptide',
-    'https://pubmed.ncbi.nlm.nih.gov/?term=peptide+therapy',
-  ];
-  const researchBundle = [];
-  if (!DRY_RUN) {
-    for (const url of researchTargets) {
-      try {
-        const sourceText = await webFetch(url, { maxRetries: 1, timeout: 12000 });
-        researchBundle.push({ url, text: sourceText.slice(0, 5000) });
-      } catch (e) {
-        log('warn', `write-blog: research source unavailable ${url}: ${e.message}`);
-      }
-    }
-    if (researchBundle.length < 2) {
-      log('warn', 'write-blog: fewer than two authoritative research sources available; refusing to draft');
-      return 0;
-    }
-  }
-
   const existingTitles = allTitles('blog');
   const existingNewsTitles = [...allTitles('news'), ...allTitles('legal')];
+  const topicQueue = readJson(join(PIPELINE, 'queue', 'blog-topics.json'), { topics: [] });
+  const existingBlogFiles = [
+    ...findFiles(contentDirFor('blog'), /\.md$/, /_sample|\.diff\.md/),
+    ...findFiles(join(PIPELINE, 'drafts', 'blog'), /\.md$/, /_sample|\.diff\.md/),
+    ...findFiles(join(PIPELINE, 'humanised', 'blog'), /\.md$/, /_sample|\.diff\.md/),
+  ];
+  const existingSlugs = new Set(existingBlogFiles.map((path) => basename(path, '.md')));
+  const existingNormalizedTitles = new Set(existingBlogFiles
+    .map((path) => extractTitle(readText(path) || ''))
+    .filter(Boolean)
+    .map((title) => slugify(title)));
+  const keywordSignals = DRY_RUN ? [] : await getKeywordSignals();
+  const selectedTopics = (topicQueue.topics || [])
+    .filter((topic) => topic.status === 'ready')
+    .filter((topic) => topic.id && topic.title && topic.keyword && topic.category)
+    .filter((topic) => !existingSlugs.has(topic.id) && !existingNormalizedTitles.has(slugify(topic.title)))
+    .map((topic) => ({ ...topic, searchOpportunity: keywordOpportunityScore(topic, keywordSignals) }))
+    .sort((a, b) => b.searchOpportunity - a.searchOpportunity || (b.priority || 0) - (a.priority || 0))
+    .slice(0, available);
+
+  if (selectedTopics.length === 0) {
+    log('warn', 'write-blog: no ready, unpublished topics remain in blog-topics.json');
+    return 0;
+  }
+
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-blog.md')) || '';
   const samplePost = readText(join(ROOT, 'sites', 'content', 'src', 'content', 'blog', '_sample-beginners-guide.md')) || '';
 
   const systemPrompt = `You are an autonomous peptide blog writer. You MUST follow every editorial rule below.\n\n${claudeRules}\n\n${writerPrompt}\n\nSAMPLE FORMAT:\n${samplePost}`;
 
-  const userPrompt = `Today's date: ${today}
-Blog posts already published today: ${todayCount}
-Maximum allowed today: ${CONFIG.velocity.maxBlogPerDay}
-You may write up to: ${available} posts
-
-EXISTING BLOG POSTS (do not duplicate these topics):
-${existingTitles.map((t) => `- ${t}`).join('\n') || '(none yet)'}
-
-EXISTING NEWS TOPICS (avoid overlap — blog is evergreen, news is time-sensitive):
-${existingNewsTitles.slice(0, 20).map((t) => `- ${t}`).join('\n') || '(none yet)'}
-
-AUTHORITATIVE RESEARCH SOURCES:
-${JSON.stringify(researchBundle, null, 2)}
-
-INSTRUCTIONS:
-1. Write ${available} evergreen educational blog post(s) about peptide therapy
-2. Choose topics that fill gaps — what would a patient researching peptide therapy want to know?
-3. For each post, write a markdown post with YAML frontmatter matching this schema. Output RAW markdown — do NOT wrap in \`\`\`markdown code blocks:
-   ---
-   title: "..."
-   description: "..."
-   category: "beginners" | "guides" | "comparisons" | "science" | "cost" | "safety"
-   tags: ["tag1", "tag2"]
-   sources: ["authoritative-url-1", "authoritative-url-2"]
-   author: "Peptide Atlas Editorial Team"
-   publishDate: YYYY-MM-DD
-   ---
-4. Separate each post with: <!-- POST SEPARATOR -->
-5. 1,000-1,500 words per post
-6. No treatment claims. Every medical claim sourced.
-7. Include internal links where relevant (e.g., link to /clinics/ or /doctors/ pages)`;
-
   if (DRY_RUN) {
-    log('info', 'DRY RUN: would call OpenAI to write blog posts');
+    for (const topic of selectedTopics) {
+      log('info', `DRY RUN: would write blog topic ${topic.id} for keyword "${topic.keyword}"`);
+    }
     return 0;
   }
 
-  try {
-    const response = await chat({
-      system: systemPrompt,
-      user: userPrompt,
-      model: CONFIG.models.writing,
-      temperature: 0.65,
-    });
+  let written = 0;
+  for (const topic of selectedTopics) {
+    const researchBundle = [];
+    for (const url of topic.sourceUrls || []) {
+      if (!isAuthoritativeUrl(url)) {
+        log('warn', `write-blog: ignored non-authoritative queued source ${url}`);
+        continue;
+      }
+      try {
+        const sourceText = await webFetch(url, { maxRetries: 1, timeout: 12000 });
+        researchBundle.push({ url, text: readableText(sourceText).slice(0, 6000) });
+      } catch (e) {
+        log('warn', `write-blog: research source unavailable ${url}: ${e.message}`);
+      }
+    }
+    if (researchBundle.length < 2) {
+      log('warn', `write-blog: ${topic.id} has fewer than two reachable authoritative sources; refusing to draft`);
+      continue;
+    }
 
-    const posts = response
-      .split('<!-- POST SEPARATOR -->')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    let written = 0;
+    const approvedSources = researchBundle.map((source) => source.url);
+    const userPrompt = `Today's date: ${today}
 
-    for (const post of posts) {
+ASSIGNED EDITORIAL BRIEF:
+- Exact title: ${topic.title}
+- Primary keyword: ${topic.keyword}
+- Supporting phrases: ${(topic.supportingKeywords || []).join(', ') || '(none)'}
+- Category: ${topic.category}
+- Reader intent: ${topic.intent}
+
+EXISTING BLOG POSTS (do not duplicate these topics):
+${existingTitles.map((title) => `- ${title}`).join('\n') || '(none yet)'}
+
+RECENT NEWS TOPICS (keep this article evergreen and avoid duplicating them):
+${existingNewsTitles.slice(0, 20).map((title) => `- ${title}`).join('\n') || '(none yet)'}
+
+APPROVED AUTHORITATIVE SOURCES:
+${JSON.stringify(researchBundle, null, 2)}
+
+INSTRUCTIONS:
+1. Write one evergreen educational article that follows the assigned brief. Do not choose a different topic or title.
+2. Use the primary keyword naturally. Do not repeat it mechanically or write for a search engine instead of a reader.
+3. Use only the approved source URLs in frontmatter and factual attribution. Do not invent citations.
+4. Output raw Markdown beginning with this schema, without a code fence:
+   ---
+   title: "${topic.title}"
+   description: "..."
+   category: "${topic.category}"
+   tags: ["tag1", "tag2"]
+   sources: ${JSON.stringify(approvedSources)}
+   author: "Peptide Atlas Editorial Team"
+   publishDate: ${today}
+   ---
+5. Write 1,000-1,500 words. Attribute every medical or regulatory claim to a named source.
+6. Report evidence and uncertainty. Do not recommend a treatment, product, dose, clinic, or clinician.
+7. Add relevant cross-domain links only when they help the reader.`;
+
+    try {
+      const response = await chat({
+        system: systemPrompt,
+        user: userPrompt,
+        model: CONFIG.models.writing,
+        temperature: 0.65,
+      });
+      const post = stripMarkdownFences(response);
       const fm = parseFrontmatter(post);
       if (!fm || !fm.data.title) {
         const preview = post.slice(0, 200).replace(/\n/g, '\\n');
-        log('warn', `write-blog: skipping malformed post (preview: ${preview}...)`);
-        const debugPath = join(PIPELINE, 'drafts', 'blog', `_malformed-${Date.now()}.md`);
+        log('warn', `write-blog: skipping malformed ${topic.id} (preview: ${preview}...)`);
+        const debugPath = join(PIPELINE, 'drafts', 'blog', `_malformed-${topic.id}-${Date.now()}.md`);
         writeText(debugPath, post);
         continue;
       }
-
-      const category = fm.data.category || 'guides';
-      const slug = `${category}-${slugify(fm.data.title)}`;
-      const outPath = join(PIPELINE, 'drafts', 'blog', `${slug}.md`);
+      const returnedSources = Array.isArray(fm.data.sources) ? fm.data.sources : [];
+      if (slugify(fm.data.title) !== slugify(topic.title) || fm.data.category !== topic.category ||
+          returnedSources.length < 2 || returnedSources.some((source) => !approvedSources.includes(source))) {
+        log('warn', `write-blog: ${topic.id} did not follow its fixed title, category, or source brief`);
+        continue;
+      }
+      const outPath = join(PIPELINE, 'drafts', 'blog', `${topic.id}.md`);
 
       const imagePath = await generateImage('blog', {
         title: fm.data.title,
         description: fm.data.description,
-      }, slug);
+      }, topic.id);
 
       let postWithImage = post;
       if (imagePath) {
@@ -536,15 +642,13 @@ INSTRUCTIONS:
       }
 
       writeText(outPath, postWithImage);
-      log('info', `write-blog: drafted ${slug}${imagePath ? ' with image' : ''}`);
+      log('info', `write-blog: drafted ${topic.id} for keyword "${topic.keyword}" (Search Console opportunity ${topic.searchOpportunity.toFixed(1)})${imagePath ? ' with image' : ''}`);
       written++;
+    } catch (e) {
+      log('error', `write-blog: ${topic.id}: ${e.message}`);
     }
-
-    return written;
-  } catch (e) {
-    log('error', `write-blog: ${e.message}`);
-    return 0;
   }
+  return written;
 }
 
 // ── Stage: Humanise ────────────────────────────────────────────
@@ -562,7 +666,7 @@ async function runHumanise() {
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const humanisePrompt = readText(join(PIPELINE, 'prompts', 'humanise.md')) || '';
 
-  const rubricMatch = claudeRules.match(/## Humaniser rubric[\s\S]*?(?=## Velocity|$)/);
+  const rubricMatch = claudeRules.match(/## Humaniser (?:rubric|limits)[\s\S]*?(?=## Velocity|$)/);
   const rubric = rubricMatch ? rubricMatch[0] : 'Remove AI-writing signs: puffery, essay scaffolding, hedging, vague attribution, uniform rhythm.';
 
   let processed = 0;
@@ -594,7 +698,26 @@ async function runHumanise() {
       const outPath = join(humanisedDir, relativePath);
       const diffPath = outPath.replace(/\.md$/, '.diff.md');
 
-      const cleanedResponse = stripMarkdownFences(response);
+      const original = stripMarkdownFences(draftText).replace(/\r\n/g, '\n');
+      const edited = stripMarkdownFences(response).replace(/\r\n/g, '\n');
+      const originalParts = original.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
+      const editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
+      if (!originalParts || !editedParts) {
+        log('warn', `humanise: rejected ${relativePath}; editor returned malformed frontmatter`);
+        continue;
+      }
+      const cleanedResponse = `${originalParts[1]}${editedParts[2].trim()}\n`;
+      const collection = relativePath.split(/[\\/]/)[0];
+      const guard = validateContent({
+        text: cleanedResponse,
+        collection,
+        filename: draftPath,
+        verifiedRoot: join(PIPELINE, 'data', 'verified'),
+      });
+      if (!guard.ok) {
+        log('warn', `humanise: rejected ${relativePath}: ${guard.errors.join('; ')}`);
+        continue;
+      }
       writeText(outPath, cleanedResponse);
 
       const diff = `<!-- BEFORE -->\n${draftText}\n\n<!-- AFTER -->\n${cleanedResponse}`;
@@ -700,7 +823,10 @@ async function runPublish() {
     const imageFile = typeof fm.data.image === 'string' && /^\/images\/[A-Za-z0-9_./-]+$/.test(fm.data.image)
       ? join(siteDirFor(collection), 'public', fm.data.image.replace(/^\//, ''))
       : null;
-    toMove.push({ file, targetPath, imageFile, collection, title: fm.data.title, isDir, isNews, isBlog });
+    toMove.push({
+      file, targetPath, imageFile, collection, title: fm.data.title,
+      frontmatter: fm.data, isDir, isNews, isBlog,
+    });
     if (isDir) selectedDir++;
     if (isNews) selectedNews++;
     if (isBlog) selectedBlog++;
@@ -752,7 +878,7 @@ async function runPublish() {
     }
   }
 
-  advanceQueues();
+  await advanceQueues();
   log('info', 'publish: committing scoped publication files');
   try {
     const preExistingStaged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
@@ -771,6 +897,37 @@ async function runPublish() {
     const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
     if (!staged) throw new Error('No scoped publication changes were staged');
     execFileSync('git', ['commit', '-m', `publish: auto-posts ${today}`], { cwd: ROOT, stdio: 'pipe' });
+    const topicQueue = readJson(join(PIPELINE, 'queue', 'blog-topics.json'), { topics: [] });
+    for (const item of toMove) {
+      const slug = basename(item.targetPath, '.md');
+      const domain = item.collection === 'clinics' ? 'https://mypeptide.club'
+        : item.collection === 'doctors' ? 'https://toppeptideslist.com'
+          : item.collection === 'news' ? 'https://peptidesnews.us'
+            : item.collection === 'updates' ? 'https://peptidesupdates.com'
+              : 'https://safepeptides.us';
+      const route = item.collection === 'doctors' || item.collection === 'news' || item.collection === 'updates'
+        ? `/${slug}/`
+        : `/${item.collection}/${slug}/`;
+      const topic = item.collection === 'blog'
+        ? (topicQueue.topics || []).find((candidate) => candidate.id === slug)
+        : null;
+      await upsertPublishedPost({
+        title: item.frontmatter.title,
+        slug,
+        description: item.frontmatter.description,
+        collection: item.collection,
+        source_name: item.frontmatter.sourceName || null,
+        source_url: item.frontmatter.sourceUrl || item.frontmatter.sources?.[0] || null,
+        site_url: `${domain}${route}`,
+        publish_date: item.frontmatter.publishDate || today,
+        published: true,
+        published_at: new Date().toISOString(),
+        featured_image: item.frontmatter.image || null,
+        og_image: item.frontmatter.ogImage || null,
+        tags: item.frontmatter.tags || [],
+        keywords: topic ? [topic.keyword, ...(topic.supportingKeywords || [])] : [],
+      });
+    }
     if (process.env.AUTO_PUSH === 'true') {
       let pushed = false;
       for (let attempt = 1; attempt <= 2 && !pushed; attempt++) {
@@ -795,7 +952,7 @@ async function runPublish() {
 }
 
 // ── Queue advancement ──────────────────────────────────────────
-function advanceQueues() {
+async function advanceQueues() {
   // Advance cities queue
   const citiesPath = join(PIPELINE, 'queue', 'cities.json');
   const cities = readJson(citiesPath);
@@ -866,6 +1023,24 @@ function advanceQueues() {
     } else {
       log('info', `publish: states queue holding — ${inFlightLabel} still has unpublished content`);
     }
+  }
+  if (cities) {
+    await setQueueState('cities', {
+      next_index: cities.next || 0,
+      in_flight_label: cities.inFlight?.label || null,
+      in_flight_file: cities.inFlight?.file || null,
+      in_flight_at: cities.inFlight?.fetchedAt || null,
+      total_processed: cities.next || 0,
+    });
+  }
+  if (states) {
+    await setQueueState('states', {
+      next_index: states.next || 0,
+      in_flight_label: states.inFlight?.label || null,
+      in_flight_file: states.inFlight?.file || null,
+      in_flight_at: states.inFlight?.fetchedAt || null,
+      total_processed: states.next || 0,
+    });
   }
 }
 
@@ -1218,6 +1393,49 @@ ${JSON.stringify(data.results.map((r) => ({ title: r.title, url: r.url, text: (r
         : `${record.state.toLowerCase()}-${slugify(record.doctorName)}`;
       const outPath = join(PIPELINE, 'data', 'verified', type === 'clinic' ? 'clinics' : 'doctors', `${slug}.json`);
       writeJson(outPath, record);
+      const verifiedAt = new Date().toISOString();
+      if (type === 'clinic') {
+        await upsertClinic({
+          slug,
+          clinic_name: record.clinicName,
+          city: record.city,
+          state: record.state,
+          address: record.address || null,
+          website: record.website || null,
+          phone: record.phone || null,
+          doctor_name: record.doctorName || null,
+          npi: record.npi || null,
+          services: record.services || [],
+          rating_value: record.ratingValue || null,
+          rating_count: record.ratingCount || null,
+          rating_source: record.ratingSource || null,
+          verified: true,
+          verified_at: verifiedAt,
+          verification_sources: record.sourceUrls || [],
+          status: 'verified',
+          notes: (record.verificationNotes || []).join('; '),
+        });
+      } else {
+        await upsertDoctor({
+          slug,
+          kind: 'profile',
+          doctor_name: record.doctorName,
+          npi: record.npi,
+          credentials: record.credentials || null,
+          city: record.city || null,
+          state: record.state,
+          specialty: record.specialty,
+          taxonomies: record.taxonomies || [],
+          rating_value: record.ratingValue || null,
+          rating_count: record.ratingCount || null,
+          rating_source: record.ratingSource || null,
+          verified: true,
+          verified_at: verifiedAt,
+          verification_sources: record.sourceUrls || [],
+          status: 'verified',
+          notes: (record.verificationNotes || []).join('; '),
+        });
+      }
       verified++;
     } else {
       rejects.push({ reason: `Not verifiable: ${record.verificationNotes.join('; ')}`, name: nameField });
@@ -1588,15 +1806,18 @@ async function main() {
   const allowedStages = new Set([
     'all', 'fetch-news', 'fetch-clinics', 'fetch-doctors', 'verify', 'write-news',
     'write-blog', 'write-clinics', 'write-doctors', 'write-updates', 'humanise',
-    'publish', 'monitor',
+    'publish', 'monitor', 'sync-keywords',
   ]);
   if (!allowedStages.has(stage)) throw new Error(`Unknown pipeline stage: ${stage}`);
 
-  const runRecord = await startRun(stage, { dryRun: DRY_RUN, model: CONFIG.models.writing });
+  const runRecord = DRY_RUN
+    ? null
+    : await startRun(stage, { dryRun: false, model: CONFIG.models.writing });
 
   log('info', `=== Orchestrator started: stage=${stage}, hour=${hour}, dry-run=${DRY_RUN}, site=${SITE_DOMAIN} ===`);
 
   try {
+    if (stage === 'all' || stage === 'sync-keywords') await runSyncKeywords();
     if (stage === 'all' || stage === 'fetch-news') await runFetch('news');
     if (stage === 'all' || stage === 'fetch-clinics') await runFetch('clinics');
     if (stage === 'all' || stage === 'fetch-doctors') await runFetch('doctors');
@@ -1613,10 +1834,10 @@ async function main() {
     if (stage === 'all' || stage === 'publish') await runPublish();
     if (stage === 'all' || stage === 'monitor') await runMonitor();
 
-    await finishRun(runRecord?.id, 'success', `Completed stage ${stage}`);
+    if (!DRY_RUN) await finishRun(runRecord?.id, 'success', `Completed stage ${stage}`);
     log('info', '=== Orchestrator finished ===');
   } catch (error) {
-    await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message);
+    if (!DRY_RUN) await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message);
     throw error;
   }
 }

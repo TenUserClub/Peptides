@@ -4,12 +4,12 @@ Last reviewed: 2026-07-17
 
 ## Outcome
 
-The repository now has five independent deployable sites, coherent shared UI, correct cross-project header navigation, four accessible themes, explicit editorial trust pages, safer contact handling, and a deterministic content publication gate. Previously published generated posts were withdrawn into `pipeline/quarantine/2026-07-17/` because their source quality and factual support were not strong enough for a health-related site.
+The repository now has five independent deployable sites, coherent shared UI, correct cross-project header navigation, a permanent Wellness visual system, explicit editorial trust pages, safer contact handling, and a deterministic content publication gate. Previously published generated posts were withdrawn into `pipeline/quarantine/2026-07-17/` because their source quality and factual support were not strong enough for a health-related site.
 
 ## Improvements completed
 
 - Header links resolve to the five public custom domains and contain no public Vercel deployment URLs.
-- All projects share the same responsive design system and four-theme switcher.
+- All projects share the same responsive Wellness design system, self-hosted typography, and Peptide Atlas logo.
 - Sample markdown is excluded from generated pages, related content, RSS, and sitemaps.
 - Site-facing em dashes are rejected during built-output checks.
 - Clinic and doctor verification now requires stronger first-party evidence.

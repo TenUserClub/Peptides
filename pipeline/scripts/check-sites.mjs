@@ -37,6 +37,8 @@ for (const project of projects) {
   }
   const robotsPath = join(project.root, 'public', 'robots.txt');
   const robots = existsSync(robotsPath) ? readFileSync(robotsPath, 'utf8') : '';
+  if (!existsSync(join(project.root, 'public', 'brand-mark.svg'))) errors.push(`${project.name}: shared logo is missing`);
+  if (!existsSync(join(project.root, 'public', 'fonts', 'plus-jakarta-sans-latin.woff2'))) errors.push(`${project.name}: shared font is missing`);
   for (const sitemap of project.sitemaps) {
     if (!robots.includes(sitemap)) errors.push(`${project.name}: robots.txt is missing ${sitemap}`);
   }
@@ -57,6 +59,8 @@ for (const project of projects) {
     if (/\u2014|â€”/.test(text)) errors.push(`${project.name}: em dash found in ${file}`);
     if (/https:\/\/[^"'<\s]*\.vercel\.app/i.test(text)) errors.push(`${project.name}: legacy Vercel hostname leaked into ${file}`);
     if (file.endsWith('.html')) {
+      if (/theme-switcher|peptide-theme/.test(text)) errors.push(`${project.name}: removed theme switcher leaked into ${file}`);
+      if (!text.includes('/brand-mark.svg')) errors.push(`${project.name}: logo is missing from ${file}`);
       for (const domain of publicDomains) {
         if (!text.includes(domain)) errors.push(`${project.name}: header domain ${domain} is missing from ${file}`);
       }

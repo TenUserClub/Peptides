@@ -23,7 +23,8 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f9f6" />
+    <meta name="theme-color" content="#f7f2e9" />
+    <link rel="icon" href="/brand-mark.svg" type="image/svg+xml" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -40,13 +41,6 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     {analyticsDomain && <script defer data-domain={analyticsDomain} src="https://plausible.io/js/script.js"></script>}
-    <script is:inline>
-      (() => {
-        const saved = localStorage.getItem('peptide-theme');
-        const theme = saved || (matchMedia('(prefers-color-scheme: dark)').matches ? 'lab' : 'clinical');
-        document.documentElement.dataset.theme = theme;
-      })();
-    </script>
     <link rel="stylesheet" href="/styles/global.css" />
   </head>
   <body>
@@ -54,7 +48,7 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
     <header class="site-header">
       <div class="header-inner">
         <a href={SITES.blog} class="brand" aria-label="Peptide Atlas journal home">
-          <span class="brand-mark" aria-hidden="true">P</span>
+          <span class="brand-mark" aria-hidden="true"><img src="/brand-mark.svg" alt="" /></span>
           <span><strong>Peptide Atlas</strong><small>Journal & regulation</small></span>
         </a>
         <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav"><span></span><span></span><span></span></button>
@@ -74,15 +68,6 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
       </div>
     </main>
     <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><nav class="footer-links" aria-label="Editorial information"><a href="/faq/">FAQ</a><a href="/about/">About</a><a href="/editorial-policy/">Editorial policy</a><a href="/corrections/">Corrections</a></nav><p>© {new Date().getFullYear()} Peptide Atlas Journal.<br />No sponsored posts.</p></div></footer>
-    <div class="theme-control">
-      <div class="theme-menu" id="theme-menu" role="menu" aria-label="Choose a color theme" hidden>
-        <button type="button" role="menuitemradio" data-theme-option="clinical"><span class="swatch swatch-clinical"></span><span><strong>Clinical</strong><small>Clean and calm</small></span></button>
-        <button type="button" role="menuitemradio" data-theme-option="lab"><span class="swatch swatch-lab"></span><span><strong>Lab</strong><small>Dark and technical</small></span></button>
-        <button type="button" role="menuitemradio" data-theme-option="wellness"><span class="swatch swatch-wellness"></span><span><strong>Wellness</strong><small>Warm and natural</small></span></button>
-        <button type="button" role="menuitemradio" data-theme-option="editorial"><span class="swatch swatch-editorial"></span><span><strong>Editorial</strong><small>Paper and blue ink</small></span></button>
-      </div>
-      <button class="theme-trigger" id="theme-switcher" type="button" aria-label="Choose color theme" aria-haspopup="menu" aria-controls="theme-menu" aria-expanded="false"><span class="theme-dot"></span><span id="theme-label">Clinical</span><span class="theme-chevron" aria-hidden="true">⌃</span></button>
-    </div>
     <script is:inline>
       (() => {
         const navButton = document.getElementById('nav-toggle');
@@ -92,23 +77,6 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           navButton.setAttribute('aria-expanded', String(open));
           navButton.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
         });
-        const labels = { clinical: 'Clinical', lab: 'Lab', wellness: 'Wellness', editorial: 'Editorial' };
-        const button = document.getElementById('theme-switcher');
-        const menu = document.getElementById('theme-menu');
-        const label = document.getElementById('theme-label');
-        const options = document.querySelectorAll('[data-theme-option]');
-        const closeMenu = () => { if (menu) menu.hidden = true; button?.setAttribute('aria-expanded', 'false'); };
-        const sync = (theme) => {
-          document.documentElement.dataset.theme = theme;
-          localStorage.setItem('peptide-theme', theme);
-          if (label) label.textContent = labels[theme];
-          options.forEach((option) => option.setAttribute('aria-checked', String(option.dataset.themeOption === theme)));
-        };
-        sync(document.documentElement.dataset.theme || 'clinical');
-        button?.addEventListener('click', () => { if (menu) menu.hidden = !menu.hidden; button.setAttribute('aria-expanded', String(menu && !menu.hidden)); });
-        options.forEach((option) => option.addEventListener('click', () => { sync(option.dataset.themeOption); closeMenu(); button?.focus(); }));
-        document.addEventListener('click', (event) => { if (!event.target.closest('.theme-control')) closeMenu(); });
-        document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeMenu(); button?.focus(); } });
       })();
     </script>
   </body>

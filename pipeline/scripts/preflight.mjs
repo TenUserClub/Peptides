@@ -8,6 +8,7 @@ loadEnv();
 
 const checkSupabase = process.argv.includes('--check-supabase');
 const allowMissingRequired = process.argv.includes('--allow-missing-required');
+const requireSupabase = process.env.REQUIRE_SUPABASE === 'true';
 const errors = [];
 const notices = [];
 
@@ -32,6 +33,9 @@ const supabaseUrl = process.env.SUPABASE_URL?.trim() || '';
 const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim();
 if (Boolean(supabaseUrl) !== Boolean(supabaseKey)) {
   errors.push('Set both SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, or leave both unset');
+}
+if (requireSupabase && (!supabaseUrl || !supabaseKey)) {
+  errors.push('REQUIRE_SUPABASE=true requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
 }
 if (supabaseUrl) {
   try {
@@ -60,26 +64,62 @@ for (const [name, listKey, requiresNext] of [['cities', 'cities', true], ['state
   }
 }
 
+try {
+  const blogQueue = JSON.parse(readFileSync(join(ROOT, 'pipeline', 'queue', 'blog-topics.json'), 'utf8'));
+  if (!Array.isArray(blogQueue.topics) || blogQueue.topics.length === 0) {
+    errors.push('blog-topics.json is missing a non-empty topics array');
+  } else {
+    const ids = new Set();
+    for (const topic of blogQueue.topics) {
+      if (!topic.id || !topic.title || !topic.keyword || !topic.category || !topic.intent) {
+        errors.push('Every blog topic needs id, title, keyword, category, and intent');
+        break;
+      }
+      if (ids.has(topic.id)) errors.push(`Duplicate blog topic id: ${topic.id}`);
+      ids.add(topic.id);
+      if (!Array.isArray(topic.sourceUrls) || topic.sourceUrls.length < 2) {
+        errors.push(`Blog topic ${topic.id} needs at least two source URLs`);
+      }
+    }
+  }
+} catch (error) {
+  errors.push(`blog-topics.json could not be parsed: ${error.message}`);
+}
+
 if (process.env.SUPABASE_SERVICE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   notices.push('SUPABASE_SERVICE_KEY is supported for compatibility; rename it to SUPABASE_SERVICE_ROLE_KEY');
 }
 
+const searchConsoleEncoded = process.env.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64?.trim() || '';
+if (searchConsoleEncoded) {
+  try {
+    const account = JSON.parse(Buffer.from(searchConsoleEncoded, 'base64').toString('utf8'));
+    if (!account.client_email || !account.private_key) errors.push('Search Console service account JSON is missing client_email or private_key');
+  } catch (error) {
+    errors.push(`GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 is invalid: ${error.message}`);
+  }
+}
+
 if (checkSupabase && supabaseUrl && supabaseKey && errors.length === 0) {
   try {
-    const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/pipeline_runs?select=id&limit=1`, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-    });
-    if (!response.ok) {
-      const detail = (await response.text()).slice(0, 300);
-      errors.push(`Supabase connection or migration check failed with HTTP ${response.status}: ${detail}`);
-    } else {
-      notices.push('Supabase connection and pipeline_runs table verified');
+    const tables = ['pipeline_runs', 'keyword_registry'];
+    for (const table of tables) {
+      const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?select=id&limit=1`, {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      });
+      if (!response.ok) {
+        const detail = (await response.text()).slice(0, 300);
+        errors.push(`Supabase ${table} migration check failed with HTTP ${response.status}: ${detail}`);
+      } else {
+        notices.push(`Supabase ${table} table verified`);
+      }
     }
   } catch (error) {
-    errors.push(`Supabase connection check failed: ${error.message}`);
+    const detail = error.cause?.code || error.code || error.message;
+    errors.push(`Supabase connection check failed: ${detail}`);
   }
 }
 

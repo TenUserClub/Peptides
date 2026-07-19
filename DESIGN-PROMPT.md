@@ -10,14 +10,9 @@ Peptide Atlas should feel evidence-first, calm, precise, and editorial. Avoid su
 
 All five Astro sites use the same dependency-free stylesheet and layout pattern. The canonical stylesheet is `sites/doctors/public/styles/global.css`; copies in the other projects must remain identical.
 
-The bottom-left theme control provides four choices:
+The interface uses one permanent Wellness direction: warm neutral surfaces, botanical green, restrained terracotta accents, and generous white space. A theme switcher is intentionally not present.
 
-1. Clinical: clean light surfaces and green accents.
-2. Lab: dark technical surfaces with mint accents.
-3. Wellness: warm neutral surfaces and botanical green.
-4. Editorial: paper tones and blue ink.
-
-The chosen theme persists in `localStorage`, applies before first paint, exposes an accessible menu, and defaults to Lab for a first-time visitor whose operating system prefers dark mode.
+Typography follows the reference network: self-hosted Plus Jakarta Sans, 800-weight hero headings, tight heading letter spacing, a 4rem maximum hero size, and a 1280px content frame. The shared Peptide Atlas SVG mark appears in every header and as the favicon.
 
 ## Navigation
 

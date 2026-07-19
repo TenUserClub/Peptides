@@ -17,7 +17,7 @@ The shared header contains no public `vercel.app` links. Each domain has its own
 
 ## Current launch status
 
-The UI overhaul uses one shared visual system with a different task flow for each property: search-first clinic and doctor directories, a source-and-safety guide library, an editorial news desk, and a weekly digest dashboard. It includes responsive navigation, trust and correction routes, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
+The UI overhaul uses one shared visual system with a different task flow for each property: search-first clinic and doctor directories, a source-and-safety guide library, an editorial news desk, and a weekly digest dashboard. It uses a permanent warm Wellness palette, self-hosted Plus Jakarta Sans typography, responsive navigation, trust and correction routes, and a shared Peptide Atlas logo. There is no theme switcher.
 
 Every deployable site also has a local `/faq/` help center with exactly 500 searchable answers across 10 topics. The build rejects a missing FAQ page, fewer than 500 or more than 600 answers, or a missing FAQ search control.
 
@@ -31,7 +31,7 @@ Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` 
 4. Run `node pipeline/orchestrator.mjs all --dry-run` before the first supervised live run.
 5. Configure GitHub Actions secrets before enabling scheduled publication.
 
-Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation is optional. Supabase is also optional and records pipeline-run audits when configured; committed files remain the publishing source of truth. See `ENVIRONMENT.md` for the exact local, GitHub, Supabase, and Vercel configuration.
+Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation is optional. The scheduled workflow also requires Supabase for run audits and operational mirrors; committed files remain the publishing source of truth. See `ENVIRONMENT.md` for the exact local, GitHub, Supabase, and Vercel configuration.
 
 Public site settings should be added to all five Vercel projects:
 
@@ -55,15 +55,21 @@ node pipeline/orchestrator.mjs all
 
 ## Pipeline stages
 
-1. Fetch news, clinics, and doctors.
-2. Verify clinic websites and doctor NPI records.
-3. Draft clinic, doctor, news, legal, and blog content from allowed sources.
-4. Humanise the draft without changing facts or citations.
-5. Apply deterministic frontmatter, source, claim, length, and record-matching checks.
-6. Publish within daily caps, build the affected site, and optionally push when `AUTO_PUSH=true`.
-7. Generate the Sunday weekly review and monitoring summary.
+1. Sync seed keywords or free Google Search Console query metrics into Supabase.
+2. Fetch news, clinics, and doctors.
+3. Verify clinic websites and doctor NPI records and mirror them into Supabase.
+4. Select the next evergreen brief from `pipeline/queue/blog-topics.json`, boosted by matching Search Console opportunities; news remains driven by current authoritative sources.
+5. Draft clinic, doctor, news, legal, and blog content from allowed sources.
+6. Humanise every draft, including blog posts, without changing facts, citations, or frontmatter.
+7. Apply deterministic frontmatter, source, claim, length, writing-pattern, and record-matching checks.
+8. Publish within daily caps, mirror publication metadata into Supabase, and build the affected site.
+9. Generate the Sunday weekly review and monitoring summary.
 
-GitHub Actions runs the repository check on pushes and pull requests. The scheduled workflow runs the full guarded pipeline every six hours. It creates a local publication commit, validates all five sites, and only then pushes the commit for Vercel to deploy. Manual workflow runs default to dry-run mode.
+GitHub Actions runs the repository check on pushes and pull requests. The guarded pipeline runs three times daily at 02:23, 10:23, and 18:23 UTC (07:53, 15:53, and 23:53 India time). Daily publication caps apply across all three runs, so extra runs improve freshness and retries without tripling output. Manual workflow runs default to dry-run mode.
+
+Maximum publication if every source, verification, human edit, and build passes: 3 combined news/legal posts, 1 blog guide, and 5 combined clinic/doctor entries per day. Sunday can also add 1 weekly update. That is at most 9 ordinary-day items, 10 on Sunday, or 64 in a full seven-day week. Actual output is normally lower because unverified or weak material is refused.
+
+The seed editorial map contains at least 30 source-led topics, ordered by priority. It is a topic and intent plan, not a claim of measured search volume. The pipeline publishes at most one evergreen guide per day, skips briefs already present in drafts or published content, and refuses to write when fewer than two approved authoritative sources are reachable.
 
 ## Repository map
 

@@ -66,6 +66,111 @@ export function isAuthoritativeUrl(value) {
   }
 }
 
+function countMatches(text, pattern) {
+  const flags = pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`;
+  return [...String(text || '').matchAll(new RegExp(pattern.source, flags))].length;
+}
+
+export function writingPatternErrors(body) {
+  const errors = [];
+  const text = String(body || '');
+
+  const artifactPatterns = [
+    /\b(?:contentReference|oai_citation|oaicite|attributableIndex)\b/i,
+    /\bturn\d+(?:search|image|news|file)\d+\b/i,
+    /\[(?:cite:\s*\d|span_\d+|start_span|end_span)/i,
+    /\b(?:grok_card|grok_render_citation_card_json)\b/i,
+    /:::writing\b/i,
+  ];
+  if (artifactPatterns.some((pattern) => pattern.test(text))) {
+    errors.push('Contains copied AI interface or citation artifacts');
+  }
+
+  const placeholderPatterns = [
+    /\b(?:INSERT_SOURCE_URL|SOURCE_PUBLISHER|PASTE_[A-Z0-9_]+)\b/i,
+    /\[(?:your name|insert[^\]]*|describe[^\]]*|link to[^\]]*)\]/i,
+    /\b20\d{2}-(?:XX|xx)-(?:XX|xx)\b/,
+  ];
+  if (placeholderPatterns.some((pattern) => pattern.test(text))) {
+    errors.push('Contains unfinished placeholder text');
+  }
+
+  if (/[?&](?:utm_source=(?:chatgpt(?:\.com)?|openai|copilot(?:\.com)?)|referrer=grok\.com)\b/i.test(text)) {
+    errors.push('Contains AI-tool tracking parameters in a source URL');
+  }
+
+  const assistantChatter = [
+    /\bI hope this helps\b/i,
+    /\b(?:Of course|Certainly)!/i,
+    /\bWould you like\b/i,
+    /\b(?:please )?let me know\b/i,
+    /\bhere(?:'s| is) (?:a|the) (?:template|breakdown)\b/i,
+    /\bin this section,? we will\b/i,
+    /\bcopy and paste (?:this|the following)\b/i,
+  ];
+  if (assistantChatter.some((pattern) => pattern.test(text))) {
+    errors.push('Contains chatbot-to-user or template language');
+  }
+
+  const hardFormulaic = [
+    /\bstands? as (?:a|an) testament\b/i,
+    /\bin today['\u2019]?s (?:world|landscape)\b/i,
+    /\bit is (?:important|crucial|critical) to (?:note|remember|consider)\b/i,
+    /\bnot only\b[^.!?\n]{0,120}\bbut also\b/i,
+    /\bnot just\b[^.!?\n]{0,120}\bbut\b/i,
+    /\bwhether you(?:'re| are)\b/i,
+    /^(?:#{2,6}\s*)?(?:in summary|in conclusion|key takeaways?|final thoughts)\s*$/im,
+  ];
+  if (hardFormulaic.some((pattern) => pattern.test(text))) {
+    errors.push('Contains a strong formulaic AI-writing construction');
+  }
+
+  const softFormulaic = [
+    /\b(?:delve|tapestry|interplay|pivotal|robust|seamless)\b/i,
+    /\b(?:underscore|showcase|foster|enhance)(?:s|d|ing)?\b/i,
+    /\bvaluable insights?\b/i,
+    /\b(?:broader|evolving) landscape\b/i,
+    /\b(?:serves|stands|functions|operates) as\b/i,
+    /\b(?:marking|representing) (?:a|an) (?:significant|pivotal|key)\b/i,
+    /\b(?:Additionally|Moreover|Furthermore|Notably),/i,
+  ];
+  const formulaicDensity = softFormulaic.reduce((total, pattern) => total + countMatches(text, pattern), 0);
+  if (formulaicDensity >= 3) errors.push('Contains a high density of formulaic AI vocabulary');
+
+  const vagueAttribution = /\b(?:experts|observers|some critics|industry reports|several sources|many people|researchers)\s+(?:say|argue|believe|suggest|note|claim|have cited)\b/i;
+  if (vagueAttribution.test(text)) errors.push('Contains vague attribution; name the exact source');
+
+  if (/^(?:---|\*\*\*|___)\s*\r?\n\s*#{2,6}\s/m.test(text)) {
+    errors.push('Contains a decorative thematic break before a heading');
+  }
+  if (/^(?:#{1,6}|[-*+])\s*[\p{Extended_Pictographic}]/mu.test(text)) {
+    errors.push('Contains emoji used as structural formatting');
+  }
+
+  const boldCount = countMatches(text, /\*\*[^*\n]+\*\*/);
+  if (boldCount > 6) errors.push('Contains excessive boldface emphasis');
+  const inlineHeaderBullets = countMatches(text, /^\s*[-*+]\s+\*\*[^*\n]+\*\*:\s+/m);
+  if (inlineHeaderBullets >= 2) errors.push('Contains repeated bold-label bullet formatting');
+
+  const headingLevels = [...text.matchAll(/^(#{2,6})\s+\S/gm)].map((match) => match[1].length);
+  if (headingLevels[0] > 2 || headingLevels.some((level, index) => index > 0 && level > headingLevels[index - 1] + 1)) {
+    errors.push('Contains skipped Markdown heading levels');
+  }
+
+  const paragraphOpenings = new Map();
+  for (const paragraph of text.split(/\r?\n\s*\r?\n/)) {
+    const prose = paragraph.replace(/^#{1,6}\s+|^[-*+]\s+/gm, '').replace(/[*_`[\]()]/g, '').trim();
+    if (prose.split(/\s+/).length < 8) continue;
+    const opening = (prose.toLowerCase().match(/^[a-z0-9'-]+\s+[a-z0-9'-]+/) || [])[0];
+    if (opening) paragraphOpenings.set(opening, (paragraphOpenings.get(opening) || 0) + 1);
+  }
+  if ([...paragraphOpenings.values()].some((count) => count >= 3)) {
+    errors.push('Contains a repeated paragraph-opening template');
+  }
+
+  return errors;
+}
+
 function readVerified(path) {
   try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
 }
@@ -104,6 +209,8 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
   if (prohibitedClaim.test(body)) errors.push('Contains a prohibited treatment claim');
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');
   if (/research chemical|for research use only|not for human consumption/i.test(text)) errors.push('Contains research-chemical vendor language');
+  if (/\u2014/.test(body)) errors.push('Contains an em dash; rewrite the sentence before publication');
+  errors.push(...writingPatternErrors(body));
   if (/https?:\/\/(?:www\.)?example\.com/i.test(text)) errors.push('Contains an example.com source');
   if (/https?:\/\/[^\s)"']+\.vercel\.app/i.test(text)) errors.push('Contains a legacy Vercel deployment URL');
 

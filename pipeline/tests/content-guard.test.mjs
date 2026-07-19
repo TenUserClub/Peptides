@@ -34,6 +34,20 @@ test('blocks legacy section paths on the standalone news and updates domains', (
   assert.match(result.errors.join(' '), /root path/i);
 });
 
+test('blocks copied AI artifacts, placeholders, and model tracking links', () => {
+  const text = `---\ntitle: "Weekly review"\ndescription: "Weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\nA claim appears here [cite: 1] with INSERT_SOURCE_URL and https://www.fda.gov/drugs?utm_source=chatgpt.com. ${words(200)}`;
+  const result = validateContent({ text, collection: 'updates', filename: 'week-28.md' });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /artifacts|placeholder|tracking/i);
+});
+
+test('blocks strong formulaic constructions and vague attribution', () => {
+  const text = `---\ntitle: "Weekly review"\ndescription: "Weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\n## Key takeaways\n\nThis update stands as a testament to progress. It is not only useful but also pivotal. Experts say the evolving landscape offers valuable insights. ${words(200)}`;
+  const result = validateContent({ text, collection: 'updates', filename: 'week-28.md' });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /formulaic|vague attribution/i);
+});
+
 test('requires a matching verified clinic record', () => {
   const root = mkdtempSync(join(tmpdir(), 'peptide-guard-'));
   mkdirSync(join(root, 'clinics'));

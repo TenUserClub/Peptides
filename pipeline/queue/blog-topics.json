@@ -1,0 +1,470 @@
+{
+  "_comment": "A seed editorial map, not a claim of search volume. The writer selects the highest-priority ready topic that has not already been drafted or published.",
+  "topics": [
+    {
+      "id": "beginners-what-is-peptide-therapy",
+      "priority": 100,
+      "status": "ready",
+      "keyword": "what is peptide therapy",
+      "supportingKeywords": ["peptide therapy explained", "peptide medicine basics"],
+      "title": "What is peptide therapy? A source-led beginner's guide",
+      "category": "beginners",
+      "intent": "Explain the term, distinguish approved medicines from compounded and research products, and set realistic evidence expectations.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=peptide+therapeutics+review",
+        "https://clinicaltrials.gov/search?term=peptide%20therapy"
+      ]
+    },
+    {
+      "id": "comparisons-approved-compounded-research-peptides",
+      "priority": 99,
+      "status": "ready",
+      "keyword": "FDA approved vs compounded peptides",
+      "supportingKeywords": ["research peptides vs prescription peptides", "are compounded peptides FDA approved"],
+      "title": "FDA-approved, compounded, and research peptides: what separates them",
+      "category": "comparisons",
+      "intent": "Give readers a regulatory framework without recommending a product or treatment.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding",
+        "https://www.fda.gov/drugs/development-approval-process-drugs",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely"
+      ]
+    },
+    {
+      "id": "guides-how-to-choose-peptide-clinic",
+      "priority": 98,
+      "status": "ready",
+      "keyword": "how to choose a peptide clinic",
+      "supportingKeywords": ["peptide clinic checklist", "find a peptide clinic"],
+      "title": "How to choose a peptide clinic: a verification-first checklist",
+      "category": "guides",
+      "intent": "Help readers verify identity, licensing, sourcing, follow-up, pricing, and claims before contacting a clinic.",
+      "sourceUrls": [
+        "https://npiregistry.cms.hhs.gov/",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely",
+        "https://www.fda.gov/consumers/consumer-updates/how-buy-medicines-safely-online-pharmacy"
+      ]
+    },
+    {
+      "id": "guides-check-doctor-credentials",
+      "priority": 97,
+      "status": "ready",
+      "keyword": "how to verify a doctor's credentials",
+      "supportingKeywords": ["NPI lookup doctor", "check medical license"],
+      "title": "How to verify a clinician's credentials before a peptide consultation",
+      "category": "guides",
+      "intent": "Explain what an NPI confirms, what it does not confirm, and why state license checks still matter.",
+      "sourceUrls": [
+        "https://npiregistry.cms.hhs.gov/",
+        "https://www.cms.gov/medicare/regulations-guidance/administrative-simplification/nationalprovidentstand",
+        "https://oig.hhs.gov/exclusions/"
+      ]
+    },
+    {
+      "id": "safety-spot-unsupported-peptide-claims",
+      "priority": 96,
+      "status": "ready",
+      "keyword": "peptide therapy red flags",
+      "supportingKeywords": ["unsupported peptide claims", "peptide scam warning signs"],
+      "title": "Peptide therapy red flags: how to spot unsupported health claims",
+      "category": "safety",
+      "intent": "Show how to assess certainty, evidence, testimonials, and regulatory language without labeling individual businesses.",
+      "sourceUrls": [
+        "https://www.fda.gov/consumers/health-fraud-scams",
+        "https://www.ftc.gov/business-guidance/advertising-marketing/health-claims",
+        "https://www.fda.gov/drugs/warning-letters-and-notice-violation-letters-pharmaceutical-companies"
+      ]
+    },
+    {
+      "id": "guides-questions-before-peptide-appointment",
+      "priority": 95,
+      "status": "ready",
+      "keyword": "questions to ask a peptide doctor",
+      "supportingKeywords": ["peptide consultation questions", "first peptide clinic appointment"],
+      "title": "Questions to ask before a peptide clinic appointment",
+      "category": "guides",
+      "intent": "Provide a neutral appointment checklist covering diagnosis, evidence, product status, monitoring, total cost, and alternatives.",
+      "sourceUrls": [
+        "https://www.fda.gov/patients/learn-about-drug-and-device-approvals",
+        "https://medlineplus.gov/talkingwithyourdoctor.html",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely"
+      ]
+    },
+    {
+      "id": "science-how-to-read-peptide-study",
+      "priority": 94,
+      "status": "ready",
+      "keyword": "how to read a peptide study",
+      "supportingKeywords": ["peptide research evidence", "understand peptide clinical research"],
+      "title": "How to read a peptide study without overreading the result",
+      "category": "science",
+      "intent": "Explain study design, population, comparator, endpoints, limitations, and why one paper rarely settles a question.",
+      "sourceUrls": [
+        "https://pubmed.ncbi.nlm.nih.gov/help/",
+        "https://clinicaltrials.gov/about-site/learn-about-studies",
+        "https://www.ncbi.nlm.nih.gov/books/NBK305518/"
+      ]
+    },
+    {
+      "id": "science-clinical-trial-phases",
+      "priority": 93,
+      "status": "ready",
+      "keyword": "peptide clinical trial phases",
+      "supportingKeywords": ["phase 1 phase 2 phase 3 explained", "clinical trial status meaning"],
+      "title": "Peptide clinical trial phases: what each stage can and cannot show",
+      "category": "science",
+      "intent": "Explain trial phases and statuses in reader-friendly language without implying that enrollment or completion proves effectiveness.",
+      "sourceUrls": [
+        "https://www.fda.gov/patients/drug-development-process/step-3-clinical-research",
+        "https://clinicaltrials.gov/about-site/learn-about-studies",
+        "https://clinicaltrials.gov/about-site/glossary"
+      ]
+    },
+    {
+      "id": "comparisons-animal-studies-human-trials",
+      "priority": 92,
+      "status": "ready",
+      "keyword": "animal studies vs human clinical trials",
+      "supportingKeywords": ["preclinical peptide research", "does animal research prove human benefits"],
+      "title": "Animal studies and human trials answer different peptide questions",
+      "category": "comparisons",
+      "intent": "Explain preclinical evidence, translation limits, and the additional questions human trials must answer.",
+      "sourceUrls": [
+        "https://www.fda.gov/patients/drug-development-process/step-2-preclinical-research",
+        "https://www.fda.gov/patients/drug-development-process/step-3-clinical-research",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=translation+animal+studies+human+clinical+trials"
+      ]
+    },
+    {
+      "id": "science-randomized-observational-studies",
+      "priority": 91,
+      "status": "ready",
+      "keyword": "randomized trial vs observational study",
+      "supportingKeywords": ["peptide study design", "clinical evidence hierarchy"],
+      "title": "Randomized trials, observational studies, and what their results mean",
+      "category": "science",
+      "intent": "Compare common study designs, bias, association, and causation in the context of health reporting.",
+      "sourceUrls": [
+        "https://www.ncbi.nlm.nih.gov/books/NBK305518/",
+        "https://clinicaltrials.gov/about-site/learn-about-studies",
+        "https://pubmed.ncbi.nlm.nih.gov/help/"
+      ]
+    },
+    {
+      "id": "safety-compounded-peptides-fda-approval",
+      "priority": 90,
+      "status": "ready",
+      "keyword": "are compounded peptides FDA approved",
+      "supportingKeywords": ["compounded peptide safety", "FDA compounded drugs"],
+      "title": "Are compounded peptides FDA approved? What the FDA actually reviews",
+      "category": "safety",
+      "intent": "Explain the regulatory distinction between an approved drug and a compounded preparation.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding",
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding-compounding-laws-and-policies",
+        "https://www.fda.gov/drugs/development-approval-process-drugs"
+      ]
+    },
+    {
+      "id": "comparisons-503a-vs-503b",
+      "priority": 89,
+      "status": "ready",
+      "keyword": "503A vs 503B pharmacy",
+      "supportingKeywords": ["compounding pharmacy 503A 503B", "outsourcing facility explained"],
+      "title": "503A pharmacies and 503B outsourcing facilities: a practical comparison",
+      "category": "comparisons",
+      "intent": "Explain the federal categories, their different roles, and the limits of what the labels tell a patient.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/human-drug-compounding/compounding-pharmacies",
+        "https://www.fda.gov/drugs/human-drug-compounding/outsourcing-facilities",
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding"
+      ]
+    },
+    {
+      "id": "beginners-off-label-prescribing",
+      "priority": 88,
+      "status": "ready",
+      "keyword": "what does off label use mean",
+      "supportingKeywords": ["off-label prescribing explained", "FDA approved use vs off label"],
+      "title": "What off-label prescribing means, and what it does not mean",
+      "category": "beginners",
+      "intent": "Define off-label use and distinguish clinician judgment from FDA evaluation of a specific labeled use.",
+      "sourceUrls": [
+        "https://www.fda.gov/patients/learn-about-expanded-access-and-other-treatment-options/understanding-unapproved-use-approved-drugs-label",
+        "https://www.fda.gov/drugs/development-approval-process-drugs",
+        "https://www.fda.gov/patients/learn-about-drug-and-device-approvals"
+      ]
+    },
+    {
+      "id": "safety-fda-warning-letters",
+      "priority": 87,
+      "status": "ready",
+      "keyword": "FDA peptide warning letters",
+      "supportingKeywords": ["how to read FDA warning letter", "peptide regulatory warning"],
+      "title": "How to read an FDA warning letter about a peptide seller or clinic",
+      "category": "safety",
+      "intent": "Explain what warning letters are, what allegations mean, how responses work, and why readers should check later agency updates.",
+      "sourceUrls": [
+        "https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/compliance-actions-and-activities/warning-letters",
+        "https://www.fda.gov/drugs/warning-letters-and-notice-violation-letters-pharmaceutical-companies",
+        "https://www.fda.gov/consumers/health-fraud-scams"
+      ]
+    },
+    {
+      "id": "safety-report-adverse-event",
+      "priority": 86,
+      "status": "ready",
+      "keyword": "how to report a drug side effect to FDA",
+      "supportingKeywords": ["FDA MedWatch report", "peptide adverse event reporting"],
+      "title": "How FDA adverse-event reporting works for patients and clinicians",
+      "category": "safety",
+      "intent": "Describe MedWatch, what information a report contains, and why a report alone does not prove causation.",
+      "sourceUrls": [
+        "https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program",
+        "https://www.fda.gov/safety/medwatch-fda-safety-information-and-adverse-event-reporting-program/reporting-serious-problems-fda",
+        "https://www.fda.gov/drugs/surveillance/postmarketing-surveillance-programs"
+      ]
+    },
+    {
+      "id": "cost-peptide-clinic-pricing",
+      "priority": 85,
+      "status": "ready",
+      "keyword": "peptide therapy cost",
+      "supportingKeywords": ["peptide clinic pricing", "peptide consultation cost"],
+      "title": "Peptide clinic costs: what to include when comparing prices",
+      "category": "cost",
+      "intent": "Build a total-cost checklist covering consultation, laboratory work, medication, supplies, shipping, follow-up, and cancellation terms without publishing invented price ranges.",
+      "sourceUrls": [
+        "https://www.cms.gov/medical-bill-rights/help/guides/good-faith-estimate",
+        "https://www.cms.gov/medical-bill-rights/know-your-rights/using-insurance",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely"
+      ]
+    },
+    {
+      "id": "cost-insurance-peptide-services",
+      "priority": 84,
+      "status": "ready",
+      "keyword": "does insurance cover peptide therapy",
+      "supportingKeywords": ["peptide clinic insurance", "prior authorization peptide medication"],
+      "title": "Insurance and peptide-related care: questions to ask before paying",
+      "category": "cost",
+      "intent": "Explain that coverage depends on the service, product, diagnosis, plan, network, and authorization rules rather than promise coverage.",
+      "sourceUrls": [
+        "https://www.cms.gov/medical-bill-rights/know-your-rights/using-insurance",
+        "https://www.healthcare.gov/using-marketplace-coverage/getting-medical-care/",
+        "https://www.cms.gov/medical-bill-rights/help/guides/good-faith-estimate"
+      ]
+    },
+    {
+      "id": "guides-online-pharmacy-verification",
+      "priority": 83,
+      "status": "ready",
+      "keyword": "how to verify an online pharmacy",
+      "supportingKeywords": ["safe online pharmacy checklist", "online peptide pharmacy red flags"],
+      "title": "How to verify an online pharmacy before ordering a prescription product",
+      "category": "guides",
+      "intent": "Summarize regulator-backed checks for prescriptions, licensing, contact information, pricing claims, and unsafe sellers.",
+      "sourceUrls": [
+        "https://www.fda.gov/consumers/consumer-updates/how-buy-medicines-safely-online-pharmacy",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely/besaferx-your-source-online-pharmacy-information",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely"
+      ]
+    },
+    {
+      "id": "comparisons-glp1-medicines-wellness-peptides",
+      "priority": 82,
+      "status": "ready",
+      "keyword": "GLP-1 medications vs wellness peptides",
+      "supportingKeywords": ["GLP-1 peptide medicine", "prescription peptide vs wellness product"],
+      "title": "GLP-1 medicines and wellness peptides are not one category",
+      "category": "comparisons",
+      "intent": "Clarify terminology and regulatory status without comparing personal suitability or outcomes.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/information-about-glp-1-receptor-agonists",
+        "https://www.fda.gov/drugs/development-approval-process-drugs",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=GLP-1+receptor+agonist+review"
+      ]
+    },
+    {
+      "id": "safety-unapproved-glp1-products",
+      "priority": 81,
+      "status": "ready",
+      "keyword": "unapproved GLP-1 products FDA",
+      "supportingKeywords": ["compounded semaglutide FDA", "compounded tirzepatide safety"],
+      "title": "What the FDA says about unapproved GLP-1 products",
+      "category": "safety",
+      "intent": "Summarize the agency's current distinction between approved products and unapproved versions, using dated source material and no individualized advice.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/fdas-concerns-unapproved-glp-1-drugs-used-weight-loss",
+        "https://www.fda.gov/drugs/guidance-compliance-regulatory-information/human-drug-compounding",
+        "https://www.fda.gov/drugs/drug-safety-and-availability"
+      ]
+    },
+    {
+      "id": "science-systematic-reviews",
+      "priority": 80,
+      "status": "ready",
+      "keyword": "what is a systematic review medical research",
+      "supportingKeywords": ["systematic review vs single study", "peptide evidence review"],
+      "title": "Why a systematic review can be more useful than a single peptide study",
+      "category": "science",
+      "intent": "Explain review questions, search methods, study quality, heterogeneity, and the limits of pooled evidence.",
+      "sourceUrls": [
+        "https://www.ncbi.nlm.nih.gov/books/NBK305518/",
+        "https://pubmed.ncbi.nlm.nih.gov/help/",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=systematic+review+methodology"
+      ]
+    },
+    {
+      "id": "science-study-size-endpoints",
+      "priority": 79,
+      "status": "ready",
+      "keyword": "clinical trial sample size and endpoints",
+      "supportingKeywords": ["surrogate endpoint explained", "small clinical study limitations"],
+      "title": "Sample size, endpoints, and follow-up: three checks for a health study",
+      "category": "science",
+      "intent": "Help readers identify what a study measured, how many people it studied, and for how long before accepting a headline.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/development-resources/surrogate-endpoint-resources-drug-and-biologic-development",
+        "https://clinicaltrials.gov/about-site/learn-about-studies",
+        "https://pubmed.ncbi.nlm.nih.gov/help/"
+      ]
+    },
+    {
+      "id": "guides-search-pubmed-peptide-research",
+      "priority": 78,
+      "status": "ready",
+      "keyword": "how to search PubMed for peptide research",
+      "supportingKeywords": ["find peptide studies", "PubMed search guide"],
+      "title": "How to search PubMed for peptide research and filter the results",
+      "category": "guides",
+      "intent": "Give a reproducible search method and explain filters, abstracts, article types, retractions, and links to full text.",
+      "sourceUrls": [
+        "https://pubmed.ncbi.nlm.nih.gov/help/",
+        "https://www.ncbi.nlm.nih.gov/books/NBK3827/",
+        "https://pubmed.ncbi.nlm.nih.gov/?term=peptide+therapeutics"
+      ]
+    },
+    {
+      "id": "guides-search-clinicaltrials-peptides",
+      "priority": 77,
+      "status": "ready",
+      "keyword": "how to search ClinicalTrials.gov",
+      "supportingKeywords": ["find peptide clinical trials", "clinical trial recruitment status"],
+      "title": "How to search ClinicalTrials.gov for peptide studies",
+      "category": "guides",
+      "intent": "Explain search fields, recruitment status, study type, locations, posted results, and why a registry listing is not an endorsement.",
+      "sourceUrls": [
+        "https://clinicaltrials.gov/about-site/for-patients",
+        "https://clinicaltrials.gov/about-site/learn-about-studies",
+        "https://clinicaltrials.gov/about-site/glossary"
+      ]
+    },
+    {
+      "id": "safety-counterfeit-medicine-warning-signs",
+      "priority": 76,
+      "status": "ready",
+      "keyword": "counterfeit medicine warning signs",
+      "supportingKeywords": ["fake peptide products", "unsafe online medicine sellers"],
+      "title": "Counterfeit medicine warning signs for online health shoppers",
+      "category": "safety",
+      "intent": "Cover supply-chain and seller warnings without teaching product authentication beyond regulator guidance.",
+      "sourceUrls": [
+        "https://www.fda.gov/drugs/buying-using-medicine-safely/counterfeit-medicine",
+        "https://www.fda.gov/consumers/consumer-updates/how-buy-medicines-safely-online-pharmacy",
+        "https://www.fda.gov/drugs/buying-using-medicine-safely"
+      ]
+    },
+    {
+      "id": "safety-health-testimonials-evidence",
+      "priority": 75,
+      "status": "ready",
+      "keyword": "health testimonials vs evidence",
+      "supportingKeywords": ["before and after claims evidence", "peptide patient testimonials"],
+      "title": "Why testimonials and before-and-after photos are not clinical evidence",
+      "category": "safety",
+      "intent": "Explain selection bias, missing context, typical-results disclosures, and the difference between an anecdote and a controlled study.",
+      "sourceUrls": [
+        "https://www.ftc.gov/business-guidance/resources/advertising-faqs-guide-small-business",
+        "https://www.ftc.gov/business-guidance/advertising-marketing/endorsements-influencers-reviews",
+        "https://clinicaltrials.gov/about-site/learn-about-studies"
+      ]
+    },
+    {
+      "id": "guides-telehealth-privacy-checklist",
+      "priority": 74,
+      "status": "ready",
+      "keyword": "telehealth privacy checklist",
+      "supportingKeywords": ["online clinic privacy questions", "telehealth health data privacy"],
+      "title": "A privacy checklist for online clinics and telehealth intake forms",
+      "category": "guides",
+      "intent": "Help readers inspect privacy notices, data collection, third-party tracking, account security, records access, and contact routes.",
+      "sourceUrls": [
+        "https://www.hhs.gov/hipaa/for-individuals/index.html",
+        "https://www.ftc.gov/business-guidance/resources/health-breach-notification-rule-basics-business",
+        "https://www.healthit.gov/topic/privacy-security-and-hipaa"
+      ]
+    },
+    {
+      "id": "guides-interpret-clinic-reviews",
+      "priority": 73,
+      "status": "ready",
+      "keyword": "how to evaluate clinic reviews",
+      "supportingKeywords": ["fake medical reviews", "doctor review red flags"],
+      "title": "How to use clinic reviews without mistaking ratings for medical evidence",
+      "category": "guides",
+      "intent": "Explain review recency, volume, specificity, incentives, platform differences, and what reviews cannot establish.",
+      "sourceUrls": [
+        "https://www.ftc.gov/business-guidance/advertising-marketing/endorsements-influencers-reviews",
+        "https://www.ftc.gov/legal-library/browse/rules/consumer-reviews-testimonials-rule",
+        "https://npiregistry.cms.hhs.gov/"
+      ]
+    },
+    {
+      "id": "beginners-peptide-research-glossary",
+      "priority": 72,
+      "status": "ready",
+      "keyword": "peptide research glossary",
+      "supportingKeywords": ["peptide clinical terms", "peptide study terminology"],
+      "title": "A plain-language glossary for reading peptide research",
+      "category": "beginners",
+      "intent": "Define common regulatory and research terms while linking readers back to primary glossaries.",
+      "sourceUrls": [
+        "https://clinicaltrials.gov/about-site/glossary",
+        "https://www.fda.gov/patients/drug-development-process",
+        "https://pubmed.ncbi.nlm.nih.gov/help/"
+      ]
+    },
+    {
+      "id": "science-conflicts-funding-disclosures",
+      "priority": 71,
+      "status": "ready",
+      "keyword": "how to read study conflict of interest disclosure",
+      "supportingKeywords": ["clinical trial funding disclosure", "research author conflicts"],
+      "title": "How funding and conflict disclosures change the way you read a study",
+      "category": "science",
+      "intent": "Explain where disclosures appear, what they do and do not prove, and why methods and replication still matter.",
+      "sourceUrls": [
+        "https://clinicaltrials.gov/policy/reporting-requirements",
+        "https://pubmed.ncbi.nlm.nih.gov/help/",
+        "https://www.ncbi.nlm.nih.gov/books/NBK236202/"
+      ]
+    },
+    {
+      "id": "guides-check-health-source-update-date",
+      "priority": 70,
+      "status": "ready",
+      "keyword": "how to evaluate online health information",
+      "supportingKeywords": ["reliable health sources", "check medical information online"],
+      "title": "How to check whether online peptide information is current and sourced",
+      "category": "guides",
+      "intent": "Provide a source, date, authorship, correction, and claim-checking routine readers can repeat.",
+      "sourceUrls": [
+        "https://medlineplus.gov/webeval/webeval.html",
+        "https://www.nccih.nih.gov/health/finding-and-evaluating-online-resources",
+        "https://www.fda.gov/consumers/health-fraud-scams"
+      ]
+    }
+  ]
+}

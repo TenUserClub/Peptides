@@ -1,5 +1,5 @@
 {
-  "_comment": "Keywords to rank-track daily. The monitor agent appends new ones as posts publish (e.g. 'peptide clinic miami').",
+  "_comment": "A small SEO watchlist for reporting and a future Search Console integration. Article selection is controlled by blog-topics.json; this file does not claim live Google rank tracking.",
   "keywords": [
     "peptide clinic miami",
     "peptide therapy austin",

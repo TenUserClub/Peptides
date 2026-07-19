@@ -4,12 +4,15 @@
 
 - [ ] Run `npm run check` and resolve every failure.
 - [ ] Add `EXA_API_KEY` and `OPENAI_API_KEY` as GitHub Actions secrets.
-- [ ] Optionally add `GEMINI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` as GitHub Actions secrets.
-- [ ] If using Supabase, apply migrations `001` and `002` in order.
+- [ ] Add `OPENAI_WRITING_MODEL=gpt-4.1`, `OPENAI_HUMANISE_MODEL=gpt-4.1`, `OPENAI_VERIFY_MODEL=gpt-4.1-mini`, and `OPENAI_SUMMARY_MODEL=gpt-4.1-mini` as GitHub Actions variables, or accept the identical repository defaults.
+- [ ] Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as GitHub Actions secrets. Gemini remains optional.
+- [ ] Apply Supabase migrations `001`, `002`, and `003` in order.
+- [ ] Verify all five domains in Search Console, then optionally add `GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64` for free query metrics.
 - [ ] Confirm GitHub Actions has permission to write repository contents.
 - [ ] Add `PUBLIC_CONTACT_EMAIL` and `PUBLIC_CORRECTIONS_EMAIL` to all five Vercel projects.
 - [ ] Run `node pipeline/orchestrator.mjs all --dry-run` and confirm queues and processed markers do not change.
 - [ ] Dispatch the Editorial pipeline workflow once with `dry_run` enabled.
+- [ ] Review the priority order in `pipeline/queue/blog-topics.json`; it contains the first 30-plus seed topics and does not claim search-volume data.
 - [ ] Run the first live cycle with `AUTO_PUSH=false` and review every generated markdown file.
 - [ ] Push only after the reviewed local build passes.
 
@@ -39,6 +42,6 @@
 
 ## Later improvements
 
-- [ ] Add end-to-end browser checks for navigation, keyboard theme selection, and mobile layouts.
-- [ ] Decide whether to integrate Supabase into orchestrator state or remove the optional helper.
-- [ ] Add custom-domain redirects only after the final domain mapping is known.
+- [ ] Add end-to-end browser checks for navigation and mobile layouts.
+- [ ] Review Supabase storage and pipeline error trends monthly.
+- [ ] Confirm the remaining custom-domain redirects after every domain is attached in Vercel.

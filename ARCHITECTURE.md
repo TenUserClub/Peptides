@@ -17,16 +17,16 @@ Each project has its own canonical site URL, sitemap, robots file, 404 page, and
 ## Content flow
 
 ```text
-queues -> fetched source data -> verified records -> drafts -> humanised -> content guard -> site content -> Astro build
+topic and directory queues -> fetched source data -> verified records -> drafts -> humanised -> content guard -> site content -> Astro build
 ```
 
-The orchestrator owns state transitions. Queue pointers advance only after the corresponding verified batch has published. Dry runs may log intended work but must not advance queues or write processed markers.
+The orchestrator owns state transitions. Directory queue pointers advance only after the corresponding verified batch has published. Evergreen articles are selected deterministically from the highest-priority ready entry in `pipeline/queue/blog-topics.json`; a matching draft, humanised file, or published file prevents duplicate selection. Dry runs may log intended work but must not advance queues or write processed markers.
 
 ## Publication guard
 
 `pipeline/lib/content-guard.mjs` is the deterministic publication gate. It checks required frontmatter, collection-specific word ranges, prohibited claims, authoritative sources, sample filenames, placeholder domains, cross-site links, and matching verified records for clinics and doctors. Model-based writing and humanising do not replace this gate.
 
-News and legal posts must use an authoritative primary source. Blog posts need at least two authoritative sources. Clinic listings require a matching verified clinic record. Doctor profiles require a matching NPI record; roundups require a methodology and matching verified records.
+News and legal posts must use an authoritative primary source. Blog posts need at least two reachable sources from their assigned editorial brief. Humanised content keeps the original frontmatter and is rejected for em dashes or repeated stock AI-writing phrases. Clinic listings require a matching verified clinic record. Doctor profiles require a matching NPI record; roundups require a methodology and matching verified records.
 
 ## Verification model
 
@@ -34,7 +34,7 @@ Clinic verification requires a reachable first-party website that mentions an in
 
 ## Storage
 
-Committed Markdown, verified JSON records, and queue files are the publishing source of truth. Supabase is optional. When configured, it records pipeline run status and supports future data services, but it does not replace the file-based publication state.
+Committed Markdown, verified JSON records, and queue files remain the publishing source of truth. The scheduled workflow requires Supabase as a private operational mirror for run status, verified entities, publication metadata, queue state, and Search Console keyword metrics. Supabase does not replace the Git-backed deployment state.
 
 ## Deployment
 
@@ -42,11 +42,11 @@ Vercel builds each Astro project from its own root and each project owns one ape
 
 ## Automation and checks
 
-`.github/workflows/ci.yml` runs tests and builds all sites on pushes and pull requests. `.github/workflows/pipeline.yml` runs every pipeline stage every six hours after repository secrets are configured. Manual dispatch defaults to a non-writing dry run. `pipeline/scripts/check-sites.mjs` inspects built output for placeholder or sample content, em dashes, broken internal links, robots mistakes, incorrect canonicals, shared stylesheet drift, and a searchable 500-to-600-answer FAQ center on every site.
+`.github/workflows/ci.yml` runs tests and builds all sites on pushes and pull requests. `.github/workflows/pipeline.yml` runs every pipeline stage at 02:23, 10:23, and 18:23 UTC after repository secrets are configured. Daily velocity caps are shared across the three runs. The non-round minute reduces exposure to GitHub's busiest scheduler window. Manual dispatch defaults to a non-writing dry run. `pipeline/scripts/check-sites.mjs` inspects built output for placeholder or sample content, em dashes, broken internal links, robots mistakes, incorrect canonicals, shared stylesheet drift, and a searchable 500-to-600-answer FAQ center on every site.
 
 ## Shared presentation
 
-The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other four projects. The integrity check rejects drift. All layouts expose four persisted themes and use the public domain map from `src/lib/sections.ts`. FAQ content is generated from site-specific topic specifications in `shared/faq.ts` and rendered by `shared/FaqCenter.astro`; each project owns a thin local `/faq/` route so its canonical domain and sitemap stay correct.
+The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other four projects. The integrity check rejects drift. All layouts use the permanent Wellness palette, self-hosted Plus Jakarta Sans typography, the shared SVG identity, and the public domain map from `src/lib/sections.ts`. FAQ content is generated from site-specific topic specifications in `shared/faq.ts` and rendered by `shared/FaqCenter.astro`; each project owns a thin local `/faq/` route so its canonical domain and sitemap stay correct.
 
 ## Domain deployment map
 

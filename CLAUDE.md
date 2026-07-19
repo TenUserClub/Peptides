@@ -41,6 +41,8 @@ Write in plain US English. Lead with the useful fact. Vary sentence and paragrap
 
 The humaniser may improve rhythm, clarity, and repetition. It may not add or remove facts, citations, names, figures, caveats, methodology, or frontmatter. A humanised draft must still pass `pipeline/lib/content-guard.mjs`.
 
+Treat Wikipedia's Signs of AI writing page as a descriptive negative checklist, not as proof of authorship. For ordinary web articles, check for inflated significance, superficial analysis, promotional tone, vague authorities, outline-like conclusions, clustered AI vocabulary, forced contrasts, padded trios, avoidance of simple "is" or "has" wording, decorative formatting, assistant chatter, placeholders, model citation artifacts, tracking parameters, and unverifiable references. Wikipedia-specific wikitext and editor-behaviour signs do not apply to this project. Fix the underlying clarity, sourcing, and specificity problem instead of swapping words or inserting artificial mistakes.
+
 ## Velocity limits
 
 Publish no more than five combined clinic and doctor posts per day and no more than three combined news and legal posts per day. Leave excess in `pipeline/humanised/`. Do not advance a city or state queue until its verified batch has fully published.
