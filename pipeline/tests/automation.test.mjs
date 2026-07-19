@@ -79,3 +79,21 @@ test('Supabase queue checkpoints upsert on the queue name', () => {
   const db = read('pipeline/lib/db.mjs');
   assert.match(db, /onConflict: 'queue_name'/);
 });
+
+test('clinic and doctor writers share the combined directory limit', () => {
+  const orchestrator = read('pipeline/orchestrator.mjs');
+  const combinedCount = /countToday\('clinics'\) \+ countToday\('doctors'\)/g;
+  assert.ok((orchestrator.match(combinedCount) || []).length >= 3);
+  assert.match(orchestrator, /const unpublishedFiles = verifiedFiles\.filter/);
+  assert.match(orchestrator, /directoryDraftsThisRun/);
+  assert.match(orchestrator, /groupedDoctors\.length >= 5/);
+  assert.match(orchestrator, /doctors: \[doctor\], isRoundup: false/);
+});
+
+test('generated clinic images cannot masquerade as verified premises', () => {
+  const images = read('pipeline/lib/images.mjs');
+  const clinicPage = read('site/src/pages/clinics/[...id].astro');
+  assert.match(images, /generic editorial illustration, not a depiction of a real clinic/);
+  assert.match(images, /Do not invent signage/);
+  assert.match(clinicPage, /not a verified photograph of the clinic or its premises/);
+});

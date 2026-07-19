@@ -23,6 +23,7 @@ h1,h2,h3,h4{font-family:var(--font-body);line-height:1.08;letter-spacing:-.03em;
 @media(max-width:620px){.split-sections{grid-template-columns:1fr}.section-heading{align-items:flex-start}.hero-actions{align-items:flex-start;flex-direction:column}}
 .footer-inner{align-items:flex-start}.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem}.footer-links a{color:var(--muted);font-size:.74rem;font-weight:700;text-decoration:none}.footer-links a:hover{color:var(--accent)}code{padding:.1rem .3rem;border-radius:5px;background:var(--surface-soft);font-size:.85em}
 @media(max-width:620px){.footer-links{justify-content:flex-start;margin:1rem 0}}
+.featured-image figcaption{padding:.65rem 1rem;color:var(--muted);font-size:.72rem;line-height:1.45}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 
 /* Network redesign: task-first directories, newsroom and help centers */

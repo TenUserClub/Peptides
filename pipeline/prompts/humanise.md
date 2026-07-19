@@ -42,4 +42,4 @@ Fix each pattern by improving the writing, not by inserting noise. Read the open
 
 Write raw article content directly, without Markdown fences. The file must begin with the YAML delimiter `---`. Save it to `pipeline/humanised/{same relative path}`. Save a unified diff to `pipeline/humanised/{slug}.diff.md`, then delete the processed draft.
 
-Log the input and output word counts, the formulaic patterns removed, repeated openings fixed, attribution fixes, and any claim cut for lack of support.
+Do not append word counts, editing notes, a change log, or an audit report to the article. The orchestrator records acceptance and rejection in its own logs.

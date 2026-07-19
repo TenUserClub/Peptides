@@ -45,17 +45,17 @@ Safety: No realistic human faces. No identifiable people. No medical procedures 
    * Warm, clean, professional. No specific people visible.
    */
   clinics: ({ clinicName, city, state, services = [] }) => {
-    const serviceStr = services.slice(0, 2).join(' and ');
+    void clinicName;
+    void services;
     return `Create a clean, professional illustration of a modern peptide therapy clinic in ${city}, ${state}.
 
-Clinic: "${clinicName}"
-Services offered: ${serviceStr}
+This is a generic editorial illustration, not a depiction of a real clinic or its premises.
 
-Style: Architectural illustration, clean modern interior design, warm natural lighting, warm whites and soft teals with wood accents. Flat editorial illustration style with subtle depth. No text, no logos.
+Style: Architectural illustration, clean modern interior design, warm natural lighting, warm whites and soft teals with wood accents. Flat editorial illustration style with subtle depth.
 
 Content: A welcoming modern medical clinic interior — reception desk, comfortable waiting area with plants, large windows with soft natural light. The space feels clean, calm, and professional. No identifiable people; if any silhouettes are present, they must be abstract and unrecognizable (just shapes, no faces or features). No medical equipment with specific brand names. No syringes or injection imagery.
 
-Safety: No realistic human faces. No identifiable people. No medical procedures shown. No text overlays. No brand logos. No syringes or needles.`;
+Safety: Do not show the clinic's name. Do not invent signage, wall lettering, medication names, service names, labels, logos, or any other readable text. No realistic human faces. No identifiable people. No medical procedures shown. No text overlays. No brand logos. No syringes or needles.`;
   },
 
   /**

@@ -58,6 +58,7 @@ const CONFIG = {
 };
 
 const DRY_RUN = process.argv.includes('--dry-run');
+let directoryDraftsThisRun = 0;
 
 // ── Content helpers ────────────────────────────────────────────
 function readText(path, fallback = null) {
@@ -1521,7 +1522,7 @@ async function runWriteClinics() {
   log('info', 'orchestrator: write-clinics');
   const today = new Date().toISOString().slice(0, 10);
 
-  const todayCount = countToday('clinics');
+  const todayCount = countToday('clinics') + countToday('doctors');
   if (todayCount >= CONFIG.velocity.maxDirPerDay) {
     log('info', `write-clinics: velocity cap reached (${todayCount}/${CONFIG.velocity.maxDirPerDay})`);
     return 0;
@@ -1546,14 +1547,21 @@ async function runWriteClinics() {
     ...findFiles(join(ROOT, 'site', 'src', 'content', 'clinics'), /\.md$/).map((p) => basename(p, '.md')),
   ]);
 
-  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount);
+  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount - directoryDraftsThisRun);
   let written = 0;
 
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-clinics.md')) || '';
   const samplePost = readText(join(ROOT, 'site', 'src', 'content', 'clinics', '_sample-austin-tx-example-clinic.md')) || '';
 
-  for (const vf of verifiedFiles.slice(0, available)) {
+  const unpublishedFiles = verifiedFiles.filter((vf) => {
+    const record = readJson(vf);
+    if (!record?.verified) return false;
+    const slug = `${record.city.toLowerCase().replace(/\s+/g, '-')}-${record.state.toLowerCase()}-${slugify(record.clinicName)}`;
+    return !existingSlugs.has(slug);
+  });
+
+  for (const vf of unpublishedFiles.slice(0, available)) {
     const record = readJson(vf);
     if (!record || !record.verified) continue;
 
@@ -1599,6 +1607,7 @@ Then the article body with these sections:
     if (DRY_RUN) {
       log('info', `DRY RUN: would write clinic ${slug}`);
       written++;
+      directoryDraftsThisRun++;
       continue;
     }
 
@@ -1646,6 +1655,7 @@ Then the article body with these sections:
       writeText(outPath, postWithImage);
       log('info', `write-clinics: drafted ${slug}${imagePath ? ' with image' : ''}`);
       written++;
+      directoryDraftsThisRun++;
     } catch (e) {
       log('error', `write-clinics: failed for ${slug}: ${e.message}`);
     }
@@ -1658,7 +1668,7 @@ async function runWriteDoctors() {
   log('info', 'orchestrator: write-doctors');
   const today = new Date().toISOString().slice(0, 10);
 
-  const todayCount = countToday('doctors');
+  const todayCount = countToday('clinics') + countToday('doctors');
   if (todayCount >= CONFIG.velocity.maxDirPerDay) {
     log('info', `write-doctors: velocity cap reached (${todayCount}/${CONFIG.velocity.maxDirPerDay})`);
     return 0;
@@ -1693,19 +1703,30 @@ async function runWriteDoctors() {
     byGroup[key].push(record);
   }
 
-  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount);
+  const available = Math.max(0, CONFIG.velocity.maxDirPerDay - todayCount - directoryDraftsThisRun);
   let written = 0;
 
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-doctors.md')) || '';
   const samplePost = readText(join(ROOT, 'sites', 'doctors', 'src', 'content', 'doctors', '_sample-florida-top-glp1.md')) || '';
 
-  // Write roundups for groups with 3+ doctors, profiles for singletons
-  for (const [groupKey, doctors] of Object.entries(byGroup)) {
+  const doctorCandidates = [];
+  for (const [groupKey, groupedDoctors] of Object.entries(byGroup)) {
+    const [state, specialty] = groupKey.split('-');
+    if (groupedDoctors.length >= 5) {
+      doctorCandidates.push({ state, specialty, doctors: groupedDoctors, isRoundup: true });
+    } else {
+      for (const doctor of groupedDoctors) {
+        doctorCandidates.push({ state, specialty, doctors: [doctor], isRoundup: false });
+      }
+    }
+  }
+
+  // Write roundups only when the group meets the five-doctor editorial minimum.
+  // Smaller groups become independent profiles so every verified doctor advances.
+  for (const { state, specialty, doctors, isRoundup } of doctorCandidates) {
     if (written >= available) break;
 
-    const [state, specialty] = groupKey.split('-');
-    const isRoundup = doctors.length >= 3;
     const slug = isRoundup
       ? `${state.toLowerCase()}-top-${slugify(specialty)}`
       : `${state.toLowerCase()}-${slugify(doctors[0].doctorName || doctors[0].slug || 'doctor')}`;
@@ -1771,11 +1792,12 @@ publishDate: ${today}
 ---
 
 Body: opening → credentials → services → patient reviews (attributed or "none found") → location/contact.
-700–1,000 words. No treatment claims. Facts only from the verified record.`;
+300-800 words. No treatment claims. Facts only from the verified record.`;
 
     if (DRY_RUN) {
       log('info', `DRY RUN: would write doctor ${slug} (${isRoundup ? 'roundup' : 'profile'})`);
       written++;
+      directoryDraftsThisRun++;
       continue;
     }
 
@@ -1815,6 +1837,7 @@ Body: opening → credentials → services → patient reviews (attributed or "n
       writeText(outPath, postWithImage);
       log('info', `write-doctors: drafted ${slug} (${isRoundup ? 'roundup' : 'profile'})${imagePath ? ' with image' : ''}`);
       written++;
+      directoryDraftsThisRun++;
     } catch (e) {
       log('error', `write-doctors: failed for ${slug}: ${e.message}`);
     }

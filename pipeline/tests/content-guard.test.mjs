@@ -21,9 +21,16 @@ test('blocks unsupported outcomes and weak news sources', () => {
 });
 
 test('allows neutral discussion of research chemicals and approved treatment indications', () => {
-  const text = `---\ntitle: "Research and approved products"\ndescription: "A sourced regulatory explanation"\ncategory: "beginners"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} The term research chemical appears in regulatory discussions. An FDA-approved medicine may treat a labeled condition.`;
+  const text = `---\ntitle: "Research and approved products"\ndescription: "A sourced regulatory explanation"\ncategory: "beginners"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} The term research chemical appears in regulatory discussions. An FDA-approved medicine may treat a labeled condition. Peptides do not cure every disease.`;
   const result = validateContent({ text, collection: 'blog', filename: 'research-products.md' });
   assert.equal(result.ok, true, result.errors.join('; '));
+});
+
+test('blocks appended humaniser audits and decorative separators', () => {
+  const text = `---\ntitle: "Weekly review"\ndescription: "Weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-17\nauthor: "Peptide Atlas Editorial Team"\n---\n${words(200)}\n\n---\n\nWord count (input): 193`;
+  const result = validateContent({ text, collection: 'updates', filename: 'week-28.md' });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /editing notes|thematic break/i);
 });
 
 test('blocks sample files', () => {

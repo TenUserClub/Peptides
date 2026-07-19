@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
 export const WORD_LIMITS = {
   clinics: [200, 900],
-  doctors: [700, 1500],
+  doctors: [250, 1000],
   news: [400, 700],
   legal: [400, 700],
   blog: [1000, 1500],
@@ -140,8 +140,8 @@ export function writingPatternErrors(body) {
   const vagueAttribution = /\b(?:experts|observers|some critics|industry reports|several sources|many people|researchers)\s+(?:say|argue|believe|suggest|note|claim|have cited)\b/i;
   if (vagueAttribution.test(text)) errors.push('Contains vague attribution; name the exact source');
 
-  if (/^(?:---|\*\*\*|___)\s*\r?\n\s*#{2,6}\s/m.test(text)) {
-    errors.push('Contains a decorative thematic break before a heading');
+  if (/^(?:---|\*\*\*|___)\s*$/m.test(text)) {
+    errors.push('Contains a decorative thematic break');
   }
   if (/^(?:#{1,6}|[-*+])\s*[\p{Extended_Pictographic}]/mu.test(text)) {
     errors.push('Contains emoji used as structural formatting');
@@ -204,11 +204,17 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
     errors.push(`Word count ${words} is outside ${limits[0]}-${limits[1]}`);
   }
 
-  const prohibitedClaim = /\b(peptides?|semaglutide|tirzepatide|BPC-157|thymosin)\b[^.!?\n]{0,100}\b(cures?|heals?|fixes?|reverses?|prevents?)\b/i;
+  const prohibitedClaim = /\b(peptides?|semaglutide|tirzepatide|BPC-157|thymosin)\b[^.!?\n]{0,100}\b(cures?|heals?|fixes?|reverses?|prevents?)\b/gi;
   const unsupportedOutcome = /\b(significant benefits|successful therapy|effectiveness of your treatment|enhance immune function|support tissue repair)\b/i;
-  if (prohibitedClaim.test(body)) errors.push('Contains a prohibited treatment claim');
+  const positiveTreatmentClaim = [...body.matchAll(prohibitedClaim)].some((match) =>
+    !/\b(?:not|never|no evidence|cannot|can't|doesn't|does not|do not|isn't|is not|aren't|are not|without evidence|claims?|advertis(?:e|es|ed)|market(?:s|ed|ing))\b/i.test(match[0])
+  );
+  if (positiveTreatmentClaim) errors.push('Contains a prohibited treatment claim');
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');
   if (/\b(?:buy|shop|order) research chemicals?\b/i.test(text)) errors.push('Contains research-chemical vendor language');
+  if (/^(?:word count \((?:input|output)\)|formulaic patterns removed|repeated openings fixed|attribution fixes|claims cut for lack of support):/im.test(body)) {
+    errors.push('Contains appended editing notes or model audit metadata');
+  }
   if (/\u2014/.test(body)) errors.push('Contains an em dash; rewrite the sentence before publication');
   errors.push(...writingPatternErrors(body));
   if (/https?:\/\/(?:www\.)?example\.com/i.test(text)) errors.push('Contains an example.com source');
