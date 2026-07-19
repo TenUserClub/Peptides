@@ -22,6 +22,6 @@ For every humanised markdown file, excluding diff files:
 
 Build the Astro project that owns each published collection. If any build fails, revert the files moved by that publication attempt and stop. Do not modify unrelated working-tree changes.
 
-Create a local publication commit after successful builds. Push only when `AUTO_PUSH=true`. Retry a failed push twice, retain the local commit, and record that a manual push is required.
+Create a scoped local publication commit after successful builds. Refuse to mix it with pre-existing staged changes. A local run may push only when `AUTO_PUSH=true`; a failed push must retain the commit and fail visibly. In GitHub Actions, keep `AUTO_PUSH=false`, validate all five sites after the pipeline finishes, and let the workflow push the validated commit.
 
 Queue pointers may advance only when their entire verified in-flight batch has published. A dry run must not move files, advance queues, create commits, or push.

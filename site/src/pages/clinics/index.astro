@@ -17,7 +17,7 @@ const avgRating = rated.length > 0
   : null;
 ---
 <Base title="Peptide Therapy Clinics Directory | Find Verified Clinics" description={`Browse ${totalClinics} verified peptide therapy clinics across ${states.length} US states. Filter by city, state, services, and ratings.`}>
-  <section class="hero">
+  <section class="network-hero">
     <p class="eyebrow">Verified clinic research</p>
     <h1>Compare clinics with the facts in view.</h1>
     <p>Filter fact-checked listings by location, services, and attributed public ratings. No paid placements.</p>
@@ -92,6 +92,8 @@ const avgRating = rated.length > 0
       var results = document.getElementById('results-list');
       var count = document.getElementById('results-count');
       var cards = results ? Array.from(results.querySelectorAll('.directory-card')) : [];
+      var initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+      if (search && initialQuery) search.value = initialQuery;
 
       function filter() {
         var q = (search?.value || '').toLowerCase().trim();
@@ -134,6 +136,7 @@ const avgRating = rated.length > 0
         if (ratingFilter) ratingFilter.value = '';
         filter();
       });
+      filter();
     })();
   </script>
 </Base>

@@ -1,0 +1,92 @@
+---
+import { createFaqs } from './faq';
+
+interface Props {
+  siteKey: 'clinics' | 'doctors' | 'content' | 'news' | 'updates';
+  intro: string;
+  correctionsHref: string;
+}
+
+const { siteKey, intro, correctionsHref } = Astro.props;
+const { site, items } = createFaqs(siteKey);
+const categories = [...new Set(items.map((item) => item.category))];
+---
+
+<section class="faq-hero">
+  <div>
+    <p class="eyebrow">Help center</p>
+    <h1>Questions, answered plainly.</h1>
+    <p>{intro}</p>
+  </div>
+  <span class="answer-count"><strong>{items.length}</strong> answers</span>
+</section>
+
+<section class="faq-tools" aria-label="FAQ search and topics">
+  <label class="faq-search-wrap" for="faq-search">
+    <span>Search all answers</span>
+    <input class="faq-search" id="faq-search" type="search" placeholder={`Search ${site.name} help`} autocomplete="off" />
+  </label>
+  <div class="faq-categories" role="group" aria-label="Filter by topic">
+    <button class="faq-category is-active" type="button" data-faq-category="all">All topics</button>
+    {categories.map((category) => <button class="faq-category" type="button" data-faq-category={category}>{category}</button>)}
+  </div>
+  <p class="faq-summary" id="faq-summary" aria-live="polite">Showing all {items.length} answers across {categories.length} topics.</p>
+</section>
+
+<div class="faq-groups" id="faq-groups">
+  {categories.map((category) => {
+    const categoryItems = items.filter((item) => item.category === category);
+    return (
+      <section class="faq-group" data-faq-group={category}>
+        <header class="faq-group-title"><div><p class="eyebrow">Topic</p><h2>{category}</h2></div><span>{categoryItems.length}</span></header>
+        <div class="faq-list">
+          {categoryItems.map((item) => (
+            <details class="faq-item" id={item.id} data-category={item.category} data-search={`${item.question} ${item.answer}`.toLowerCase()}>
+              <summary>{item.question}<span aria-hidden="true">+</span></summary>
+              <div class="faq-answer"><p>{item.answer}</p></div>
+            </details>
+          ))}
+        </div>
+      </section>
+    );
+  })}
+</div>
+
+<section class="faq-cta">
+  <div><p class="eyebrow">Found something outdated?</p><h2>Good information gets corrected.</h2><p>Send the page address, the detail you think is wrong, and a reliable source. The editorial team will review it.</p></div>
+  <a class="cta" href={correctionsHref}>Request a correction</a>
+</section>
+
+<script>
+  const search = document.querySelector('#faq-search');
+  const buttons = [...document.querySelectorAll('[data-faq-category]')];
+  const items = [...document.querySelectorAll('.faq-item')];
+  const groups = [...document.querySelectorAll('[data-faq-group]')];
+  const summary = document.querySelector('#faq-summary');
+  let activeCategory = 'all';
+
+  const filterFaqs = () => {
+    const query = search instanceof HTMLInputElement ? search.value.trim().toLowerCase() : '';
+    let visible = 0;
+    items.forEach((item) => {
+      if (!(item instanceof HTMLElement)) return;
+      const categoryMatch = activeCategory === 'all' || item.dataset.category === activeCategory;
+      const searchMatch = !query || (item.dataset.search || '').includes(query);
+      item.hidden = !(categoryMatch && searchMatch);
+      if (!item.hidden) visible += 1;
+    });
+    groups.forEach((group) => {
+      if (!(group instanceof HTMLElement)) return;
+      group.hidden = !group.querySelector('.faq-item:not([hidden])');
+    });
+    if (summary) summary.textContent = visible === 0 ? 'No answers match that search.' : `Showing ${visible} answer${visible === 1 ? '' : 's'}.`;
+  };
+
+  search?.addEventListener('input', filterFaqs);
+  buttons.forEach((button) => button.addEventListener('click', () => {
+    if (!(button instanceof HTMLElement)) return;
+    activeCategory = button.dataset.faqCategory || 'all';
+    buttons.forEach((candidate) => candidate.classList.toggle('is-active', candidate === button));
+    filterFaqs();
+  }));
+</script>

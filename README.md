@@ -17,18 +17,21 @@ The shared header contains no public `vercel.app` links. Each domain has its own
 
 ## Current launch status
 
-The UI overhaul is shared across all five sites. It includes responsive editorial layouts, accessible navigation, trust and correction pages, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
+The UI overhaul uses one shared visual system with a different task flow for each property: search-first clinic and doctor directories, a source-and-safety guide library, an editorial news desk, and a weekly digest dashboard. It includes responsive navigation, trust and correction routes, and a bottom-left theme switcher with Clinical, Lab, Wellness, and Editorial themes.
+
+Every deployable site also has a local `/faq/` help center with exactly 500 searchable answers across 10 topics. The build rejects a missing FAQ page, fewer than 500 or more than 600 answers, or a missing FAQ search control.
 
 Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` after review found weak sourcing and unverifiable claims. Sample markdown remains as schema documentation but is excluded from routes and sitemaps. Production publication should resume only with content that passes the new guard.
 
 ## Setup
 
-1. Copy `.env.example` to `.env` and add the required keys.
+1. Copy `.env.example` to `.env` in the repository root and add the required local keys.
 2. Install dependencies in the root and each Astro project.
-3. Run `npm run check` from the repository root.
+3. Run `npm run preflight` and `npm run check` from the repository root.
 4. Run `node pipeline/orchestrator.mjs all --dry-run` before the first supervised live run.
+5. Configure GitHub Actions secrets before enabling scheduled publication.
 
-Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation and Supabase are optional. The orchestrator currently uses the filesystem as its source of truth; `pipeline/lib/db.mjs` is an optional helper and is not wired into the main workflow.
+Required pipeline keys are `EXA_API_KEY` and `OPENAI_API_KEY`. Gemini image generation is optional. Supabase is also optional and records pipeline-run audits when configured; committed files remain the publishing source of truth. See `ENVIRONMENT.md` for the exact local, GitHub, Supabase, and Vercel configuration.
 
 Public site settings should be added to all five Vercel projects:
 
@@ -40,6 +43,7 @@ Public site settings should be added to all five Vercel projects:
 
 ```powershell
 npm test
+npm run preflight
 npm run build:all
 npm run check:sites
 npm run check
@@ -47,7 +51,7 @@ node pipeline/orchestrator.mjs all --dry-run
 node pipeline/orchestrator.mjs all
 ```
 
-`npm run check` runs guard tests, builds all five sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, wrong canonical hosts, and diverged shared CSS.
+`npm run check` runs guard tests, builds all five sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, wrong canonical hosts, incomplete FAQ centers, and diverged shared CSS.
 
 ## Pipeline stages
 
@@ -59,7 +63,7 @@ node pipeline/orchestrator.mjs all
 6. Publish within daily caps, build the affected site, and optionally push when `AUTO_PUSH=true`.
 7. Generate the Sunday weekly review and monitoring summary.
 
-GitHub Actions runs the repository check on pushes and pull requests. The scheduled pipeline workflow is ready, but it only becomes operational after repository secrets are configured.
+GitHub Actions runs the repository check on pushes and pull requests. The scheduled workflow runs the full guarded pipeline every six hours. It creates a local publication commit, validates all five sites, and only then pushes the commit for Vercel to deploy. Manual workflow runs default to dry-run mode.
 
 ## Repository map
 

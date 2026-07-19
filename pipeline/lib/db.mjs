@@ -1,17 +1,15 @@
 /**
  * Supabase client for the Peptide SEO pipeline.
- * Optional — the pipeline works file-only if SUPABASE_URL is not set
- * or if @supabase/supabase-js is not installed.
- * If set, queue state, verified records, rankings, and post metadata
- * are persisted to Postgres instead of JSON/CSV files.
+ * Optional Supabase helpers for run auditing and future data services.
+ * Markdown and JSON in the repository remain the pipeline source of truth.
  */
 
 import { loadEnv, log } from '../scripts/lib.mjs';
 
 loadEnv();
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
+const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim();
 
 let supabase = null;
 let enabled = false;
@@ -39,6 +37,12 @@ if (SUPABASE_URL && SUPABASE_KEY) {
 
 export function isEnabled() {
   return enabled;
+}
+
+export async function checkConnection() {
+  if (!enabled) return { enabled: false, ok: true, error: null };
+  const { error } = await supabase.from('pipeline_runs').select('id', { head: true, count: 'exact' });
+  return { enabled: true, ok: !error, error: error?.message || null };
 }
 
 // ── Clinics ─────────────────────────────────────────────────────
@@ -209,12 +213,13 @@ export async function startRun(stage, opts = {}) {
   return record;
 }
 
-export async function finishRun(id, status, summary) {
-  if (!enabled) return null;
+export async function finishRun(id, status, summary, errorMessage = null) {
+  if (!enabled || !id) return null;
   const { error } = await supabase.from('pipeline_runs').update({
     status,
     finished_at: new Date().toISOString(),
     log_summary: summary,
+    error_message: errorMessage,
   }).eq('id', id);
   if (error) { log('error', `db finishRun: ${error.message}`); }
 }

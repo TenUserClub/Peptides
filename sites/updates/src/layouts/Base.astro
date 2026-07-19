@@ -19,7 +19,7 @@ const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
 const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" data-site="updates">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -62,6 +62,7 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           {SECTIONS.map((section) => (
             <a href={sectionHref(section)} aria-current={section.label === currentSection ? 'page' : undefined}>{section.label}</a>
           ))}
+          <a class="nav-faq" href="/faq/" aria-current={Astro.url.pathname.startsWith('/faq') ? 'page' : undefined}>FAQ</a>
         </nav>
       </div>
     </header>
@@ -72,7 +73,7 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
         {showCorrections && <div class="corrections"><strong>Corrections</strong><span>Information on this page was compiled from public sources and verified at the time of publication. If something is inaccurate or should be updated or removed, {correctionsEmail ? <a href={`mailto:${correctionsEmail}`}>{correctionsEmail}</a> : <a href={`${SITES.editorial}/corrections/`}>use the corrections page</a>}. We act on requests within 5 business days.</span></div>}
       </div>
     </main>
-    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><nav class="footer-links" aria-label="Editorial information"><a href={`${SITES.editorial}/about/`}>About</a><a href={`${SITES.editorial}/editorial-policy/`}>Editorial policy</a><a href={`${SITES.editorial}/corrections/`}>Corrections</a></nav><p>© {new Date().getFullYear()} Peptide Updates.<br />No sponsored posts.</p></div></footer>
+    <footer class="site-footer"><div class="container footer-inner"><p><strong>Peptide Atlas</strong><br />Evidence-first directories and reporting.</p><nav class="footer-links" aria-label="Editorial information"><a href="/faq/">FAQ</a><a href={`${SITES.editorial}/about/`}>About</a><a href={`${SITES.editorial}/editorial-policy/`}>Editorial policy</a><a href={`${SITES.editorial}/corrections/`}>Corrections</a></nav><p>© {new Date().getFullYear()} Peptide Updates.<br />No sponsored posts.</p></div></footer>
     <div class="theme-control">
       <div class="theme-menu" id="theme-menu" role="menu" aria-label="Choose a color theme" hidden>
         <button type="button" role="menuitemradio" data-theme-option="clinical"><span class="swatch swatch-clinical"></span><span><strong>Clinical</strong><small>Clean and calm</small></span></button>

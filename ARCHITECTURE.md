@@ -34,19 +34,19 @@ Clinic verification requires a reachable first-party website that mentions an in
 
 ## Storage
 
-Markdown, JSON, and logs are the current source of truth. `pipeline/lib/db.mjs` and the Supabase migration are optional foundations, not an active replacement for file state in the orchestrator. Enabling Supabase credentials only initialises the helper; it does not move the main workflow into Postgres.
+Committed Markdown, verified JSON records, and queue files are the publishing source of truth. Supabase is optional. When configured, it records pipeline run status and supports future data services, but it does not replace the file-based publication state.
 
 ## Deployment
 
-Vercel builds each Astro project from its own root and each project owns one apex custom domain. News and Updates publish at their domain roots. Their project-level redirect files permanently move legacy `/news/...` and `/updates/...` URLs to the matching root paths. A local publish creates a git commit. A push only occurs when `AUTO_PUSH=true`; failed pushes retry twice and leave the local commit intact.
+Vercel builds each Astro project from its own root and each project owns one apex custom domain. News and Updates publish at their domain roots. Their project-level redirect files permanently move legacy `/news/...` and `/updates/...` URLs to the matching root paths. A local pipeline run creates a scoped Git commit. In GitHub Actions, the workflow validates all five builds before pushing that commit. Local automatic pushes are available only when `AUTO_PUSH=true`; a failed push makes the pipeline fail visibly and retains the local commit.
 
 ## Automation and checks
 
-`.github/workflows/ci.yml` runs tests and builds all sites on pushes and pull requests. `.github/workflows/pipeline.yml` can run the orchestrator every six hours after repository secrets are configured. `pipeline/scripts/check-sites.mjs` inspects built output for placeholder or sample content, em dashes, broken internal links, robots mistakes, and shared stylesheet drift.
+`.github/workflows/ci.yml` runs tests and builds all sites on pushes and pull requests. `.github/workflows/pipeline.yml` runs every pipeline stage every six hours after repository secrets are configured. Manual dispatch defaults to a non-writing dry run. `pipeline/scripts/check-sites.mjs` inspects built output for placeholder or sample content, em dashes, broken internal links, robots mistakes, incorrect canonicals, shared stylesheet drift, and a searchable 500-to-600-answer FAQ center on every site.
 
 ## Shared presentation
 
-The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other four projects. The integrity check rejects drift. All layouts expose four persisted themes and use the public domain map from `src/lib/sections.ts`.
+The layouts are intentionally separate because their active section and footer wording differ. The canonical stylesheet is maintained in `sites/doctors/public/styles/global.css` and copied byte-for-byte to the other four projects. The integrity check rejects drift. All layouts expose four persisted themes and use the public domain map from `src/lib/sections.ts`. FAQ content is generated from site-specific topic specifications in `shared/faq.ts` and rendered by `shared/FaqCenter.astro`; each project owns a thin local `/faq/` route so its canonical domain and sitemap stay correct.
 
 ## Domain deployment map
 

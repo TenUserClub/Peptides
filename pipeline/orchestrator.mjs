@@ -8,7 +8,7 @@
  *                          verify|write-news|write-blog|write-clinics|write-doctors|write-updates|
  *                          humanise|publish|monitor]
  *
- * Environment: .env (OPENAI_API_KEY, EXA_API_KEY, GEMINI_API_KEY, SITE_DOMAIN, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+ * Environment: .env (OPENAI_API_KEY, EXA_API_KEY, optional GEMINI and Supabase keys)
  */
 
 import { join, dirname, basename, relative } from 'node:path';
@@ -20,6 +20,7 @@ import { loadEnv, readJson, writeJson, log, PIPELINE, ROOT } from './scripts/lib
 import { chat } from './lib/llm.mjs';
 import { generateImage } from './lib/images.mjs';
 import { isAuthoritativeUrl, validateContent } from './lib/content-guard.mjs';
+import { startRun, finishRun } from './lib/db.mjs';
 
 loadEnv();
 
@@ -754,12 +755,18 @@ async function runPublish() {
   advanceQueues();
   log('info', 'publish: committing scoped publication files');
   try {
+    const preExistingStaged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
+    if (preExistingStaged) throw new Error('Refusing to mix publication output with pre-existing staged changes');
     const stagePaths = [
       ...toMove.flatMap((item) => [item.targetPath, item.imageFile].filter((path) => path && existsSync(path))),
+      join(PIPELINE, 'data', 'verified'),
+      join(PIPELINE, 'data', '.processed-news.json'),
+      join(PIPELINE, 'data', '.processed-clinics.json'),
+      join(PIPELINE, 'data', '.processed-doctors.json'),
       join(PIPELINE, 'queue', 'cities.json'),
       join(PIPELINE, 'queue', 'states.json'),
       join(PIPELINE, 'queue', 'keywords.json'),
-    ].map((path) => relative(ROOT, path));
+    ].filter((path) => existsSync(path)).map((path) => relative(ROOT, path));
     execFileSync('git', ['add', '--', ...stagePaths], { cwd: ROOT, stdio: 'pipe' });
     const staged = execFileSync('git', ['diff', '--cached', '--name-only'], { cwd: ROOT, encoding: 'utf8' }).trim();
     if (!staged) throw new Error('No scoped publication changes were staged');
@@ -775,12 +782,13 @@ async function runPublish() {
           log('warn', `publish: push attempt ${attempt}/2 failed: ${pushError.message}`);
         }
       }
-      if (!pushed) log('error', 'publish: local commit retained; manual git push required');
+      if (!pushed) throw new Error('Automatic push failed twice; the local publication commit was retained');
     } else {
       log('info', 'publish: committed locally. Set AUTO_PUSH=true to deploy automatically.');
     }
   } catch (e) {
-    log('warn', `publish: git commit issue: ${e.message}`);
+    log('error', `publish: git commit or push failed: ${e.message}`);
+    throw e;
   }
 
   return toMove.length;
@@ -1577,28 +1585,40 @@ async function main() {
   const stage = process.argv[2] || 'all';
   const hour = new Date().getHours();
 
+  const allowedStages = new Set([
+    'all', 'fetch-news', 'fetch-clinics', 'fetch-doctors', 'verify', 'write-news',
+    'write-blog', 'write-clinics', 'write-doctors', 'write-updates', 'humanise',
+    'publish', 'monitor',
+  ]);
+  if (!allowedStages.has(stage)) throw new Error(`Unknown pipeline stage: ${stage}`);
+
+  const runRecord = await startRun(stage, { dryRun: DRY_RUN, model: CONFIG.models.writing });
+
   log('info', `=== Orchestrator started: stage=${stage}, hour=${hour}, dry-run=${DRY_RUN}, site=${SITE_DOMAIN} ===`);
 
-  if (stage === 'all' || stage === 'fetch-news') await runFetch('news');
-  if (stage === 'all' || stage === 'fetch-clinics') await runFetch('clinics');
-  if (stage === 'all' || stage === 'fetch-doctors') await runFetch('doctors');
+  try {
+    if (stage === 'all' || stage === 'fetch-news') await runFetch('news');
+    if (stage === 'all' || stage === 'fetch-clinics') await runFetch('clinics');
+    if (stage === 'all' || stage === 'fetch-doctors') await runFetch('doctors');
 
-  if (stage === 'all' && hour >= 2 && hour < 6) await runVerify();
-  else if (stage === 'verify') await runVerify();
+    if (stage === 'all' || stage === 'verify') await runVerify();
 
-  if (stage === 'all' || stage === 'write-news') await runWriteNews();
-  if (stage === 'all' || stage === 'write-blog') await runWriteBlog();
-  if (stage === 'all' || stage === 'write-clinics') await runWriteClinics();
-  if (stage === 'all' || stage === 'write-doctors') await runWriteDoctors();
-  if (stage === 'all' || stage === 'write-updates') await runWriteUpdates();
+    if (stage === 'all' || stage === 'write-news') await runWriteNews();
+    if (stage === 'all' || stage === 'write-blog') await runWriteBlog();
+    if (stage === 'all' || stage === 'write-clinics') await runWriteClinics();
+    if (stage === 'all' || stage === 'write-doctors') await runWriteDoctors();
+    if (stage === 'all' || stage === 'write-updates') await runWriteUpdates();
 
-  if (stage === 'all' || stage === 'humanise') await runHumanise();
+    if (stage === 'all' || stage === 'humanise') await runHumanise();
+    if (stage === 'all' || stage === 'publish') await runPublish();
+    if (stage === 'all' || stage === 'monitor') await runMonitor();
 
-  if (stage === 'all' || stage === 'publish') await runPublish();
-
-  if (stage === 'monitor' || (stage === 'all' && hour >= 6 && hour < 8)) await runMonitor();
-
-  log('info', '=== Orchestrator finished ===');
+    await finishRun(runRecord?.id, 'success', `Completed stage ${stage}`);
+    log('info', '=== Orchestrator finished ===');
+  } catch (error) {
+    await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message);
+    throw error;
+  }
 }
 
 main().catch((e) => {

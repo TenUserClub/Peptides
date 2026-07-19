@@ -41,10 +41,20 @@ for (const project of projects) {
     if (!robots.includes(sitemap)) errors.push(`${project.name}: robots.txt is missing ${sitemap}`);
   }
 
+  const faqPath = join(dist, 'faq', 'index.html');
+  if (!existsSync(faqPath)) {
+    errors.push(`${project.name}: FAQ center is missing`);
+  } else {
+    const faqHtml = readFileSync(faqPath, 'utf8');
+    const faqCount = (faqHtml.match(/<details\b/g) || []).length;
+    if (faqCount < 500 || faqCount > 600) errors.push(`${project.name}: expected 500 to 600 FAQ answers, found ${faqCount}`);
+    if (!faqHtml.includes('id="faq-search"')) errors.push(`${project.name}: FAQ search control is missing`);
+  }
+
   for (const file of filesUnder(dist).filter((path) => /\.(html|xml)$/i.test(path))) {
     const text = readFileSync(file, 'utf8');
     if (/_sample|example\.com/i.test(text)) errors.push(`${project.name}: sample or example content leaked into ${file}`);
-    if (/—|â€”/.test(text)) errors.push(`${project.name}: em dash found in ${file}`);
+    if (/\u2014|â€”/.test(text)) errors.push(`${project.name}: em dash found in ${file}`);
     if (/https:\/\/[^"'<\s]*\.vercel\.app/i.test(text)) errors.push(`${project.name}: legacy Vercel hostname leaked into ${file}`);
     if (file.endsWith('.html')) {
       for (const domain of publicDomains) {

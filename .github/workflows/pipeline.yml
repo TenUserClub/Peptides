@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run every stage without writing or publishing content
+        required: true
+        type: boolean
+        default: true
 
 concurrency:
   group: peptide-editorial-pipeline
@@ -15,14 +21,36 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
+      OPENAI_HUMANISE_MODEL: ${{ vars.OPENAI_HUMANISE_MODEL }}
+      OPENAI_VERIFY_MODEL: ${{ vars.OPENAI_VERIFY_MODEL }}
+      OPENAI_SUMMARY_MODEL: ${{ vars.OPENAI_SUMMARY_MODEL }}
+      SITE_DOMAIN: mypeptide.club
+      AUTO_PUSH: "false"
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+            sites/doctors/package-lock.json
+            sites/content/package-lock.json
+            sites/news/package-lock.json
+            sites/updates/package-lock.json
       - run: npm ci
       - run: npm ci --prefix site
       - run: npm ci --prefix sites/doctors
@@ -33,22 +61,15 @@ jobs:
         run: |
           git config user.name "Peptide Atlas Bot"
           git config user.email "peptide-atlas-bot@users.noreply.github.com"
+      - name: Validate automation configuration
+        run: node pipeline/scripts/preflight.mjs --check-supabase
+      - name: Run guarded pipeline in dry-run mode
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: node pipeline/orchestrator.mjs all --dry-run
       - name: Run guarded pipeline
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
-          OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
-          OPENAI_HUMANISE_MODEL: ${{ vars.OPENAI_HUMANISE_MODEL }}
-          OPENAI_VERIFY_MODEL: ${{ vars.OPENAI_VERIFY_MODEL }}
-          SITE_DOMAIN: mypeptide.club
-          AUTO_PUSH: "true"
-        if: ${{ env.OPENAI_API_KEY != '' && env.EXA_API_KEY != '' }}
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.dry_run }}
         run: node pipeline/orchestrator.mjs all
-      - name: Explain missing secrets
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
-        if: ${{ env.OPENAI_API_KEY == '' || env.EXA_API_KEY == '' }}
-        run: echo "Pipeline skipped. Add OPENAI_API_KEY and EXA_API_KEY as repository secrets."
+      - name: Validate generated publication across all five sites
+        run: npm run check
+      - name: Push validated publication commit
+        run: git push origin HEAD:${{ github.event.repository.default_branch }}

@@ -4,8 +4,12 @@
 
 - [ ] Run `npm run check` and resolve every failure.
 - [ ] Add `EXA_API_KEY` and `OPENAI_API_KEY` as GitHub Actions secrets.
+- [ ] Optionally add `GEMINI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` as GitHub Actions secrets.
+- [ ] If using Supabase, apply migrations `001` and `002` in order.
+- [ ] Confirm GitHub Actions has permission to write repository contents.
 - [ ] Add `PUBLIC_CONTACT_EMAIL` and `PUBLIC_CORRECTIONS_EMAIL` to all five Vercel projects.
 - [ ] Run `node pipeline/orchestrator.mjs all --dry-run` and confirm queues and processed markers do not change.
+- [ ] Dispatch the Editorial pipeline workflow once with `dry_run` enabled.
 - [ ] Run the first live cycle with `AUTO_PUSH=false` and review every generated markdown file.
 - [ ] Push only after the reviewed local build passes.
 
