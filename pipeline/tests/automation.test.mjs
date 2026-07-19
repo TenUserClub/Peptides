@@ -63,6 +63,7 @@ test('Supabase and the free Search Console registry are wired into live runs', (
   assert.match(orchestrator, /upsertDoctor/);
   assert.match(orchestrator, /pruneKeywordMetrics\(90\)/);
   assert.match(workflow, /REQUIRE_SUPABASE: "true"/);
+  assert.match(workflow, /SUPABASE_SECRET_KEY/);
   assert.match(workflow, /GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64/);
   assert.match(migration, /create table if not exists keyword_registry/);
 });

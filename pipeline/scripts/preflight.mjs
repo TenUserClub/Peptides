@@ -30,12 +30,17 @@ if (!/^[a-z0-9.-]+$/i.test(siteDomain) || siteDomain.includes('..')) {
 }
 
 const supabaseUrl = process.env.SUPABASE_URL?.trim() || '';
-const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim();
+const supabaseKey = (
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  ''
+).trim();
 if (Boolean(supabaseUrl) !== Boolean(supabaseKey)) {
-  errors.push('Set both SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, or leave both unset');
+  errors.push('Set SUPABASE_URL with either SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY, or leave all unset');
 }
 if (requireSupabase && (!supabaseUrl || !supabaseKey)) {
-  errors.push('REQUIRE_SUPABASE=true requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY');
+  errors.push('REQUIRE_SUPABASE=true requires SUPABASE_URL and a Supabase server secret key');
 }
 if (supabaseUrl) {
   try {
@@ -87,7 +92,7 @@ try {
 }
 
 if (process.env.SUPABASE_SERVICE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  notices.push('SUPABASE_SERVICE_KEY is supported for compatibility; rename it to SUPABASE_SERVICE_ROLE_KEY');
+  notices.push('SUPABASE_SERVICE_KEY is supported for compatibility; rename it to SUPABASE_SECRET_KEY');
 }
 
 const searchConsoleEncoded = process.env.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64?.trim() || '';
@@ -104,12 +109,9 @@ if (checkSupabase && supabaseUrl && supabaseKey && errors.length === 0) {
   try {
     const tables = ['pipeline_runs', 'keyword_registry'];
     for (const table of tables) {
-      const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?select=id&limit=1`, {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-      });
+      const headers = { apikey: supabaseKey };
+      if (!supabaseKey.startsWith('sb_secret_')) headers.Authorization = `Bearer ${supabaseKey}`;
+      const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?select=id&limit=1`, { headers });
       if (!response.ok) {
         const detail = (await response.text()).slice(0, 300);
         errors.push(`Supabase ${table} migration check failed with HTTP ${response.status}: ${detail}`);
@@ -132,6 +134,6 @@ if (errors.length) {
 console.log('Automation preflight passed.');
 console.log(`- Required pipeline keys: ${allowMissingRequired && (!present('OPENAI_API_KEY') || !present('EXA_API_KEY')) ? 'structural check only' : 'available'}`);
 console.log(`- Gemini images: ${present('GEMINI_API_KEY') ? 'enabled' : 'disabled (optional)'}`);
-console.log(`- Supabase audit: ${supabaseUrl && supabaseKey ? 'enabled' : 'disabled (optional)'}`);
+console.log(`- Supabase operational mirror: ${supabaseUrl && supabaseKey ? 'enabled' : 'disabled (optional)'}`);
 console.log(`- Automatic push inside orchestrator: ${autoPush}`);
 for (const notice of notices) console.log(`- ${notice}`);

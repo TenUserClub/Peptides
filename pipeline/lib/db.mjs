@@ -9,7 +9,12 @@ import { loadEnv, log } from '../scripts/lib.mjs';
 loadEnv();
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').trim();
-const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '').trim();
+const SUPABASE_KEY = (
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  ''
+).trim();
 const REQUIRE_SUPABASE = process.env.REQUIRE_SUPABASE === 'true';
 
 let supabase = null;

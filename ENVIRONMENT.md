@@ -9,7 +9,7 @@
 | GitHub Actions variables | Model names and Search Console property identifiers | Non-secret pipeline configuration |
 | Each Vercel project | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_CORRECTIONS_EMAIL`, optional `PUBLIC_PLAUSIBLE_DOMAIN` | Public site builds |
 
-Never put OpenAI, Exa, Gemini, or the Supabase service role key in a `PUBLIC_*` variable. The static sites do not need those private keys.
+Never put OpenAI, Exa, Gemini, or a Supabase server secret key in a `PUBLIC_*` variable. The static sites do not need those private keys.
 
 ## Local development
 
@@ -23,7 +23,7 @@ Required:
 Optional:
 
 - `GEMINI_API_KEY` and `GEMINI_MODEL` for generated images
-- `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` for the operational database mirror
+- `SUPABASE_URL` and either `SUPABASE_SECRET_KEY` (recommended) or the legacy `SUPABASE_SERVICE_ROLE_KEY` for the operational database mirror
 - `GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64` for free first-party query metrics
 - Model overrides beginning with `OPENAI_`
 
@@ -40,7 +40,7 @@ Required secrets:
 - `OPENAI_API_KEY`
 - `EXA_API_KEY`
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY` for a current `sb_secret_...` key, or `SUPABASE_SERVICE_ROLE_KEY` for a legacy service-role key
 
 Optional secrets:
 
@@ -81,11 +81,11 @@ To enable it:
 3. Apply `supabase/migrations/002_harden_automation_schema.sql`.
 4. Apply `supabase/migrations/003_keyword_registry.sql`.
 5. Store the project URL as `SUPABASE_URL`.
-6. Store the server-side service role key as `SUPABASE_SERVICE_ROLE_KEY`.
+6. Store a current `sb_secret_...` server key as `SUPABASE_SECRET_KEY`. If the project only exposes a legacy service-role key, store it as `SUPABASE_SERVICE_ROLE_KEY` instead. Do not set both.
 7. Set `REQUIRE_SUPABASE=true` for a strict local live run. GitHub already sets it.
 8. Run `node pipeline/scripts/preflight.mjs --check-supabase`.
 
-Do not use the anon key in place of the service role key. The migrations keep operational tables private because none of the public sites query Supabase directly.
+Do not use an anon or `sb_publishable_...` key here. The automation needs a server-side `sb_secret_...` or legacy service-role key. The migrations keep operational tables private because none of the public sites query Supabase directly.
 
 ## Free keyword metrics with Search Console
 
