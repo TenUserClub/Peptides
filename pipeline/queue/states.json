@@ -1,5 +1,5 @@
 {
-  "next": 1,
+  "next": 2,
   "states": [
     {
       "state": "Florida",
@@ -41,10 +41,5 @@
       "state": "New York",
       "specialty": "GLP-1 therapy"
     }
-  ],
-  "inFlight": {
-    "label": "Texas/GLP-1 therapy",
-    "file": "/home/runner/work/Peptides/Peptides/pipeline/data/exa/doctors/texas-glp-1-therapy-2026-07-19T16-44-47-518Z.json",
-    "fetchedAt": "2026-07-19T16:44:47.519Z"
-  }
+  ]
 }
