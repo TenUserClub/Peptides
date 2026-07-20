@@ -1,0 +1,36 @@
+{
+  "doctorName": "Dr. Michael R. Schwartz",
+  "city": "Westlake Village",
+  "state": "CA",
+  "credentials": "MD (double-board-certified plastic surgeon)",
+  "specialty": "Peptide Therapy",
+  "clinicName": "Schwartz Aesthetic Institute",
+  "website": "https://www.drschwartz.com/non-surgical/wellness/peptides/",
+  "phone": "",
+  "services": [
+    "Peptide therapy for wellness and anti-aging",
+    "Laser therapy",
+    "Injectables",
+    "Medical weight loss",
+    "IV therapy"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": null,
+  "sourceUrls": [
+    "https://www.drschwartz.com/non-surgical/wellness/peptides/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1649380429"
+  ],
+  "npi": "1649380429",
+  "taxonomies": [
+    {
+      "desc": "Plastic Surgery",
+      "state": "CA"
+    }
+  ]
+}

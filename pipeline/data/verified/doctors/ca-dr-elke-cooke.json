@@ -1,0 +1,34 @@
+{
+  "doctorName": "Dr. Elke Cooke",
+  "city": "",
+  "state": "CA",
+  "credentials": "MD",
+  "specialty": "Peptide Therapy",
+  "clinicName": "Elke Cooke MD",
+  "website": "https://www.elkecookemd.com/peptide-therapy",
+  "phone": "",
+  "services": [
+    "Sermorelin",
+    "CJC-Ipamorelin",
+    "BPC-157"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": null,
+  "sourceUrls": [
+    "https://www.elkecookemd.com/peptide-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1780762260"
+  ],
+  "npi": "1780762260",
+  "taxonomies": [
+    {
+      "desc": "Emergency Medicine",
+      "state": "CA"
+    }
+  ]
+}

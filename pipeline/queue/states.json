@@ -41,5 +41,10 @@
       "state": "New York",
       "specialty": "GLP-1 therapy"
     }
-  ]
+  ],
+  "inFlight": {
+    "label": "California/peptide therapy",
+    "file": "/home/runner/work/Peptides/Peptides/pipeline/data/exa/doctors/california-peptide-therapy-2026-07-20T12-28-39-449Z.json",
+    "fetchedAt": "2026-07-20T12:28:39.451Z"
+  }
 }

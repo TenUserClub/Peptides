@@ -1,0 +1,32 @@
+{
+  "doctorName": "Dr. Darren L. Bergey",
+  "city": "Colton",
+  "state": "CA",
+  "credentials": "MD",
+  "specialty": "Peptide Therapy",
+  "clinicName": "Executive Medical and Surgical Associates",
+  "website": "https://www.bergeymd.com/service/peptide-therapy",
+  "phone": "",
+  "services": [
+    "Personalized peptide therapy targeting energy, strength, healing, inflammation, cognitive function, metabolism, gut healing, sexual health, skin rejuvenation"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": null,
+  "sourceUrls": [
+    "https://www.bergeymd.com/service/peptide-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1861464711"
+  ],
+  "npi": "1861464711",
+  "taxonomies": [
+    {
+      "desc": "Specialist",
+      "state": "CA"
+    }
+  ]
+}

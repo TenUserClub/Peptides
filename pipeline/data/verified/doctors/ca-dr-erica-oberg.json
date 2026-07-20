@@ -1,0 +1,38 @@
+{
+  "doctorName": "Dr. Erica Oberg",
+  "city": "La Jolla",
+  "state": "CA",
+  "credentials": "MD",
+  "specialty": "Peptide Therapy",
+  "clinicName": "Dr. Erica Oberg Regenerative Medicine",
+  "website": "https://drericaoberg.com/",
+  "phone": "(858) 215-4935",
+  "services": [
+    "BPC-157",
+    "CJC-1295/Ipamorelin",
+    "Cerebrolysin",
+    "Thymosin Alpha-1",
+    "PT-141",
+    "Melanotan II"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "yearsInPractice": null,
+  "sourceUrls": [
+    "https://healingmaps.com/listing/dr-erica-oberg-regenerative-medicine-la-jolla-california/",
+    "https://drericaoberg.com/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1801993233"
+  ],
+  "npi": "1801993233",
+  "taxonomies": [
+    {
+      "desc": "Naturopath",
+      "state": "WA"
+    }
+  ]
+}

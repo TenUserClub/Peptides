@@ -1,0 +1,37 @@
+{
+  "doctorName": "Dr. Ehsan Ali",
+  "city": "Beverly Hills",
+  "state": "CA",
+  "credentials": "MD",
+  "specialty": "Peptide Therapy",
+  "clinicName": "Beverly Hills Concierge Doctor",
+  "website": "https://beverlyhillsconciergedoctor.com/",
+  "phone": "(310) 683-0180",
+  "services": [
+    "BPC-157",
+    "Ipamorelin",
+    "Sermorelin",
+    "Tesamorelin",
+    "Additional peptides"
+  ],
+  "ratingValue": 4.8,
+  "ratingCount": 1467,
+  "ratingSource": "Zocdoc",
+  "yearsInPractice": null,
+  "sourceUrls": [
+    "https://healingmaps.com/listing/beverly-hills-concierge-doctor-beverly-hills-california/",
+    "https://beverlyhillsconciergedoctor.com/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1548451297"
+  ],
+  "npi": "1548451297",
+  "taxonomies": [
+    {
+      "desc": "Internal Medicine",
+      "state": "CA"
+    }
+  ]
+}
