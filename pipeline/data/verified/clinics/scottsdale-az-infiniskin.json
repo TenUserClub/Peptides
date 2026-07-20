@@ -1,0 +1,24 @@
+{
+  "clinicName": "Infiniskin",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://www.infiniskin.com/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for weight loss",
+    "Peptide therapy for anti-aging",
+    "Peptide therapy for energy"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.infiniskin.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

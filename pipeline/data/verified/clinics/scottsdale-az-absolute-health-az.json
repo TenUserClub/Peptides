@@ -1,0 +1,23 @@
+{
+  "clinicName": "Absolute Health AZ",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "8360 E. Raintree Dr. Suite 135 Scottsdale AZ 85260",
+  "phone": "",
+  "website": "https://absolutehealthaz.com/services/peptides/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for recovery, repair & performance (BPC-157, TB-500, CJC-1295 / Ipamorelin, MOTS-C, Delta Sleep Inducting Peptide, NAD+)",
+    "Peptide therapy for metabolic, weight-management & aesthetic (Semaglutide, Tirzepatide, Melanotan II, Retatrutide)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://absolutehealthaz.com/services/peptides/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

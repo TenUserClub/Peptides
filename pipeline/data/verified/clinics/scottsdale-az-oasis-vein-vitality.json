@@ -1,0 +1,32 @@
+{
+  "clinicName": "Oasis Vein & Vitality",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://oasisvv.com/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for anti-aging and skin rejuvenation",
+    "Peptide therapy for hormonal balance",
+    "Peptide therapy for immune system support",
+    "Peptide therapy for hair restoration",
+    "Peptide therapy for muscle building",
+    "Peptide therapy for weight management and metabolic support",
+    "Peptide therapy for accelerated healing",
+    "Peptide therapy for joint and muscle pain relief",
+    "Peptide therapy for cognitive enhancement",
+    "Peptide therapy for chronic disease and pain management"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://oasisvv.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

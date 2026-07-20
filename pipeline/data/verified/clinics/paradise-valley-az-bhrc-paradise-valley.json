@@ -1,0 +1,25 @@
+{
+  "clinicName": "BHRC Paradise Valley",
+  "city": "Paradise Valley",
+  "state": "AZ",
+  "address": "",
+  "phone": "(480) 398-8400",
+  "website": "https://www.bhrcenter.com/location/paradise-valley-az/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Physician-prescribed peptides for weight management & metabolic optimization",
+    "AOD-9604 for fat breakdown",
+    "Semaglutide (various doses) for appetite suppression and metabolic health",
+    "Tirzepatide for weight reduction"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.bhrcenter.com/location/paradise-valley-az/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "clinicName": "Howarth Plastic Surgery",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://howarthplasticsurgery.com/wellness/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for cellular performance",
+    "Peptide therapy for recovery",
+    "Peptide therapy for metabolic balance",
+    "Peptide therapy for body composition",
+    "Peptide therapy for cognitive clarity",
+    "Peptide therapy for performance optimization",
+    "Peptide therapy for healthy aging"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://howarthplasticsurgery.com/wellness/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

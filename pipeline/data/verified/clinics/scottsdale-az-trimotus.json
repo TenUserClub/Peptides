@@ -1,0 +1,27 @@
+{
+  "clinicName": "TriMotus",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://trimotus.com/functional-medicine/trimotus-peptide-track/",
+  "doctorName": "",
+  "services": [
+    "Personalized peptide therapy for recovery and tissue repair",
+    "Peptide therapy for fat loss and lean muscle gain",
+    "Peptide therapy for cognitive function and mental clarity",
+    "Peptide therapy for immune response",
+    "Peptide therapy for inflammation and pain reduction",
+    "Peptide therapy for energy, sleep, and resilience"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://trimotus.com/functional-medicine/trimotus-peptide-track/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

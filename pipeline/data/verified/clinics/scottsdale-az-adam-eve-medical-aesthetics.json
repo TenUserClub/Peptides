@@ -1,0 +1,23 @@
+{
+  "clinicName": "Adam & Eve Medical Aesthetics",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://www.adamandevemedspa.com/scottsdale/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for longevity and regeneration (Epithalon, GLOW blend, Wolverine blend)",
+    "Peptide therapy for wellness and cognitive support (Cognitive Blend, Focus & Mood Blend, Immune Mix)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.adamandevemedspa.com/scottsdale/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

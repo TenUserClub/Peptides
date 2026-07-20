@@ -1,0 +1,29 @@
+{
+  "clinicName": "Ziva Wellness MD",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "",
+  "website": "https://zivawellnessmd.com/peptide-therapy-scottsdale-az/",
+  "doctorName": "",
+  "services": [
+    "Peptide therapy for anti-aging",
+    "Peptide therapy for wellness",
+    "Peptide therapy for low energy",
+    "Peptide therapy for weight management",
+    "Peptide therapy for aging skin",
+    "Peptide therapy for poor recovery",
+    "Peptide therapy for hormonal imbalances"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://zivawellnessmd.com/peptide-therapy-scottsdale-az/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

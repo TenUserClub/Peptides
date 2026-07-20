@@ -202,5 +202,10 @@
       "city": "Cheyenne",
       "state": "WY"
     }
-  ]
+  ],
+  "inFlight": {
+    "label": "Scottsdale, AZ",
+    "file": "/home/runner/work/Peptides/Peptides/pipeline/data/exa/clinics/scottsdale-az-2026-07-20T20-01-06-299Z.json",
+    "fetchedAt": "2026-07-20T20:01:06.301Z"
+  }
 }

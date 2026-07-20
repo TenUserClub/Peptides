@@ -1,0 +1,33 @@
+{
+  "clinicName": "Dr. Dan Wool",
+  "city": "Scottsdale",
+  "state": "AZ",
+  "address": "",
+  "phone": "(480) 741-2200",
+  "website": "https://drdanwool.com/peptide-therapy",
+  "doctorName": "Dr. Dan Wool",
+  "services": [
+    "Peptide therapy for weight loss",
+    "Peptide therapy for energy",
+    "Peptide therapy for hormones",
+    "Peptide therapy for anti-aging"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://drdanwool.com/peptide-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1003391764"
+  ],
+  "npi": "1003391764",
+  "taxonomies": [
+    {
+      "desc": "Family Medicine",
+      "state": "AZ"
+    }
+  ]
+}
