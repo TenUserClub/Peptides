@@ -42,9 +42,14 @@ for (const project of projects) {
   for (const requiredHeader of ['Content-Security-Policy', 'Permissions-Policy', 'Referrer-Policy', 'X-Content-Type-Options', 'X-Frame-Options', 'X-XSS-Protection', 'Cross-Origin-Opener-Policy']) {
     if (!configuredHeaders.has(requiredHeader)) errors.push(`${project.name}: ${requiredHeader} is missing from vercel.json`);
   }
-  if (!existsSync(join(project.root, 'public', 'brand-mark.svg'))) errors.push(`${project.name}: shared logo is missing`);
+  const brandMarkPath = join(project.root, 'public', 'brand-mark.svg');
+  const svgFaviconPath = join(project.root, 'public', 'favicon.svg');
+  if (!existsSync(brandMarkPath)) errors.push(`${project.name}: shared logo is missing`);
   for (const favicon of ['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png']) {
     if (!existsSync(join(project.root, 'public', favicon))) errors.push(`${project.name}: ${favicon} is missing`);
+  }
+  if (existsSync(brandMarkPath) && existsSync(svgFaviconPath) && !readFileSync(brandMarkPath).equals(readFileSync(svgFaviconPath))) {
+    errors.push(`${project.name}: header brand mark has drifted from favicon.svg`);
   }
   const securityTxt = join(project.root, 'public', '.well-known', 'security.txt');
   if (!existsSync(securityTxt)) errors.push(`${project.name}: .well-known/security.txt is missing`);
