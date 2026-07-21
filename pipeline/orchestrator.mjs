@@ -157,17 +157,17 @@ function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 }
 
+const HTML_ENTITY_TEXT = {
+  '&nbsp;': ' ', '&#160;': ' ', '&amp;': '&', '&quot;': '"', '&#34;': '"',
+  '&#39;': "'", '&apos;': "'", '&lt;': '<', '&gt;': '>',
+};
+
 function readableText(html) {
   return String(html || '')
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<(script|style|svg|noscript)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;|&#160;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&quot;|&#34;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
+    .replace(/&(?:nbsp|amp|quot|apos|lt|gt);|&#(?:34|39|160);/gi, (entity) => HTML_ENTITY_TEXT[entity.toLowerCase()] ?? entity)
     .replace(/\s+/g, ' ')
     .trim();
 }
