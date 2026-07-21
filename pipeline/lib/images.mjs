@@ -14,6 +14,9 @@ const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 // Use 'node pipeline/scripts/list-gemini-models.mjs' to discover available models.
 // Known working image models: gemini-3.1-flash-image, gemini-3-pro-image
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-image';
+const GEMINI_MAX_CALLS_PER_RUN = Math.max(1, Number.parseInt(process.env.GEMINI_MAX_CALLS_PER_RUN || '10', 10) || 10);
+const GEMINI_TIMEOUT_MS = Math.max(1000, Number.parseInt(process.env.GEMINI_TIMEOUT_MS || '120000', 10) || 120000);
+let geminiCalls = 0;
 
 /**
  * Image generation prompt templates per content type.
@@ -159,6 +162,10 @@ export async function generateImage(type, context, slug) {
     log('info', 'images: GEMINI_API_KEY not set, skipping image generation');
     return null;
   }
+  if (geminiCalls >= GEMINI_MAX_CALLS_PER_RUN) {
+    log('warn', `images: Gemini per-run call budget reached (${GEMINI_MAX_CALLS_PER_RUN}), skipping ${slug}`);
+    return null;
+  }
 
   const template = PROMPT_TEMPLATES[type];
   if (!template) {
@@ -179,6 +186,7 @@ export async function generateImage(type, context, slug) {
   const outputPath = join(siteRoot, 'public', 'images', type, `${slug}.jpg`);
 
   log('info', `images: generating ${type} image for ${slug}`);
+  geminiCalls += 1;
 
   try {
     const res = await fetch(
@@ -190,6 +198,7 @@ export async function generateImage(type, context, slug) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { responseModalities: ['Text', 'Image'] },
         }),
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
       }
     );
 

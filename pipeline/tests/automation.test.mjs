@@ -68,6 +68,44 @@ test('Supabase and the free Search Console registry are wired into live runs', (
   assert.match(migration, /create table if not exists keyword_registry/);
 });
 
+test('Supabase controls the publication queue with content and integrity snapshots', () => {
+  const orchestrator = read('pipeline/orchestrator.mjs');
+  const integrity = read('pipeline/lib/integrity.mjs');
+  const db = read('pipeline/lib/db.mjs');
+  const preflight = read('pipeline/scripts/preflight.mjs');
+  const workflow = read('.github/workflows/pipeline.yml');
+  const migration = read('supabase/migrations/004_publication_control.sql');
+  assert.match(orchestrator, /syncPublicationIntegrity/);
+  assert.match(orchestrator, /outcome\.mirrored/);
+  assert.match(integrity, /content_sha256/);
+  assert.match(integrity, /source_context/);
+  assert.match(integrity, /mirrorMismatches/);
+  assert.match(integrity, /checkPublicationControl/);
+  assert.match(db, /withdrawPublicationQueueItems/);
+  assert.match(preflight, /SUPABASE_CONTROL_PLANE_REQUIRED/);
+  assert.match(migration, /create table if not exists publication_queue/);
+  assert.match(migration, /create table if not exists integrity_checks/);
+  assert.match(workflow, /REQUIRE_SUPABASE: "true"/);
+  assert.match(workflow, /SUPABASE_CONTROL_PLANE_REQUIRED/);
+});
+
+test('external API calls have explicit per-run budgets and timeouts', () => {
+  const llm = read('pipeline/lib/llm.mjs');
+  const images = read('pipeline/lib/images.mjs');
+  const exa = read('pipeline/scripts/exa-fetch.mjs');
+  const workflow = read('.github/workflows/pipeline.yml');
+  assert.match(llm, /MAX_OPENAI_CALLS_PER_RUN/);
+  assert.match(llm, /MAX_OPENAI_OUTPUT_TOKENS_PER_RUN/);
+  assert.match(llm, /AbortSignal\.timeout\(OPENAI_TIMEOUT_MS\)/);
+  assert.match(images, /GEMINI_MAX_CALLS_PER_RUN/);
+  assert.match(images, /AbortSignal\.timeout\(GEMINI_TIMEOUT_MS\)/);
+  assert.match(exa, /EXA_MAX_REQUESTS_PER_RUN/);
+  assert.match(exa, /AbortSignal\.timeout\(EXA_TIMEOUT_MS\)/);
+  for (const setting of ['OPENAI_MAX_CALLS_PER_RUN', 'GEMINI_MAX_CALLS_PER_RUN', 'EXA_MAX_REQUESTS_PER_RUN']) {
+    assert.ok(workflow.includes(setting), `${setting} is not explicit in the scheduled workflow`);
+  }
+});
+
 test('zero-publication runs checkpoint verification and queue progress', () => {
   const orchestrator = read('pipeline/orchestrator.mjs');
   assert.match(orchestrator, /publish: committed verification and queue checkpoint/);
@@ -110,4 +148,14 @@ test('the starter clinic queue covers all 50 US states once', () => {
   assert.equal(queue.cities.length, 50);
   assert.equal(new Set(states).size, 50);
   assert.equal(queue.coveragePlan, 'One starter metro in every US state before a second geographic pass');
+});
+
+test('the starter doctor queue covers all 50 US states once', () => {
+  const queue = JSON.parse(read('pipeline/queue/states.json'));
+  const states = queue.states.map((item) => item.state);
+  assert.equal(queue.states.length, 50);
+  assert.equal(new Set(states).size, 50);
+  assert.equal(queue.coveragePlan, 'One doctor discovery pass in every US state before repeating a state');
+  assert.equal(queue.states[queue.next].state, 'California');
+  assert.match(queue.inFlight.label, /^California\//);
 });

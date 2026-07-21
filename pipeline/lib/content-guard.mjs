@@ -66,6 +66,18 @@ export function isAuthoritativeUrl(value) {
   }
 }
 
+function isDiscoveryOnlyUrl(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (host === 'pubmed.ncbi.nlm.nih.gov' && url.pathname === '/' && url.searchParams.has('term')) return true;
+    if (host === 'clinicaltrials.gov' && url.pathname.replace(/\/$/, '') === '/search') return true;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 function countMatches(text, pattern) {
   const flags = pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`;
   return [...String(text || '').matchAll(new RegExp(pattern.source, flags))].length;
@@ -235,6 +247,9 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
     const sources = Array.isArray(data.sources) ? data.sources : [];
     if (sources.length < 2) errors.push('Blog posts require at least two authoritative sources');
     if (sources.some((source) => !isAuthoritativeUrl(source))) errors.push('Every blog source must be authoritative');
+    if (sources.filter((source) => isAuthoritativeUrl(source) && !isDiscoveryOnlyUrl(source)).length < 2) {
+      errors.push('Blog posts require at least two specific authoritative sources; search pages are discovery-only');
+    }
   }
 
   if (collection === 'clinics' || collection === 'doctors') {

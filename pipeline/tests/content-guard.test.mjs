@@ -13,6 +13,13 @@ test('accepts a sourced blog within the editorial word range', () => {
   assert.equal(result.ok, true, result.errors.join('; '));
 });
 
+test('does not count literature and trial search pages as specific blog evidence', () => {
+  const text = `---\ntitle: "Discovery links"\ndescription: "A guide with discovery links only."\ncategory: "science"\nsources: ["https://pubmed.ncbi.nlm.nih.gov/?term=peptide+review", "https://clinicaltrials.gov/search?term=peptide"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-22\n---\n${words(1050)}`;
+  const result = validateContent({ text, collection: 'blog', filename: 'discovery-links.md' });
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join(' '), /specific authoritative sources|discovery-only/i);
+});
+
 test('blocks unsupported outcomes and weak news sources', () => {
   const text = `---\ntitle: "Claim"\ndescription: "Claim"\nsourceName: "Blog"\nsourceUrl: "https://example.com/story"\nsourceType: primary\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-17\n---\nPeptides offer significant benefits. ${words(420)}`;
   const result = validateContent({ text, collection: 'news', filename: 'claim.md' });
@@ -21,13 +28,13 @@ test('blocks unsupported outcomes and weak news sources', () => {
 });
 
 test('allows neutral discussion of research chemicals and approved treatment indications', () => {
-  const text = `---\ntitle: "Research and approved products"\ndescription: "A sourced regulatory explanation"\ncategory: "beginners"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} The term research chemical appears in regulatory discussions. An FDA-approved medicine may treat a labeled condition. Peptides do not cure every disease.`;
+  const text = `---\ntitle: "Research and approved products"\ndescription: "A sourced regulatory explanation"\ncategory: "beginners"\nsources: ["https://www.fda.gov/drugs", "https://pubmed.ncbi.nlm.nih.gov/32622810/"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} The term research chemical appears in regulatory discussions. An FDA-approved medicine may treat a labeled condition. Peptides do not cure every disease.`;
   const result = validateContent({ text, collection: 'blog', filename: 'research-products.md' });
   assert.equal(result.ok, true, result.errors.join('; '));
 });
 
 test('allows sourced discussion of misleading cure claims', () => {
-  const text = `---\ntitle: "Claim review"\ndescription: "A sourced review"\ncategory: "safety"\nsources: ["https://www.fda.gov/drugs", "https://clinicaltrials.gov/search"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} Some sellers market peptide therapy as a cure for chronic disease, but the FDA warns readers to check whether a product is approved.`;
+  const text = `---\ntitle: "Claim review"\ndescription: "A sourced review"\ncategory: "safety"\nsources: ["https://www.fda.gov/drugs", "https://pubmed.ncbi.nlm.nih.gov/32622810/"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-19\n---\n${words(1000)} Some sellers market peptide therapy as a cure for chronic disease, but the FDA warns readers to check whether a product is approved.`;
   const result = validateContent({ text, collection: 'blog', filename: 'claim-review.md' });
   assert.equal(result.ok, true, result.errors.join('; '));
 });

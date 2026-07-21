@@ -17,14 +17,21 @@ const canonicalUrl = new URL(Astro.url.pathname, `${canonicalBase}/`).toString()
 const ogImageUrl = ogImage ? `${siteUrl}${ogImage}` : image ? `${siteUrl}${image}` : null;
 const correctionsEmail = import.meta.env.PUBLIC_CORRECTIONS_EMAIL;
 const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+const faqHref = currentSection === 'Laws & legal' || Astro.url.pathname.startsWith('/legal')
+  ? '/legal/faq/'
+  : currentSection === 'Blog' || Astro.url.pathname.startsWith('/blog')
+    ? '/blog/faq/'
+    : '/faq/';
 ---
 <!doctype html>
 <html lang="en" data-site="content">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f2e9" />
-    <link rel="icon" href="/brand-mark.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#52745d" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -56,7 +63,7 @@ const analyticsDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
           {SECTIONS.map((section) => (
             <a href={sectionHref(section)} aria-current={section.label === currentSection ? 'page' : undefined}>{section.label}</a>
           ))}
-          <a class="nav-faq" href="/faq/" aria-current={Astro.url.pathname.startsWith('/faq') ? 'page' : undefined}>FAQ</a>
+          <a class="nav-faq" href={faqHref} aria-current={Astro.url.pathname.endsWith('/faq/') || Astro.url.pathname === '/faq/' ? 'page' : undefined}>FAQ</a>
         </nav>
       </div>
     </header>

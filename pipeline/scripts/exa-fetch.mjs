@@ -17,6 +17,10 @@ const EXA_KEY = requireEnv('EXA_API_KEY');
 const mode = process.argv[2];
 
 async function exaSearch(query, opts = {}) {
+  if (exaRequests >= EXA_MAX_REQUESTS_PER_RUN) {
+    throw new Error(`Exa per-run request budget reached (${EXA_MAX_REQUESTS_PER_RUN})`);
+  }
+  exaRequests += 1;
   const res = await fetch('https://api.exa.ai/search', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': EXA_KEY },
@@ -28,6 +32,7 @@ async function exaSearch(query, opts = {}) {
       ...(opts.startPublishedDate ? { startPublishedDate: opts.startPublishedDate } : {}),
       ...(opts.category ? { category: opts.category } : {}),
     }),
+    signal: AbortSignal.timeout(EXA_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Exa ${res.status}: ${await res.text()}`);
   return res.json();
@@ -35,6 +40,9 @@ async function exaSearch(query, opts = {}) {
 
 // Exa rate limit: 10 requests/second. Space out requests to stay well under.
 const EXA_DELAY_MS = 200;
+const EXA_MAX_REQUESTS_PER_RUN = Math.max(1, Number.parseInt(process.env.EXA_MAX_REQUESTS_PER_RUN || '5', 10) || 5);
+const EXA_TIMEOUT_MS = Math.max(1000, Number.parseInt(process.env.EXA_TIMEOUT_MS || '30000', 10) || 30000);
+let exaRequests = 0;
 
 async function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));

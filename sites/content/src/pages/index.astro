@@ -22,5 +22,5 @@ const hasContent = guides.length + legal.length > 0;
     {legal.length > 0 && <section><div class="section-kicker"><div><p class="eyebrow">Policy watch</p><h2>Legal and regulatory developments</h2></div><a class="text-link" href="/legal/">All coverage</a></div><div class="compact-list">{legal.map((item) => <article><p class="meta">{item.data.jurisdiction} · {item.data.publishDate.toISOString().slice(0, 10)}</p><h3><a href={`/legal/${item.id}/`}>{item.data.title}</a></h3></article>)}</div></section>}
   </>}
 
-  <section class="faq-preview"><div><p class="eyebrow">500 source-led answers</p><h2>Build a stronger filter for health claims.</h2><p>Review evidence, FDA status, compounding, legal coverage, citations, safety, corrections, and editorial methods.</p></div><a class="cta" href="/faq/">Open the Safe Peptides FAQ</a></section>
+  <section class="faq-preview"><div><p class="eyebrow">200 answers in two focused centers</p><h2>Build a stronger filter for health and legal claims.</h2><p>Use 100 peptide education answers and 100 laws and legal answers, each with its own evidence and professional standard.</p></div><a class="cta" href="/faq/">Choose a help center</a></section>
 </Base>

@@ -4,11 +4,11 @@ import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const projects = [
-  { name: 'clinics', root: join(ROOT, 'site'), canonical: 'https://mypeptide.club/', sitemaps: ['https://mypeptide.club/sitemap-index.xml'] },
-  { name: 'doctors', root: join(ROOT, 'sites', 'doctors'), canonical: 'https://toppeptideslist.com/', sitemaps: ['https://toppeptideslist.com/sitemap-index.xml'] },
-  { name: 'content', root: join(ROOT, 'sites', 'content'), canonical: 'https://safepeptides.us/', sitemaps: ['https://safepeptides.us/sitemap-safe.xml'] },
-  { name: 'news', root: join(ROOT, 'sites', 'news'), canonical: 'https://peptidesnews.us/', sitemaps: ['https://peptidesnews.us/sitemap-index.xml'] },
-  { name: 'updates', root: join(ROOT, 'sites', 'updates'), canonical: 'https://peptidesupdates.com/', sitemaps: ['https://peptidesupdates.com/sitemap-index.xml'] },
+  { name: 'clinics', root: join(ROOT, 'site'), canonical: 'https://mypeptide.club/', sitemaps: ['https://mypeptide.club/sitemap-index.xml'], faqPaths: ['faq'] },
+  { name: 'doctors', root: join(ROOT, 'sites', 'doctors'), canonical: 'https://toppeptideslist.com/', sitemaps: ['https://toppeptideslist.com/sitemap-index.xml'], faqPaths: ['faq'] },
+  { name: 'content', root: join(ROOT, 'sites', 'content'), canonical: 'https://safepeptides.us/', sitemaps: ['https://safepeptides.us/sitemap-safe.xml'], faqPaths: ['blog/faq', 'legal/faq'] },
+  { name: 'news', root: join(ROOT, 'sites', 'news'), canonical: 'https://peptidesnews.us/', sitemaps: ['https://peptidesnews.us/sitemap-index.xml'], faqPaths: ['faq'] },
+  { name: 'updates', root: join(ROOT, 'sites', 'updates'), canonical: 'https://peptidesupdates.com/', sitemaps: ['https://peptidesupdates.com/sitemap-index.xml'], faqPaths: ['faq'] },
 ];
 const errors = [];
 const publicDomains = ['https://mypeptide.club', 'https://toppeptideslist.com', 'https://safepeptides.us', 'https://peptidesnews.us', 'https://peptidesupdates.com'];
@@ -38,19 +38,26 @@ for (const project of projects) {
   const robotsPath = join(project.root, 'public', 'robots.txt');
   const robots = existsSync(robotsPath) ? readFileSync(robotsPath, 'utf8') : '';
   if (!existsSync(join(project.root, 'public', 'brand-mark.svg'))) errors.push(`${project.name}: shared logo is missing`);
+  for (const favicon of ['favicon.svg', 'favicon-32.png', 'apple-touch-icon.png']) {
+    if (!existsSync(join(project.root, 'public', favicon))) errors.push(`${project.name}: ${favicon} is missing`);
+  }
   if (!existsSync(join(project.root, 'public', 'fonts', 'plus-jakarta-sans-latin.woff2'))) errors.push(`${project.name}: shared font is missing`);
   for (const sitemap of project.sitemaps) {
     if (!robots.includes(sitemap)) errors.push(`${project.name}: robots.txt is missing ${sitemap}`);
   }
 
-  const faqPath = join(dist, 'faq', 'index.html');
-  if (!existsSync(faqPath)) {
-    errors.push(`${project.name}: FAQ center is missing`);
-  } else {
+  for (const faqRelative of project.faqPaths) {
+    const faqPath = join(dist, ...faqRelative.split('/'), 'index.html');
+    if (!existsSync(faqPath)) {
+      errors.push(`${project.name}: FAQ center ${faqRelative} is missing`);
+      continue;
+    }
     const faqHtml = readFileSync(faqPath, 'utf8');
     const faqCount = (faqHtml.match(/<details\b/g) || []).length;
-    if (faqCount < 500 || faqCount > 600) errors.push(`${project.name}: expected 500 to 600 FAQ answers, found ${faqCount}`);
-    if (!faqHtml.includes('id="faq-search"')) errors.push(`${project.name}: FAQ search control is missing`);
+    const faqIds = [...faqHtml.matchAll(/<details[^>]+id="([^"]+)"/g)].map((match) => match[1]);
+    if (faqCount !== 100) errors.push(`${project.name}: expected exactly 100 focused FAQ answers at ${faqRelative}, found ${faqCount}`);
+    if (new Set(faqIds).size !== faqCount) errors.push(`${project.name}: duplicate FAQ identifiers found at ${faqRelative}`);
+    if (!faqHtml.includes('id="faq-search"')) errors.push(`${project.name}: FAQ search control is missing at ${faqRelative}`);
   }
 
   for (const file of filesUnder(dist).filter((path) => /\.(html|xml)$/i.test(path))) {
@@ -61,6 +68,7 @@ for (const project of projects) {
     if (file.endsWith('.html')) {
       if (/theme-switcher|peptide-theme/.test(text)) errors.push(`${project.name}: removed theme switcher leaked into ${file}`);
       if (!text.includes('/brand-mark.svg')) errors.push(`${project.name}: logo is missing from ${file}`);
+      if (!text.includes('/favicon.svg') || !text.includes('/apple-touch-icon.png')) errors.push(`${project.name}: favicon links are missing from ${file}`);
       for (const domain of publicDomains) {
         if (!text.includes(domain)) errors.push(`${project.name}: header domain ${domain} is missing from ${file}`);
       }

@@ -53,21 +53,38 @@ const specs: Record<string, SiteSpec> = {
       ['Corrections and privacy', 'Public professional facts can be corrected through a documented review process.', ['profile corrections', 'identity disputes', 'listing removal', 'public information', 'contact privacy']],
     ].map(([name, summary, topics]) => ({ name, summary, topics })) as CategorySpec[],
   },
-  content: {
-    name: 'Safe Peptides',
-    confirmation: 'Use the cited primary source and its publication date to confirm the current rule, evidence, or safety statement.',
-    professional: 'Educational and legal summaries are not medical or legal advice. Ask a licensed clinician or qualified attorney about your situation.',
+  blog: {
+    name: 'Peptide Atlas Blog',
+    confirmation: 'Open the cited FDA, registry, or peer-reviewed source and confirm that it addresses the exact product, population, and use discussed.',
+    professional: 'Educational guides cannot determine whether a peptide product or treatment is appropriate for you. Ask a licensed clinician who knows your history.',
     categories: [
-      ['Using Safe Peptides', 'The site separates educational guides from primary-source legal and regulatory coverage.', ['site navigation', 'guide categories', 'legal coverage', 'article dates', 'reading levels']],
-      ['Evidence basics', 'Evidence strength depends on study design, population, comparator, and replication.', ['clinical trials', 'observational studies', 'systematic reviews', 'animal studies', 'laboratory research']],
-      ['Regulatory status', 'Regulatory status is product-specific and can change after agency action.', ['FDA approval', 'off-label use', 'investigational drugs', 'drug shortages', 'enforcement actions']],
-      ['Compounding', 'Compounded drugs are governed differently from FDA-approved products and require careful source context.', ['503A pharmacies', '503B facilities', 'bulk drug substances', 'quality standards', 'compounding restrictions']],
-      ['Reading health guides', 'Guides explain terminology and questions to ask without recommending treatment.', ['benefit claims', 'risk sections', 'comparison guides', 'cost guides', 'beginner guides']],
-      ['Laws and legal coverage', 'Legal reporting identifies jurisdiction, source documents, and the limits of a summary.', ['federal rules', 'state rules', 'court decisions', 'warning letters', 'policy proposals']],
-      ['Sources and citations', 'Claims should lead back to accessible, authoritative, and accurately described sources.', ['FDA sources', 'court records', 'peer-reviewed papers', 'trial registries', 'source updates']],
-      ['Safety information', 'Safety discussions must distinguish known evidence, uncertainty, and individual clinical judgment.', ['side effects', 'drug interactions', 'contraindications', 'product quality', 'emergency symptoms']],
-      ['Corrections and updates', 'Material errors are corrected transparently and stale claims are reviewed or withdrawn.', ['correction requests', 'article updates', 'withdrawn pages', 'review dates', 'archived guidance']],
-      ['Authors and editorial review', 'Authorship, human review, conflicts, and methodology should be visible to the reader.', ['author bylines', 'medical review', 'legal review', 'editorial independence', 'AI assistance']],
+      ['Using the blog', 'Blog pages are educational guides organized by reader intent, not individualized treatment plans.', ['guide categories', 'article dates', 'reading order', 'internal links', 'medical disclaimers']],
+      ['Evidence hierarchy', 'A claim is stronger when it is supported by appropriate human evidence, transparent methods, and replication.', ['randomized trials', 'observational studies', 'systematic reviews', 'animal studies', 'laboratory studies']],
+      ['Regulatory status', 'Every guide must distinguish approved drugs, compounded preparations, investigational products, and research-use products.', ['FDA approval', 'approved indications', 'off-label use', 'compounded drugs', 'research-use labels']],
+      ['Understanding studies', 'Study interpretation depends on design, population, comparator, endpoints, duration, and uncertainty.', ['trial phases', 'sample size', 'control groups', 'surrogate endpoints', 'absolute risk']],
+      ['Peptide medicine topics', 'The word peptide describes a broad molecular class and does not establish safety or effectiveness by itself.', ['GLP-1 medicines', 'peptide hormones', 'drug delivery', 'metabolic indications', 'oncology applications']],
+      ['Safety questions', 'Safety information must be tied to the exact product and use rather than generalized across all peptides.', ['side effects', 'contraindications', 'drug interactions', 'adverse event reporting', 'product quality']],
+      ['Choosing care', 'Guides help readers verify providers and claims without recommending a clinic, clinician, or treatment.', ['clinician credentials', 'clinic claims', 'second opinions', 'informed consent', 'follow-up plans']],
+      ['Costs and access', 'Prices and access vary by approved indication, insurance plan, prescriber, pharmacy, testing, and location.', ['insurance coverage', 'self-pay prices', 'laboratory costs', 'telehealth access', 'pharmacy sourcing']],
+      ['Sources and citations', 'Material claims should link to specific authoritative evidence rather than a search result or marketing page.', ['FDA pages', 'specific PubMed records', 'ClinicalTrials.gov studies', 'NPI records', 'state license records']],
+      ['Editorial controls', 'Published guides carry authorship, source, correction, and review information so readers can assess accountability.', ['author bylines', 'qualified review', 'conflict disclosure', 'correction notes', 'AI assistance']],
+    ].map(([name, summary, topics]) => ({ name, summary, topics })) as CategorySpec[],
+  },
+  legal: {
+    name: 'Peptide Atlas Laws & Legal',
+    confirmation: 'Read the linked statute, regulation, agency document, warning letter, court filing, or other primary source and check its date and jurisdiction.',
+    professional: 'Legal summaries are general information, not legal advice. Ask a qualified attorney about how a rule or proceeding applies to a specific situation.',
+    categories: [
+      ['Using legal coverage', 'Legal pages identify the governing authority, jurisdiction, source date, and limits of the summary.', ['legal index', 'federal coverage', 'state coverage', 'source documents', 'publication dates']],
+      ['FDA approval law', 'FDA approval is product- and indication-specific and differs from registration, listing, or compounding status.', ['drug approval', 'approved labeling', 'unapproved drugs', 'investigational use', 'biological products']],
+      ['Section 503A compounding', 'Section 503A describes conditions for patient-specific compounding by eligible pharmacists and physicians.', ['patient prescriptions', 'commercially available drugs', 'bulk substances', 'state-licensed pharmacies', '503A exemptions']],
+      ['Section 503B facilities', 'Section 503B governs registered outsourcing facilities and differs from traditional patient-specific compounding.', ['outsourcing registration', 'facility inspections', 'bulk substance limits', 'adverse event reports', '503B exemptions']],
+      ['Drug shortages', 'Shortage status can affect compounding rules, but the exact product, date, and statutory conditions still matter.', ['shortage list', 'shortage resolution', 'essentially copies', 'enforcement discretion', 'availability dates']],
+      ['Enforcement actions', 'Agency actions must be read for the named product, company, conduct, legal basis, and procedural stage.', ['warning letters', 'recalls', 'seizures', 'injunctions', 'civil penalties']],
+      ['Marketing and claims', 'Health advertising and promotional claims can trigger FDA, FTC, state, or professional-board scrutiny.', ['misleading approval claims', 'health benefit claims', 'testimonials', 'telehealth promotion', 'sponsored placement']],
+      ['State requirements', 'State pharmacy, medical, prescribing, and telehealth rules can add requirements beyond federal law.', ['medical licenses', 'pharmacy licenses', 'telehealth prescribing', 'scope of practice', 'state board orders']],
+      ['Courts and procedure', 'A complaint, motion, order, and final judgment have different legal significance and must not be conflated.', ['complaints', 'motions', 'court orders', 'settlements', 'appeals']],
+      ['Legal sourcing and corrections', 'Legal reporting should preserve the primary document, procedural posture, update history, and correction record.', ['case citations', 'agency dockets', 'effective dates', 'correction requests', 'withdrawn guidance']],
     ].map(([name, summary, topics]) => ({ name, summary, topics })) as CategorySpec[],
   },
   news: {
@@ -113,18 +130,9 @@ export function createFaqs(siteKey: keyof typeof specs): { site: SiteSpec; items
   const items: FaqItem[] = [];
   for (const category of site.categories) {
     for (const topic of category.topics) {
-      const context = `${category.summary} ${site.confirmation}`;
       const variants = [
-        [`What is ${topic}?`, `${topic[0].toUpperCase()}${topic.slice(1)} is one part of ${category.name.toLowerCase()} on ${site.name}. ${context}`],
-        [`How does ${site.name} handle ${topic}?`, `${site.name} presents ${topic} as research information with visible context and source links. ${context}`],
-        [`Why does ${topic} matter?`, `${topic[0].toUpperCase()}${topic.slice(1)} can change how a listing, article, or update should be interpreted. ${context}`],
-        [`What should I verify about ${topic}?`, `Check the date, named source, scope, and any limits attached to ${topic}. ${site.confirmation}`],
-        [`What questions should I ask about ${topic}?`, `Ask who supplied the information, when it was checked, what evidence supports it, and what may have changed. ${site.professional}`],
-        [`Where can I confirm ${topic}?`, `Start with the first-party or primary source linked from the relevant page. ${site.confirmation}`],
-        [`How often can information about ${topic} change?`, `It can change whenever a provider, regulator, researcher, court, or publisher releases new information. Check the page date and the underlying source.`],
-        [`What is commonly misunderstood about ${topic}?`, `A common mistake is treating a short label as a complete conclusion. ${category.summary} Read the supporting source before drawing a conclusion.`],
-        [`When should I get professional help with a question about ${topic}?`, site.professional],
-        [`How can I report an error about ${topic}?`, `Use the corrections link in the site footer and include the page URL, the disputed detail, and a reliable supporting source. The editorial team reviews material correction requests.`],
+        [`How does ${site.name} handle ${topic}?`, `${category.summary} For ${topic}, the page should state the relevant scope, date, and source instead of turning a short label into a recommendation or conclusion.`],
+        [`What should I check before relying on ${topic}?`, `Check the exact claim, named source, date, population or jurisdiction, and stated limitations for ${topic}. ${site.confirmation} ${site.professional}`],
       ];
       variants.forEach(([question, answer], index) => items.push({
         id: `${slugify(category.name)}-${slugify(topic)}-${index + 1}`,

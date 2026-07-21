@@ -80,10 +80,18 @@ To enable it:
 2. Apply `supabase/migrations/001_initial_schema.sql`.
 3. Apply `supabase/migrations/002_harden_automation_schema.sql`.
 4. Apply `supabase/migrations/003_keyword_registry.sql`.
-5. Store the project URL as `SUPABASE_URL`.
-6. Store a current `sb_secret_...` server key as `SUPABASE_SECRET_KEY`. If the project only exposes a legacy service-role key, store it as `SUPABASE_SERVICE_ROLE_KEY` instead. Do not set both.
-7. Set `REQUIRE_SUPABASE=true` for a strict local live run. GitHub already sets it.
-8. Run `node pipeline/scripts/preflight.mjs --check-supabase`.
+5. Apply `supabase/migrations/004_publication_control.sql`.
+6. Store the project URL as `SUPABASE_URL`.
+7. Store a current `sb_secret_...` server key as `SUPABASE_SECRET_KEY`. If the project only exposes a legacy service-role key, store it as `SUPABASE_SERVICE_ROLE_KEY` instead. Do not set both.
+8. Set `REQUIRE_SUPABASE=true` for a strict local live run. GitHub already sets it.
+9. Set `SUPABASE_CONTROL_PLANE_REQUIRED=true` after migration 004 has been applied.
+10. Run `node pipeline/scripts/preflight.mjs --check-supabase`.
+
+The publication control mirror stores every queued item with its source context, stage, exact Markdown and SHA-256 hash when content exists, validation errors, and repository commit. Each live run also records an integrity snapshot. Git remains the source of truth; Supabase is the private control and audit layer and cannot silently replace repository content.
+
+Migration 004 is rollout-safe. Until its two private tables exist, scheduled runs continue using the required core Supabase audit tables and log a clear warning instead of interrupting publication. Once applied, the control mirror activates automatically; setting `SUPABASE_CONTROL_PLANE_REQUIRED=true` then makes a missing or inaccessible control table a hard preflight failure.
+
+Default API safety budgets are 30 OpenAI calls and 60,000 requested output tokens per run, 10 Gemini image calls per run, and 5 Exa searches per run. Each API also has a request timeout. Override the corresponding `*_MAX_*_PER_RUN` or `*_TIMEOUT_MS` variables only after reviewing provider quotas and the pipeline's daily publication caps.
 
 Do not use an anon or `sb_publishable_...` key here. The automation needs a server-side `sb_secret_...` or legacy service-role key. The migrations keep operational tables private because none of the public sites query Supabase directly.
 

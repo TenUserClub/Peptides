@@ -6,7 +6,7 @@
 - [ ] Add `EXA_API_KEY` and `OPENAI_API_KEY` as GitHub Actions secrets.
 - [ ] Add `OPENAI_WRITING_MODEL=gpt-4.1`, `OPENAI_HUMANISE_MODEL=gpt-4.1`, `OPENAI_VERIFY_MODEL=gpt-4.1-mini`, and `OPENAI_SUMMARY_MODEL=gpt-4.1-mini` as GitHub Actions variables, or accept the identical repository defaults.
 - [ ] Add `SUPABASE_URL` and either `SUPABASE_SECRET_KEY` (recommended) or legacy `SUPABASE_SERVICE_ROLE_KEY` as GitHub Actions secrets. Gemini remains optional.
-- [ ] Apply Supabase migrations `001`, `002`, and `003` in order.
+- [ ] Apply Supabase migration `004` in the SQL editor, then set the GitHub Actions variable `SUPABASE_CONTROL_PLANE_REQUIRED=true`. Migrations `001` through `003` are already present in the current project.
 - [ ] Verify all five domains in Search Console, then optionally add `GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64` for free query metrics.
 - [ ] Confirm GitHub Actions has permission to write repository contents.
 - [ ] Add `PUBLIC_CONTACT_EMAIL` and `PUBLIC_CORRECTIONS_EMAIL` to all five Vercel projects.

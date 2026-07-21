@@ -1,7 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import FaqCenter from '../../../../shared/FaqCenter.astro';
 ---
-<Base title="Peptide Safety and Regulation FAQ | Safe Peptides" description="500 source-led answers about evidence, regulation, compounding, safety, legal coverage, citations, and corrections." currentSection="">
-  <FaqCenter siteKey="content" intro="Navigate evidence, regulation, compounding, safety, and legal reporting with 500 source-led answers. Each topic makes clear where a summary stops and professional advice begins." correctionsHref="/corrections/" />
+<Base title="Peptide Atlas Help Center" description="Choose the peptide education FAQ or the laws and legal FAQ for 100 focused answers in each section." currentSection="">
+  <p class="eyebrow">Help center</p>
+  <h1>Choose the context for your question.</h1>
+  <p>Blog and legal questions use different evidence and professional standards. Each help center contains 100 focused answers written for its section.</p>
+  <div class="card-grid">
+    <article class="card"><div class="card-body"><p class="eyebrow">Blog</p><h2><a href="/blog/faq/">Peptide education FAQ</a></h2><p>Evidence, study interpretation, regulatory status, safety, costs, provider questions, and sources.</p></div></article>
+    <article class="card"><div class="card-body"><p class="eyebrow">Laws &amp; legal</p><h2><a href="/legal/faq/">Peptide laws and regulation FAQ</a></h2><p>FDA approval, compounding pathways, shortages, enforcement, state rules, courts, and legal sourcing.</p></div></article>
+  </div>
 </Base>

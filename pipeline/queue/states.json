@@ -1,5 +1,6 @@
 {
   "next": 2,
+  "coveragePlan": "One doctor discovery pass in every US state before repeating a state",
   "states": [
     {
       "state": "Florida",
@@ -18,19 +19,99 @@
       "specialty": "peptide therapy"
     },
     {
-      "state": "Florida",
-      "specialty": "hormone and longevity medicine"
+      "state": "Alabama",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Alaska",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Arkansas",
+      "specialty": "peptide therapy"
     },
     {
       "state": "Colorado",
       "specialty": "GLP-1 therapy"
     },
     {
-      "state": "Tennessee",
-      "specialty": "peptide therapy"
+      "state": "Connecticut",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Delaware",
+      "specialty": "GLP-1 therapy"
     },
     {
       "state": "Georgia",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Hawaii",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Idaho",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Illinois",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Indiana",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Iowa",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Kansas",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Kentucky",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Louisiana",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Maine",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Maryland",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Massachusetts",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Michigan",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Minnesota",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Mississippi",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Missouri",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Montana",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Nebraska",
       "specialty": "GLP-1 therapy"
     },
     {
@@ -38,8 +119,88 @@
       "specialty": "longevity medicine"
     },
     {
+      "state": "New Hampshire",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "New Jersey",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "New Mexico",
+      "specialty": "peptide therapy"
+    },
+    {
       "state": "New York",
       "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "North Carolina",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "North Dakota",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Ohio",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Oklahoma",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Oregon",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Pennsylvania",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Rhode Island",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "South Carolina",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "South Dakota",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Tennessee",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "Utah",
+      "specialty": "longevity medicine"
+    },
+    {
+      "state": "Vermont",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Virginia",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Washington",
+      "specialty": "peptide therapy"
+    },
+    {
+      "state": "West Virginia",
+      "specialty": "metabolic medicine"
+    },
+    {
+      "state": "Wisconsin",
+      "specialty": "GLP-1 therapy"
+    },
+    {
+      "state": "Wyoming",
+      "specialty": "metabolic medicine"
     }
   ],
   "inFlight": {

@@ -26,6 +26,7 @@ import {
   upsertKeywordMetrics, getKeywordSignals, pruneKeywordMetrics, setQueueState,
 } from './lib/db.mjs';
 import { fetchSearchQueries, isConfigured as isSearchConsoleConfigured } from './lib/search-console.mjs';
+import { syncPublicationIntegrity } from './lib/integrity.mjs';
 
 loadEnv();
 
@@ -1080,6 +1081,7 @@ async function advanceQueues() {
       in_flight_file: cities.inFlight?.file || null,
       in_flight_at: cities.inFlight?.fetchedAt || null,
       total_processed: cities.next || 0,
+      total_published: findFiles(contentDirFor('clinics'), /\.md$/, /_sample|\.diff\.md/).length,
     });
   }
   if (states) {
@@ -1089,6 +1091,7 @@ async function advanceQueues() {
       in_flight_file: states.inFlight?.file || null,
       in_flight_at: states.inFlight?.fetchedAt || null,
       total_processed: states.next || 0,
+      total_published: findFiles(contentDirFor('doctors'), /\.md$/, /_sample|\.diff\.md/).length,
     });
   }
 }
@@ -1899,7 +1902,7 @@ async function main() {
   const allowedStages = new Set([
     'all', 'fetch-news', 'fetch-clinics', 'fetch-doctors', 'verify', 'write-news',
     'write-blog', 'write-clinics', 'write-doctors', 'write-updates', 'humanise',
-    'publish', 'monitor', 'sync-keywords',
+    'publish', 'monitor', 'sync-keywords', 'sync-control',
   ]);
   if (!allowedStages.has(stage)) throw new Error(`Unknown pipeline stage: ${stage}`);
 
@@ -1910,7 +1913,7 @@ async function main() {
   log('info', `=== Orchestrator started: stage=${stage}, hour=${hour}, dry-run=${DRY_RUN}, site=${SITE_DOMAIN} ===`);
 
   try {
-    const outcome = { verified: 0, drafted: 0, humanised: 0, published: 0 };
+    const outcome = { verified: 0, drafted: 0, humanised: 0, published: 0, mirrored: 0 };
     if (stage === 'all' || stage === 'sync-keywords') await runSyncKeywords();
     if (stage === 'all' || stage === 'fetch-news') await runFetch('news');
     if (stage === 'all' || stage === 'fetch-clinics') await runFetch('clinics');
@@ -1927,15 +1930,20 @@ async function main() {
     if (stage === 'all' || stage === 'humanise') outcome.humanised += await runHumanise();
     if (stage === 'all' || stage === 'publish') outcome.published += await runPublish();
     if (stage === 'all' || stage === 'monitor') await runMonitor();
+    if (stage === 'all' || stage === 'sync-control') {
+      const integrity = await syncPublicationIntegrity({ write: !DRY_RUN });
+      outcome.mirrored += integrity.saved;
+    }
 
-    const outcomeSummary = `Completed stage ${stage}: verified=${outcome.verified}, drafted=${outcome.drafted}, humanised=${outcome.humanised}, published=${outcome.published}`;
+    const outcomeSummary = `Completed stage ${stage}: verified=${outcome.verified}, drafted=${outcome.drafted}, humanised=${outcome.humanised}, published=${outcome.published}, mirrored=${outcome.mirrored}`;
     if (stage === 'all' && !DRY_RUN && outcome.published === 0) {
       log('warn', `orchestrator: completed safely with zero publications (${outcomeSummary})`);
     }
-    if (!DRY_RUN) await finishRun(runRecord?.id, 'success', outcomeSummary);
+    const itemsProcessed = outcome.verified + outcome.drafted + outcome.humanised + outcome.published + outcome.mirrored;
+    if (!DRY_RUN) await finishRun(runRecord?.id, 'success', outcomeSummary, null, { itemsProcessed, itemsFailed: 0 });
     log('info', '=== Orchestrator finished ===');
   } catch (error) {
-    if (!DRY_RUN) await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message);
+    if (!DRY_RUN) await finishRun(runRecord?.id, 'failed', `Failed stage ${stage}`, error.message, { itemsProcessed: 0, itemsFailed: 1 });
     throw error;
   }
 }

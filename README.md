@@ -19,7 +19,7 @@ The shared header contains no public `vercel.app` links. Each domain has its own
 
 The UI overhaul uses one shared visual system with a different task flow for each property: search-first clinic and doctor directories, a source-and-safety guide library, an editorial news desk, and a weekly digest dashboard. It uses a permanent warm Wellness palette, self-hosted Plus Jakarta Sans typography, responsive navigation, trust and correction routes, and a shared Peptide Atlas logo. There is no theme switcher.
 
-Every deployable site also has a local `/faq/` help center with exactly 500 searchable answers across 10 topics. The build rejects a missing FAQ page, fewer than 500 or more than 600 answers, or a missing FAQ search control.
+Each of the six header sections has exactly 100 searchable, section-specific FAQ answers across 10 topic groups. Blog and Laws & legal have separate centers even though they share one deployment. The build rejects a missing center, any count other than 100, duplicate FAQ identifiers, or a missing search control.
 
 Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` after review found weak sourcing and unverifiable claims. Sample markdown remains as schema documentation but is excluded from routes and sitemaps. Production publication should resume only with content that passes the new guard.
 
@@ -63,13 +63,16 @@ node pipeline/orchestrator.mjs all
 6. Humanise every draft, including blog posts, without changing facts, citations, or frontmatter.
 7. Apply deterministic frontmatter, source, claim, length, writing-pattern, and record-matching checks.
 8. Publish within daily caps, mirror publication metadata into Supabase, and build the affected site.
-9. Generate the Sunday weekly review and monitoring summary.
+9. Mirror every queued, drafted, blocked, and published item with its source context, exact content hash, validation result, and repository commit into Supabase.
+10. Generate the Sunday weekly review and monitoring summary.
 
 GitHub Actions runs the repository check on pushes and pull requests. The guarded pipeline runs three times daily at 02:23, 10:23, and 18:23 UTC (07:53, 15:53, and 23:53 India time). Daily publication caps apply across all three runs, so extra runs improve freshness and retries without tripling output. Manual workflow runs default to dry-run mode.
 
 Maximum publication if every source, verification, human edit, and build passes: 3 combined news/legal posts, 1 blog guide, and 5 combined clinic/doctor entries per day. Sunday can also add 1 weekly update. That is at most 9 ordinary-day items, 10 on Sunday, or 64 in a full seven-day week. Actual output is normally lower because unverified or weak material is refused.
 
 Clinic discovery begins with one representative metro in every US state. The queue finishes all verified, publishable records for its current metro before advancing, so a city with several valid clinics can span multiple daily runs. After this first 50-state pass, additional cities can be appended for deeper state coverage without changing the workflow.
+
+Doctor discovery also begins with one focused query in every US state before any state repeats. Its current California in-flight batch and queue pointer are preserved while the remaining states complete the first nationwide pass.
 
 The seed editorial map contains at least 30 source-led topics, ordered by priority. It is a topic and intent plan, not a claim of measured search volume. The pipeline publishes at most one evergreen guide per day, skips briefs already present in drafts or published content, and refuses to write when fewer than two approved authoritative sources are reachable.
 

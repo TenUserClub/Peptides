@@ -19,5 +19,5 @@ const latest = posts.slice(3);
 
   {latest.length > 0 && <section id="latest"><div class="section-kicker"><div><p class="eyebrow">News feed</p><h2>Latest source-led reports</h2></div></div><div class="story-list">{latest.map((item, index) => <article class="story-row"><span class="story-number">{String(index + 1).padStart(2, '0')}</span><div><p class="meta">{item.data.publishDate.toISOString().slice(0, 10)} · via {item.data.sourceName}</p><h3><a href={`/${item.id}/`}>{item.data.title}</a></h3></div></article>)}</div></section>}
 
-  <section class="faq-preview"><div><p class="eyebrow">500 newsroom answers</p><h2>Read breaking developments with better context.</h2><p>Learn how reports handle primary sources, FDA action, trial results, compounding, corrections, attribution, and submissions.</p></div><a class="cta" href="/faq/">Open the news FAQ</a></section>
+  <section class="faq-preview"><div><p class="eyebrow">100 focused news answers</p><h2>Read breaking developments with better context.</h2><p>Learn how reports handle primary sources, FDA action, trial results, compounding, corrections, attribution, and submissions.</p></div><a class="cta" href="/faq/">Open the news FAQ</a></section>
 </Base>

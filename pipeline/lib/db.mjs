@@ -283,6 +283,72 @@ export async function setQueueState(queueName, data) {
   return record;
 }
 
+// ── Publication control and integrity ───────────────────────────
+
+export async function checkPublicationControl() {
+  if (!enabled) return { enabled: false, ok: false, error: 'Supabase is not configured' };
+  for (const table of ['publication_queue', 'integrity_checks']) {
+    const { error } = await supabase.from(table).select('id').limit(1);
+    if (error) return { enabled: true, ok: false, error: `${table}: ${error.message}` };
+  }
+  return { enabled: true, ok: true, error: null };
+}
+
+export async function upsertPublicationQueueItems(items) {
+  if (!enabled || !items.length) return 0;
+  let saved = 0;
+  for (let index = 0; index < items.length; index += 200) {
+    const chunk = items.slice(index, index + 200).map((item) => ({
+      ...item,
+      updated_at: new Date().toISOString(),
+    }));
+    const { error } = await supabase
+      .from('publication_queue')
+      .upsert(chunk, { onConflict: 'collection,item_key' });
+    if (error) return dbFailure('upsertPublicationQueueItems', error) || saved;
+    saved += chunk.length;
+  }
+  return saved;
+}
+
+export async function getPublicationQueueSnapshot() {
+  if (!enabled) return [];
+  const { data, error } = await supabase
+    .from('publication_queue')
+    .select('collection,item_key,status,content_sha256,repo_commit')
+    .limit(5000);
+  if (error) return dbFailure('getPublicationQueueSnapshot', error) || [];
+  return data || [];
+}
+
+export async function withdrawPublicationQueueItems(items, repoCommit) {
+  if (!enabled || !items.length) return 0;
+  const records = items.map((item) => ({
+    collection: item.collection,
+    item_key: item.item_key,
+    status: 'withdrawn',
+    repo_commit: repoCommit,
+    validation_errors: ['Item no longer exists in the repository publication queue'],
+    updated_at: new Date().toISOString(),
+  }));
+  const { error } = await supabase
+    .from('publication_queue')
+    .upsert(records, { onConflict: 'collection,item_key' });
+  if (error) return dbFailure('withdrawPublicationQueueItems', error) || 0;
+  return records.length;
+}
+
+export async function recordIntegrityCheck(data) {
+  if (!enabled) return null;
+  const { data: record, error } = await supabase
+    .from('integrity_checks')
+    .insert(data)
+    .select()
+    .single();
+  if (error) return dbFailure('recordIntegrityCheck', error);
+  return record;
+}
+
 // ── Pipeline Runs ───────────────────────────────────────────────
 
 export async function startRun(stage, opts = {}) {
@@ -297,13 +363,15 @@ export async function startRun(stage, opts = {}) {
   return record;
 }
 
-export async function finishRun(id, status, summary, errorMessage = null) {
+export async function finishRun(id, status, summary, errorMessage = null, metrics = {}) {
   if (!enabled || !id) return null;
   const { error } = await supabase.from('pipeline_runs').update({
     status,
     finished_at: new Date().toISOString(),
     log_summary: summary,
     error_message: errorMessage,
+    items_processed: metrics.itemsProcessed || 0,
+    items_failed: metrics.itemsFailed || 0,
   }).eq('id', id);
   if (error) dbFailure('finishRun', error);
 }

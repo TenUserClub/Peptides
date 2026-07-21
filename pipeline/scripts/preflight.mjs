@@ -12,6 +12,14 @@ const requireSupabase = process.env.REQUIRE_SUPABASE === 'true';
 const errors = [];
 const notices = [];
 
+function validatePositiveInteger(name, fallback) {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isInteger(value) || value <= 0) errors.push(`${name} must be a positive integer`);
+  return value;
+}
+
 function present(name) {
   const value = process.env[name]?.trim();
   return Boolean(value && !value.startsWith('#'));
@@ -20,6 +28,16 @@ function present(name) {
 for (const name of ['OPENAI_API_KEY', 'EXA_API_KEY']) {
   if (!present(name) && !allowMissingRequired) errors.push(`Missing required environment variable: ${name}`);
 }
+
+for (const [name, fallback] of [
+  ['OPENAI_MAX_CALLS_PER_RUN', 30],
+  ['OPENAI_MAX_OUTPUT_TOKENS_PER_RUN', 60000],
+  ['OPENAI_TIMEOUT_MS', 90000],
+  ['GEMINI_MAX_CALLS_PER_RUN', 10],
+  ['GEMINI_TIMEOUT_MS', 120000],
+  ['EXA_MAX_REQUESTS_PER_RUN', 5],
+  ['EXA_TIMEOUT_MS', 30000],
+]) validatePositiveInteger(name, fallback);
 
 const autoPush = process.env.AUTO_PUSH?.trim() || 'false';
 if (!['true', 'false'].includes(autoPush)) errors.push('AUTO_PUSH must be either true or false');
@@ -107,14 +125,20 @@ if (searchConsoleEncoded) {
 
 if (checkSupabase && supabaseUrl && supabaseKey && errors.length === 0) {
   try {
-    const tables = ['pipeline_runs', 'keyword_registry'];
-    for (const table of tables) {
+    const controlRequired = process.env.SUPABASE_CONTROL_PLANE_REQUIRED === 'true';
+    const tables = [
+      ...['pipeline_runs', 'keyword_registry'].map((table) => ({ table, required: true })),
+      ...['publication_queue', 'integrity_checks'].map((table) => ({ table, required: controlRequired })),
+    ];
+    for (const { table, required } of tables) {
       const headers = { apikey: supabaseKey };
       if (!supabaseKey.startsWith('sb_secret_')) headers.Authorization = `Bearer ${supabaseKey}`;
       const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${table}?select=id&limit=1`, { headers });
       if (!response.ok) {
         const detail = (await response.text()).slice(0, 300);
-        errors.push(`Supabase ${table} migration check failed with HTTP ${response.status}: ${detail}`);
+        const message = `Supabase ${table} migration check failed with HTTP ${response.status}: ${detail}`;
+        if (required) errors.push(message);
+        else notices.push(`${message}; apply migration 004 to enable publication integrity control`);
       } else {
         notices.push(`Supabase ${table} table verified`);
       }
