@@ -10,9 +10,11 @@ if (!key) {
   process.exit(1);
 }
 
-const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`);
+const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100', {
+  headers: { 'x-goog-api-key': key },
+});
 if (!res.ok) {
-  console.error(`Failed: ${res.status} ${await res.text()}`);
+  console.error(`Failed: ${res.status} ${(await res.text()).slice(0, 500)}`);
   process.exit(1);
 }
 

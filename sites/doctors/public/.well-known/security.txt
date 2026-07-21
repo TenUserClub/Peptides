@@ -1,0 +1,5 @@
+Contact: https://safepeptides.us/security/
+Expires: 2027-07-21T23:59:59Z
+Preferred-Languages: en
+Canonical: https://toppeptideslist.com/.well-known/security.txt
+Policy: https://safepeptides.us/security/

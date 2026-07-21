@@ -7,8 +7,9 @@
     "build:all": "npm --prefix site run build && npm --prefix sites/doctors run build && npm --prefix sites/content run build && npm --prefix sites/news run build && npm --prefix sites/updates run build",
     "preflight": "node pipeline/scripts/preflight.mjs",
     "preflight:structure": "node pipeline/scripts/preflight.mjs --allow-missing-required",
+    "security:check": "node pipeline/scripts/security-check.mjs",
     "check:sites": "node pipeline/scripts/check-sites.mjs",
-    "check": "npm run preflight:structure && npm test && npm run build:all && npm run check:sites"
+    "check": "npm run security:check && npm run preflight:structure && npm test && npm run build:all && npm run check:sites"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2"

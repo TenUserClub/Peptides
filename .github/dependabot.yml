@@ -1,0 +1,35 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      root-dependencies: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /site
+    schedule: { interval: monthly }
+    groups:
+      clinics-dependencies: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /sites/doctors
+    schedule: { interval: monthly }
+    groups:
+      doctors-dependencies: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /sites/content
+    schedule: { interval: monthly }
+    groups:
+      content-dependencies: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /sites/news
+    schedule: { interval: monthly }
+    groups:
+      news-dependencies: { patterns: ["*"] }
+  - package-ecosystem: npm
+    directory: /sites/updates
+    schedule: { interval: monthly }
+    groups:
+      updates-dependencies: { patterns: ["*"] }

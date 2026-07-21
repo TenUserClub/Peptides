@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+const securityEmail = import.meta.env.PUBLIC_SECURITY_EMAIL;
+---
+<Base title="Security | Peptide Atlas" description="How to report a suspected security vulnerability affecting the Peptide Atlas network." currentSection="" showDisclaimer={false}>
+  <article>
+    <p class="eyebrow">Coordinated disclosure</p>
+    <h1>Help us keep Peptide Atlas secure.</h1>
+    <p>We welcome good-faith reports about security issues affecting any Peptide Atlas domain or this project’s public code.</p>
+    <h2>How to report</h2>
+    {securityEmail
+      ? <p>Email <a href={`mailto:${securityEmail}?subject=Peptide%20Atlas%20security%20report`}>{securityEmail}</a> with the affected URL, a concise description, reproduction steps, and the potential impact. Do not include secrets or personal data unless necessary.</p>
+      : <p>Use the repository’s private security advisory channel when available. If you cannot access it, use the <a href="/corrections/">corrections page</a> and identify the message as a security report.</p>}
+    <h2>Safe research expectations</h2>
+    <p>Use only the minimum testing needed to demonstrate an issue. Do not access, alter, retain, or disclose other people’s data; disrupt availability; run denial-of-service tests; send spam; use social engineering; or demand payment. A report does not authorize testing that would otherwise be unlawful.</p>
+    <h2>What to expect</h2>
+    <p>We will acknowledge a usable report when a monitored contact channel is available, assess severity, work toward a proportionate fix, and coordinate public disclosure when appropriate. Please allow a reasonable remediation period before publishing details.</p>
+    <h2>Current safeguards</h2>
+    <p>The public properties are static sites. Server credentials are limited to the private publishing workflow, automated scans check for accidental exposure, dependencies are monitored, and publication records are mirrored to a private integrity control layer.</p>
+  </article>
+</Base>

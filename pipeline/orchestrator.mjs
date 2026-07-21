@@ -27,6 +27,7 @@ import {
 } from './lib/db.mjs';
 import { fetchSearchQueries, isConfigured as isSearchConsoleConfigured } from './lib/search-console.mjs';
 import { syncPublicationIntegrity } from './lib/integrity.mjs';
+import { safeFetchText } from './lib/safe-fetch.mjs';
 
 loadEnv();
 
@@ -178,19 +179,15 @@ async function webFetch(url, opts = {}) {
   if (!normalizedUrl) throw new Error(`Invalid HTTP URL: ${url}`);
   for (let i = 0; i <= maxRetries; i++) {
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeout);
-      const res = await fetch(normalizedUrl, {
-        signal: controller.signal,
+      return await safeFetchText(normalizedUrl, {
+        timeout,
+        maxBytes: 2_000_000,
         headers: {
           'User-Agent': CONFIG.web.userAgent,
           Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
         },
       });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.text();
     } catch (e) {
       if (i === maxRetries) throw e;
       log('warn', `webFetch retry ${i + 1} for ${normalizedUrl}: ${e.message}`);

@@ -16,20 +16,15 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
       GOOGLE_SEARCH_CONSOLE_PROPERTIES: ${{ vars.GOOGLE_SEARCH_CONSOLE_PROPERTIES }}
       GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
       OPENAI_WRITING_MODEL: ${{ vars.OPENAI_WRITING_MODEL }}
@@ -48,11 +43,11 @@ jobs:
       REQUIRE_SUPABASE: "true"
       SUPABASE_CONTROL_PLANE_REQUIRED: ${{ vars.SUPABASE_CONTROL_PLANE_REQUIRED || 'false' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
           ref: ${{ github.event.repository.default_branch }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
           cache: npm
@@ -75,12 +70,36 @@ jobs:
           git config user.email "peptide-atlas-bot@users.noreply.github.com"
       - name: Validate automation configuration
         run: node pipeline/scripts/preflight.mjs --check-supabase
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
       - name: Run guarded pipeline in dry-run mode
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
         run: node pipeline/orchestrator.mjs all --dry-run
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
       - name: Run guarded pipeline
         if: ${{ github.event_name != 'workflow_dispatch' || !inputs.dry_run }}
         run: node pipeline/orchestrator.mjs all
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
       - name: Validate generated publication across all five sites
         run: npm run check
       - name: Push validated publication commit

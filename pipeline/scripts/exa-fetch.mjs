@@ -34,7 +34,7 @@ async function exaSearch(query, opts = {}) {
     }),
     signal: AbortSignal.timeout(EXA_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`Exa ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`Exa ${res.status}: ${(await res.text()).slice(0, 500)}`);
   return res.json();
 }
 

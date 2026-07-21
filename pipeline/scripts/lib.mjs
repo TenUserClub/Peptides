@@ -2,6 +2,7 @@
 import { readFileSync, writeFileSync, mkdirSync, appendFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { redactSecrets } from '../lib/security.mjs';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const PIPELINE = join(ROOT, 'pipeline');
@@ -10,9 +11,8 @@ export function loadEnv() {
   const envPath = join(ROOT, '.env');
   if (!existsSync(envPath)) return;
   for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
-    // Strip inline comments (# and everything after it) before parsing
-    const cleanLine = line.replace(/\s*#.*/, '');
-    const m = cleanLine.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (/^\s*#/.test(line)) continue;
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
     if (m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
 }
@@ -37,7 +37,7 @@ export function writeJson(path, data) {
 }
 
 export function log(level, msg) {
-  const line = `${new Date().toISOString()} [${level}] ${msg}`;
+  const line = redactSecrets(`${new Date().toISOString()} [${level}] ${msg}`);
   console.log(line);
   mkdirSync(join(PIPELINE, 'logs'), { recursive: true });
   appendFileSync(join(PIPELINE, 'logs', `${new Date().toISOString().slice(0, 10)}.log`), line + '\n');

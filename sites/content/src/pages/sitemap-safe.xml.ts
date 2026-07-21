@@ -8,7 +8,7 @@ export async function GET() {
   const blog = (await getCollection('blog')).filter((post) => !post.id.startsWith('_sample'));
   const legal = (await getCollection('legal')).filter((post) => !post.id.startsWith('_sample'));
   const paths = [
-    '/', '/about/', '/blog/', '/corrections/', '/editorial-policy/', '/faq/', '/legal/',
+    '/', '/about/', '/accessibility/', '/blog/', '/corrections/', '/editorial-policy/', '/faq/', '/legal/', '/privacy/', '/security/', '/terms/',
     ...blog.map((post) => `/blog/${post.id}/`),
     ...legal.map((post) => `/legal/${post.id}/`),
   ];

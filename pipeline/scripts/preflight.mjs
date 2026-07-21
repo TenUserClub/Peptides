@@ -3,6 +3,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadEnv, ROOT } from './lib.mjs';
+import { validateSupabaseUrl, GOOGLE_OAUTH_TOKEN_URL } from '../lib/security.mjs';
 
 loadEnv();
 
@@ -61,12 +62,8 @@ if (requireSupabase && (!supabaseUrl || !supabaseKey)) {
   errors.push('REQUIRE_SUPABASE=true requires SUPABASE_URL and a Supabase server secret key');
 }
 if (supabaseUrl) {
-  try {
-    const parsed = new URL(supabaseUrl);
-    if (parsed.protocol !== 'https:') errors.push('SUPABASE_URL must use https');
-  } catch {
-    errors.push('SUPABASE_URL is not a valid URL');
-  }
+  const validation = validateSupabaseUrl(supabaseUrl);
+  if (!validation.ok) errors.push(validation.error);
 }
 
 const projects = ['site', 'sites/doctors', 'sites/content', 'sites/news', 'sites/updates'];
@@ -118,6 +115,7 @@ if (searchConsoleEncoded) {
   try {
     const account = JSON.parse(Buffer.from(searchConsoleEncoded, 'base64').toString('utf8'));
     if (!account.client_email || !account.private_key) errors.push('Search Console service account JSON is missing client_email or private_key');
+    if (account.token_uri && account.token_uri !== GOOGLE_OAUTH_TOKEN_URL) errors.push(`Search Console token_uri must be ${GOOGLE_OAUTH_TOKEN_URL}`);
   } catch (error) {
     errors.push(`GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 is invalid: ${error.message}`);
   }

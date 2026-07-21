@@ -1,5 +1,6 @@
 import { createSign } from 'node:crypto';
 import { loadEnv, log } from '../scripts/lib.mjs';
+import { GOOGLE_OAUTH_TOKEN_URL } from './security.mjs';
 
 loadEnv();
 
@@ -23,6 +24,7 @@ function serviceAccount() {
   try {
     const parsed = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
     if (!parsed.client_email || !parsed.private_key) throw new Error('client_email or private_key is missing');
+    if (parsed.token_uri && parsed.token_uri !== GOOGLE_OAUTH_TOKEN_URL) throw new Error(`token_uri must be ${GOOGLE_OAUTH_TOKEN_URL}`);
     return parsed;
   } catch (error) {
     throw new Error(`Invalid GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${error.message}`);
@@ -43,7 +45,7 @@ async function accessToken(account) {
   const claim = base64url(JSON.stringify({
     iss: account.client_email,
     scope: 'https://www.googleapis.com/auth/webmasters.readonly',
-    aud: account.token_uri || 'https://oauth2.googleapis.com/token',
+    aud: GOOGLE_OAUTH_TOKEN_URL,
     iat: now,
     exp: now + 3600,
   }));
@@ -53,7 +55,7 @@ async function accessToken(account) {
   signer.end();
   const assertion = `${unsigned}.${base64url(signer.sign(account.private_key))}`;
 
-  const response = await fetch(account.token_uri || 'https://oauth2.googleapis.com/token', {
+  const response = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({

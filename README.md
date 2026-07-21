@@ -37,6 +37,7 @@ Public site settings should be added to all five Vercel projects:
 
 - `PUBLIC_CONTACT_EMAIL`
 - `PUBLIC_CORRECTIONS_EMAIL`
+- `PUBLIC_SECURITY_EMAIL`, if a monitored disclosure mailbox is available
 - `PUBLIC_PLAUSIBLE_DOMAIN`, only if Plausible is configured
 
 ## Common commands
@@ -51,7 +52,7 @@ node pipeline/orchestrator.mjs all --dry-run
 node pipeline/orchestrator.mjs all
 ```
 
-`npm run check` runs guard tests, builds all five sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, wrong canonical hosts, incomplete FAQ centers, and diverged shared CSS.
+`npm run check` runs secret and guard checks, builds all five sites, and scans the generated output for sample pages, placeholder domains, em dashes, broken internal links, invalid robots references, wrong canonical hosts, incomplete FAQ centers, missing security headers or disclosure files, and diverged shared CSS.
 
 ## Pipeline stages
 

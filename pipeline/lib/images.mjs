@@ -190,10 +190,10 @@ export async function generateImage(type, context, slug) {
 
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_KEY },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: { responseModalities: ['Text', 'Image'] },
@@ -207,7 +207,7 @@ export async function generateImage(type, context, slug) {
       if (res.status === 404) {
         log('warn', `images: Gemini model "${GEMINI_MODEL}" not found. Run "node pipeline/scripts/list-gemini-models.mjs" to see available models, then set GEMINI_MODEL in .env.`);
       } else {
-        log('error', `images: Gemini API error ${res.status}: ${text}`);
+        log('error', `images: Gemini API error ${res.status}: ${text.slice(0, 500)}`);
       }
       return null;
     }

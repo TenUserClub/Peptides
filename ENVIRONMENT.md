@@ -7,7 +7,7 @@
 | Repository root `.env` | Pipeline keys, Supabase values, and optional Search Console credentials | Local pipeline runs only |
 | GitHub Actions secrets | OpenAI, Exa, Supabase, optional Gemini, and optional Search Console credentials | Scheduled autonomous pipeline |
 | GitHub Actions variables | Model names and Search Console property identifiers | Non-secret pipeline configuration |
-| Each Vercel project | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_CORRECTIONS_EMAIL`, optional `PUBLIC_PLAUSIBLE_DOMAIN` | Public site builds |
+| Each Vercel project | `PUBLIC_CONTACT_EMAIL`, `PUBLIC_CORRECTIONS_EMAIL`, optional `PUBLIC_SECURITY_EMAIL`, optional `PUBLIC_PLAUSIBLE_DOMAIN` | Public site builds |
 
 Never put OpenAI, Exa, Gemini, or a Supabase server secret key in a `PUBLIC_*` variable. The static sites do not need those private keys.
 
@@ -112,6 +112,7 @@ Add the following to all five Vercel projects for Production, Preview, and Devel
 
 - `PUBLIC_CONTACT_EMAIL`
 - `PUBLIC_CORRECTIONS_EMAIL`
+- `PUBLIC_SECURITY_EMAIL`, if a monitored disclosure mailbox is available
 - `PUBLIC_PLAUSIBLE_DOMAIN`, only after analytics is configured
 
-No pipeline or Supabase service keys are required in Vercel.
+No pipeline, model-provider, Search Console, or Supabase service keys are required in Vercel. Remove any such value found there. Every `PUBLIC_*` value is compiled into client-visible output and must be treated as public.

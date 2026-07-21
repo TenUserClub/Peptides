@@ -5,6 +5,7 @@
  */
 
 import { loadEnv, log } from '../scripts/lib.mjs';
+import { validateSupabaseUrl } from './security.mjs';
 
 loadEnv();
 
@@ -30,9 +31,11 @@ function dbFailure(operation, error) {
 // Gracefully handle missing @supabase/supabase-js package
 if (SUPABASE_URL && SUPABASE_KEY) {
   try {
+    const validation = validateSupabaseUrl(SUPABASE_URL);
+    if (!validation.ok) throw new Error(validation.error);
     // Dynamic import so the pipeline doesn't crash if the package isn't installed
     const { createClient } = await import('@supabase/supabase-js');
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    supabase = createClient(validation.url, SUPABASE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     enabled = true;
@@ -40,9 +43,8 @@ if (SUPABASE_URL && SUPABASE_KEY) {
   } catch (e) {
     if (e.code === 'ERR_MODULE_NOT_FOUND') {
       log('warn', 'db: @supabase/supabase-js not installed. Run: npm install @supabase/supabase-js');
-    } else {
-      log('error', `db: Failed to initialize Supabase: ${e.message}`);
-    }
+    } else if (REQUIRE_SUPABASE) throw e;
+    else log('error', `db: Failed to initialize Supabase: ${e.message}`);
   }
 } else {
   log('info', 'db: Supabase not configured — running file-only mode');
