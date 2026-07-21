@@ -12,6 +12,6 @@
     "check": "npm run security:check && npm run preflight:structure && npm test && npm run build:all && npm run check:sites"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.110.2"
+    "@supabase/supabase-js": "^2.110.8"
   }
 }
