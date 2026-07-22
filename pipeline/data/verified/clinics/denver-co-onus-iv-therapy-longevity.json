@@ -1,0 +1,24 @@
+{
+  "clinicName": "Onus IV Therapy + Longevity",
+  "city": "Denver",
+  "state": "CO",
+  "address": "",
+  "phone": "",
+  "website": "https://www.onusiv.com/peptides",
+  "doctorName": "",
+  "services": [
+    "GLP-1 Treatment",
+    "GIP + GLP-1 Treatment",
+    "Sermorelin"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.onusiv.com/peptides"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

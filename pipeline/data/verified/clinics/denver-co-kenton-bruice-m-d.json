@@ -1,0 +1,26 @@
+{
+  "clinicName": "Kenton Bruice, M.D.",
+  "city": "Denver",
+  "state": "CO",
+  "address": "",
+  "phone": "",
+  "website": "https://www.kentonbruicemd.com/hgh-therapy",
+  "doctorName": "",
+  "services": [
+    "HGH Therapy",
+    "Peptide Therapy",
+    "Sermorelin",
+    "CJC-1295 / Ipamorelin"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.kentonbruicemd.com/hgh-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

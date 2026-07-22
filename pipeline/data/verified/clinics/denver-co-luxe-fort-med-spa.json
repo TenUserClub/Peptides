@@ -1,0 +1,20 @@
+{
+  "clinicName": "Luxe Forté Med Spa",
+  "city": "Denver",
+  "state": "CO",
+  "address": "36 Steele St, Suite 100, Cherry Creek",
+  "phone": "",
+  "website": "https://luxefortemedspa.com/services/peptide-therapy",
+  "doctorName": "",
+  "services": [],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://luxefortemedspa.com/services/peptide-therapy"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

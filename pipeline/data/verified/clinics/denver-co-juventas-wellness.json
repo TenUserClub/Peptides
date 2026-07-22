@@ -1,0 +1,30 @@
+{
+  "clinicName": "Juventas Wellness",
+  "city": "Denver",
+  "state": "CO",
+  "address": "",
+  "phone": "",
+  "website": "https://juventaswellness.com/peptides/",
+  "doctorName": "",
+  "services": [
+    "GHK-Cu (Skin / Hair)",
+    "BPC-157 (Anti-Inflammatory)",
+    "CJC-1295 (Muscle Growth / Recovery)",
+    "PT-141 (Intimacy)",
+    "TB-500 (Regenerative)",
+    "Wolverine Stack (Peak Performance)",
+    "Glow Stack (Age-Defying)",
+    "Glutathione (Detox)",
+    "Thymosin Alpha-1 (Immune Support)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://juventaswellness.com/peptides/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}
