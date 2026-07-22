@@ -94,6 +94,8 @@ Migration 004 was designed to be rollout-safe, but the production rollout is now
 
 Default API safety budgets are 30 OpenAI calls and 60,000 requested output tokens per run, 10 Gemini image calls per run, and 5 Exa searches per run. The five Exa requests map one-to-one to the bounded primary-source news lanes, so the broader coverage does not increase the existing per-run search budget. Each API also has a request timeout. Override the corresponding `*_MAX_*_PER_RUN` or `*_TIMEOUT_MS` variables only after reviewing provider quotas and the pipeline's daily publication caps.
 
+Writers and editors reserve output tokens by content type instead of using one maximum for every draft. Short directory profiles therefore cannot consume the same reservation as a 1,500-word guide, while the hard per-run ceiling still stops unexpected expansion.
+
 Gemini image generation is optional. Authentication, model, request, and quota errors disable further image attempts for that run so a broken optional key cannot consume the entire batch budget or block publication.
 
 Do not use an anon or `sb_publishable_...` key here. The automation needs a server-side `sb_secret_...` or legacy service-role key. The migrations keep operational tables private because none of the public sites query Supabase directly.

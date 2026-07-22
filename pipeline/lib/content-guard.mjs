@@ -166,8 +166,9 @@ export function writingPatternErrors(body) {
     const opening = (prose.toLowerCase().match(/^[a-z0-9'-]+\s+[a-z0-9'-]+/) || [])[0];
     if (opening) paragraphOpenings.set(opening, (paragraphOpenings.get(opening) || 0) + 1);
   }
-  if ([...paragraphOpenings.values()].some((count) => count >= 4)) {
-    errors.push('Contains a repeated paragraph-opening template');
+  const repeatedOpening = [...paragraphOpenings.entries()].find(([, count]) => count >= 4);
+  if (repeatedOpening) {
+    errors.push(`Contains a repeated paragraph-opening template: "${repeatedOpening[0]}" appears ${repeatedOpening[1]} times`);
   }
 
   return errors;
@@ -215,7 +216,7 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
     const nextStops = [after.indexOf('.'), after.indexOf('!'), after.indexOf('?'), after.indexOf('\n')].filter((index) => index >= 0);
     const sentenceEnd = match.index + match[0].length + (nextStops.length ? Math.min(...nextStops) : after.length);
     const sentence = body.slice(sentenceStart, sentenceEnd);
-    return !/\b(?:not|never|no evidence|cannot|can't|doesn't|does not|do not|isn't|is not|aren't|are not|without evidence|claims?|claiming|advertis(?:e|es|ed|ing)|market(?:s|ed|ing)|describ(?:e|es|ed|ing)|promot(?:e|es|ed|ing)|warn(?:s|ed|ing)?|misleading)\b/i.test(sentence);
+    return !/\b(?:not|never|no evidence|cannot|can't|doesn't|does not|do not|isn't|is not|aren't|are not|without evidence|claims?|claiming|advertis(?:e|es|ed|ing)|market(?:s|ed|ing)|describ(?:e|es|ed|ing)|promot(?:e|es|ed|ing)|promis(?:e|es|ed|ing)|guarantee(?:s|d|ing)?|purport(?:s|ed|ing)?|assert(?:s|ed|ing)?|alleg(?:e|es|ed|ing)|warn(?:s|ed|ing)?|misleading)\b/i.test(sentence);
   });
   if (positiveTreatmentClaim) errors.push('Contains a prohibited treatment claim');
   if (unsupportedOutcome.test(body)) errors.push('Contains an unsupported outcome or efficacy statement');

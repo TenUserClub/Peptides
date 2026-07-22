@@ -97,6 +97,9 @@ test('external API calls have explicit per-run budgets and timeouts', () => {
   assert.match(llm, /MAX_OPENAI_CALLS_PER_RUN/);
   assert.match(llm, /MAX_OPENAI_OUTPUT_TOKENS_PER_RUN/);
   assert.match(llm, /AbortSignal\.timeout\(OPENAI_TIMEOUT_MS\)/);
+  assert.match(read('pipeline/orchestrator.mjs'), /editorTokenLimits/);
+  assert.match(read('pipeline/orchestrator.mjs'), /maxTokens: editorMaxTokens/);
+  assert.match(read('pipeline/orchestrator.mjs'), /Clinic profiles must remain at least 200 words and doctor profiles at least 250 words/);
   assert.match(images, /GEMINI_MAX_CALLS_PER_RUN/);
   assert.match(images, /AbortSignal\.timeout\(GEMINI_TIMEOUT_MS\)/);
   assert.match(images, /GEMINI_STOP_STATUSES/);

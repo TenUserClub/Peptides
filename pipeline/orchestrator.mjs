@@ -762,6 +762,7 @@ INSTRUCTIONS:
         user: userPrompt,
         model: CONFIG.models.writing,
         temperature: 0.65,
+        maxTokens: 3200,
       });
       const generatedPost = stripMarkdownFences(response);
       const fm = parseFrontmatter(generatedPost);
@@ -826,11 +827,16 @@ async function runHumanise() {
   let processed = 0;
   const maxFiles = CONFIG.velocity.maxHumanisePerRun;
 
+  const editorTokenLimits = { clinics: 1800, doctors: 2000, blog: 3200, news: 2400, legal: 2400, updates: 1600 };
+
   for (const draftPath of draftFiles.slice(0, maxFiles)) {
     const draftText = readText(draftPath);
     if (!draftText) continue;
+    const relativePath = draftPath.replace(draftsDir, '').replace(/^[\\/]/, '');
+    const collection = relativePath.split(/[\\/]/)[0];
+    const editorMaxTokens = editorTokenLimits[collection] || 2400;
 
-    const systemPrompt = `You are an editor who removes AI-writing signs from draft articles.\n\n${rubric}\n\n${humanisePrompt}\n\nCRITICAL RULES:\n- Never change facts, names, numbers, ratings, platform attributions, URLs, or frontmatter\n- Never change the methodology paragraph's substance\n- Only change style and wording\n- Keep all YAML frontmatter exactly as-is\n- OUTPUT the raw article text only. Do NOT wrap the output in Markdown code fences (no \`\`\`markdown blocks). The file must start with --- (the YAML frontmatter delimiter).`;
+    const systemPrompt = `You are an editor who removes AI-writing signs from draft articles.\n\n${rubric}\n\n${humanisePrompt}\n\nCRITICAL RULES:\n- Never change facts, names, numbers, ratings, platform attributions, URLs, or frontmatter\n- Never change the methodology paragraph's substance\n- Only change style and wording\n- Keep all YAML frontmatter exactly as-is\n- Preserve the collection's required word range. Clinic profiles must remain at least 200 words and doctor profiles at least 250 words; do not pad with unsupported facts.\n- OUTPUT the raw article text only. Do NOT wrap the output in Markdown code fences (no \`\`\`markdown blocks). The file must start with --- (the YAML frontmatter delimiter).`;
 
     const userPrompt = `Rewrite the following draft to remove all AI-writing signs. Keep the frontmatter unchanged. Keep all facts exactly as they are.\n\nOUTPUT the full rewritten article starting directly with the frontmatter (---). No code blocks, no markdown fences.\n\nDRAFT:\n${draftText}`;
 
@@ -846,9 +852,9 @@ async function runHumanise() {
         user: userPrompt,
         model: CONFIG.models.humanise,
         temperature: 0.5,
+        maxTokens: editorMaxTokens,
       });
 
-      const relativePath = draftPath.replace(draftsDir, '').replace(/^[\\/]/, '');
       const outPath = join(humanisedDir, relativePath);
       const diffPath = outPath.replace(/\.md$/, '.diff.md');
 
@@ -861,7 +867,6 @@ async function runHumanise() {
         continue;
       }
       let cleanedResponse = normalizeEditorialText(`${originalParts[1]}${editedParts[2].trim()}\n`);
-      const collection = relativePath.split(/[\\/]/)[0];
       let guard = validateContent({
         text: cleanedResponse,
         collection,
@@ -872,9 +877,10 @@ async function runHumanise() {
         log('info', `humanise: corrective pass for ${relativePath}: ${guard.errors.join('; ')}`);
         const correction = await chat({
           system: systemPrompt,
-          user: `The edited draft failed deterministic publication checks. Fix every listed issue without adding facts or changing frontmatter.\n\nCHECK FAILURES:\n${guard.errors.map((error) => `- ${error}`).join('\n')}\n\nCURRENT EDITED DRAFT:\n${cleanedResponse}`,
+          user: `The edited draft failed deterministic publication checks. Fix every listed issue without adding facts or changing frontmatter. The corrected article must satisfy the collection's required word range; preserve accurate existing detail and expand only from information already present in the supplied draft.\n\nCHECK FAILURES:\n${guard.errors.map((error) => `- ${error}`).join('\n')}\n\nCURRENT EDITED DRAFT:\n${cleanedResponse}`,
           model: CONFIG.models.humanise,
           temperature: 0.25,
+          maxTokens: editorMaxTokens,
         });
         edited = stripMarkdownFences(correction).replace(/\r\n/g, '\n');
         editedParts = edited.match(/^(---\s*\n[\s\S]*?\n---\s*\n)([\s\S]*)$/);
@@ -1767,6 +1773,7 @@ Then the article body with these sections:
         user: userPrompt,
         model: CONFIG.models.writing,
         temperature: 0.6,
+        maxTokens: 1800,
       });
 
       const generatedPost = stripMarkdownFences(response);
@@ -1957,6 +1964,7 @@ Body: opening → credentials → services → patient reviews (attributed or "n
         user: userPrompt,
         model: CONFIG.models.writing,
         temperature: 0.6,
+        maxTokens: 2000,
       });
 
       const cleaned = stripMarkdownFences(response);

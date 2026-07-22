@@ -57,6 +57,15 @@ test('allows sourced discussion of misleading cure claims', () => {
   assert.equal(result.ok, true, result.errors.join('; '));
 });
 
+test('allows warnings about promised cures while blocking direct cure claims', () => {
+  const frontmatter = `---\ntitle: "Claim review"\ndescription: "A sourced review"\ncategory: "safety"\nsources: ["https://www.fda.gov/drugs", "https://pubmed.ncbi.nlm.nih.gov/32622810/"]\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-22\n---\n`;
+  const warning = validateContent({ text: `${frontmatter}${words(1000)} A clinic that promises peptides cure chronic disease is making a treatment claim that requires evidence.`, collection: 'blog', filename: 'warning.md' });
+  assert.equal(warning.ok, true, warning.errors.join('; '));
+  const direct = validateContent({ text: `${frontmatter}${words(1000)} Peptides cure chronic disease.`, collection: 'blog', filename: 'direct.md' });
+  assert.equal(direct.ok, false);
+  assert.match(direct.errors.join(' '), /prohibited treatment claim/i);
+});
+
 test('accepts a concise link-based weekly digest', () => {
   const text = `---\ntitle: "Weekly review"\ndescription: "A concise weekly review"\nweekOf: 2026-07-14\npublishDate: 2026-07-19\nauthor: "Peptide Atlas Editorial Team"\n---\n${words(90)}`;
   const result = validateContent({ text, collection: 'updates', filename: '2026-w30.md' });

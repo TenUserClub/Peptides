@@ -42,7 +42,7 @@
       "intent": "Help readers verify identity, licensing, sourcing, follow-up, pricing, and claims before contacting a clinic.",
       "sourceUrls": [
         "https://npiregistry.cms.hhs.gov/",
-        "https://www.fda.gov/drugs/buying-using-medicine-safely",
+        "https://www.fda.gov/drugs/information-consumers-and-patients-drugs/buying-using-medicine-safely",
         "https://www.fda.gov/consumers/consumer-updates/how-buy-medicines-safely-online-pharmacy"
       ]
     },
