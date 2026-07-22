@@ -19,6 +19,8 @@ The shared header contains no public `vercel.app` links. Each domain has its own
 
 The UI overhaul uses one shared visual system with a different task flow for each property: search-first clinic and doctor directories, a source-and-safety guide library, an editorial news desk, and a weekly digest dashboard. It uses a permanent warm Wellness palette, self-hosted Plus Jakarta Sans typography, responsive navigation, trust and correction routes, and a shared Peptide Atlas logo. There is no theme switcher.
 
+Safe Peptides exposes an RSS feed at `/blog/feed.xml`; Peptide Updates exposes one at `/feed.xml`. Both sites can point to a free Beehiiv or Substack subscribe page through the optional `PUBLIC_NEWSLETTER_URL` build setting. Subscriber details never pass through this static-site repository.
+
 Each of the six header sections has exactly 100 searchable, section-specific FAQ answers across 10 topic groups. Blog and Laws & legal have separate centers even though they share one deployment. The build rejects a missing center, any count other than 100, duplicate FAQ identifiers, or a missing search control.
 
 Previously generated live posts were moved to `pipeline/quarantine/2026-07-17/` after review found weak sourcing and unverifiable claims. Sample markdown remains as schema documentation but is excluded from routes and sitemaps. Production publication should resume only with content that passes the new guard.

@@ -14,6 +14,8 @@ const categories = Object.keys(byCategory).sort();
 
 const totalPosts = published.length;
 const totalCategories = categories.length;
+const configuredNewsletterUrl = import.meta.env.PUBLIC_NEWSLETTER_URL;
+const newsletterUrl = configuredNewsletterUrl && /^https:\/\//i.test(configuredNewsletterUrl) ? configuredNewsletterUrl : null;
 ---
 <Base title="Blog | Peptide Therapy Guides & Resources" description="Educational guides, comparisons, and science-backed resources on peptide therapy, GLP-1 treatments, hormone optimization, and longevity medicine." currentSection="Blog">
   <p class="eyebrow">Evidence-led learning</p>
@@ -23,6 +25,8 @@ const totalCategories = categories.length;
     GLP-1 treatments, hormone optimization, and longevity medicine. Written for patients
     researching their options. No hype, just facts.
   </p>
+
+  <section class="faq-preview"><div><p class="eyebrow">Free updates</p><h2>Follow new evidence-led guides.</h2><p>Use the open RSS feed today. Email delivery can be connected through Beehiiv or Substack later without placing subscriber data or mail credentials in this site.</p></div><div class="hero-actions">{newsletterUrl && <a class="cta" href={newsletterUrl} rel="noopener noreferrer">Subscribe by email</a>}<a class={newsletterUrl ? 'text-link' : 'cta'} href="/blog/feed.xml">Open RSS feed</a></div></section>
 
   {totalPosts === 0 ? (
     <div class="empty-state"><h2>Guides are under editorial review.</h2><p>New guides will appear after their claims and supporting sources have been checked.</p></div>

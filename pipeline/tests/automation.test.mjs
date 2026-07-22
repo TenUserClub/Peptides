@@ -99,11 +99,24 @@ test('external API calls have explicit per-run budgets and timeouts', () => {
   assert.match(llm, /AbortSignal\.timeout\(OPENAI_TIMEOUT_MS\)/);
   assert.match(images, /GEMINI_MAX_CALLS_PER_RUN/);
   assert.match(images, /AbortSignal\.timeout\(GEMINI_TIMEOUT_MS\)/);
+  assert.match(images, /GEMINI_STOP_STATUSES/);
+  assert.match(images, /geminiDisabledForRun = true/);
   assert.match(exa, /EXA_MAX_REQUESTS_PER_RUN/);
   assert.match(exa, /AbortSignal\.timeout\(EXA_TIMEOUT_MS\)/);
   for (const setting of ['OPENAI_MAX_CALLS_PER_RUN', 'GEMINI_MAX_CALLS_PER_RUN', 'EXA_MAX_REQUESTS_PER_RUN']) {
     assert.ok(workflow.includes(setting), `${setting} is not explicit in the scheduled workflow`);
   }
+});
+
+test('free newsletter delivery has provider-neutral RSS fallbacks', () => {
+  const updates = read('sites/updates/src/pages/index.astro');
+  const blog = read('sites/content/src/pages/blog/index.astro');
+  const updatesFeed = read('sites/updates/src/pages/feed.xml.ts');
+  const blogFeed = read('sites/content/src/pages/blog/feed.xml.ts');
+  assert.match(updates, /PUBLIC_NEWSLETTER_URL/);
+  assert.match(blog, /PUBLIC_NEWSLETTER_URL/);
+  assert.match(updatesFeed, /<rss version=/);
+  assert.match(blogFeed, /<rss version=/);
 });
 
 test('news discovery broadens coverage without exceeding the Exa request budget', () => {

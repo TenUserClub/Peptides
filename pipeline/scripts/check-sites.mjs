@@ -6,9 +6,9 @@ const ROOT = resolve(import.meta.dirname, '..', '..');
 const projects = [
   { name: 'clinics', root: join(ROOT, 'site'), canonical: 'https://mypeptide.club/', sitemaps: ['https://mypeptide.club/sitemap-index.xml'], faqPaths: ['faq'] },
   { name: 'doctors', root: join(ROOT, 'sites', 'doctors'), canonical: 'https://toppeptideslist.com/', sitemaps: ['https://toppeptideslist.com/sitemap-index.xml'], faqPaths: ['faq'] },
-  { name: 'content', root: join(ROOT, 'sites', 'content'), canonical: 'https://safepeptides.us/', sitemaps: ['https://safepeptides.us/sitemap-safe.xml'], faqPaths: ['blog/faq', 'legal/faq'] },
+  { name: 'content', root: join(ROOT, 'sites', 'content'), canonical: 'https://safepeptides.us/', sitemaps: ['https://safepeptides.us/sitemap-safe.xml'], faqPaths: ['blog/faq', 'legal/faq'], feeds: ['blog/feed.xml'] },
   { name: 'news', root: join(ROOT, 'sites', 'news'), canonical: 'https://peptidesnews.us/', sitemaps: ['https://peptidesnews.us/sitemap-index.xml'], faqPaths: ['faq'] },
-  { name: 'updates', root: join(ROOT, 'sites', 'updates'), canonical: 'https://peptidesupdates.com/', sitemaps: ['https://peptidesupdates.com/sitemap-index.xml'], faqPaths: ['faq'] },
+  { name: 'updates', root: join(ROOT, 'sites', 'updates'), canonical: 'https://peptidesupdates.com/', sitemaps: ['https://peptidesupdates.com/sitemap-index.xml'], faqPaths: ['faq'], feeds: ['feed.xml'] },
 ];
 const errors = [];
 const publicDomains = ['https://mypeptide.club', 'https://toppeptideslist.com', 'https://safepeptides.us', 'https://peptidesnews.us', 'https://peptidesupdates.com'];
@@ -70,6 +70,18 @@ for (const project of projects) {
     if (faqCount !== 100) errors.push(`${project.name}: expected exactly 100 focused FAQ answers at ${faqRelative}, found ${faqCount}`);
     if (new Set(faqIds).size !== faqCount) errors.push(`${project.name}: duplicate FAQ identifiers found at ${faqRelative}`);
     if (!faqHtml.includes('id="faq-search"')) errors.push(`${project.name}: FAQ search control is missing at ${faqRelative}`);
+  }
+
+  for (const feedRelative of project.feeds || []) {
+    const feedPath = join(dist, ...feedRelative.split('/'));
+    if (!existsSync(feedPath)) {
+      errors.push(`${project.name}: RSS feed ${feedRelative} is missing`);
+      continue;
+    }
+    const feedXml = readFileSync(feedPath, 'utf8');
+    if (!feedXml.includes('<rss version="2.0">') || /_sample|example\.com/i.test(feedXml)) {
+      errors.push(`${project.name}: RSS feed ${feedRelative} is invalid`);
+    }
   }
 
   for (const file of filesUnder(dist).filter((path) => /\.(html|xml)$/i.test(path))) {

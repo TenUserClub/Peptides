@@ -17,6 +17,8 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-image';
 const GEMINI_MAX_CALLS_PER_RUN = Math.max(1, Number.parseInt(process.env.GEMINI_MAX_CALLS_PER_RUN || '10', 10) || 10);
 const GEMINI_TIMEOUT_MS = Math.max(1000, Number.parseInt(process.env.GEMINI_TIMEOUT_MS || '120000', 10) || 120000);
 let geminiCalls = 0;
+let geminiDisabledForRun = false;
+const GEMINI_STOP_STATUSES = new Set([400, 401, 403, 404, 429]);
 
 /**
  * Image generation prompt templates per content type.
@@ -162,6 +164,10 @@ export async function generateImage(type, context, slug) {
     log('info', 'images: GEMINI_API_KEY not set, skipping image generation');
     return null;
   }
+  if (geminiDisabledForRun) {
+    log('info', `images: Gemini disabled for the remainder of this run, skipping ${slug}`);
+    return null;
+  }
   if (geminiCalls >= GEMINI_MAX_CALLS_PER_RUN) {
     log('warn', `images: Gemini per-run call budget reached (${GEMINI_MAX_CALLS_PER_RUN}), skipping ${slug}`);
     return null;
@@ -204,6 +210,10 @@ export async function generateImage(type, context, slug) {
 
     if (!res.ok) {
       const text = await res.text();
+      if (GEMINI_STOP_STATUSES.has(res.status)) {
+        geminiDisabledForRun = true;
+        log('warn', `images: disabling Gemini for the remainder of this run after HTTP ${res.status}`);
+      }
       if (res.status === 404) {
         log('warn', `images: Gemini model "${GEMINI_MODEL}" not found. Run "node pipeline/scripts/list-gemini-models.mjs" to see available models, then set GEMINI_MODEL in .env.`);
       } else {

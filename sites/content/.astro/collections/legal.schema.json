@@ -23,6 +23,18 @@
       "type": "string",
       "const": "primary"
     },
+    "sourceClass": {
+      "type": "string",
+      "enum": [
+        "government",
+        "international-regulator",
+        "court"
+      ]
+    },
+    "sourcePublishedDate": {
+      "type": "string",
+      "format": "date-time"
+    },
     "tags": {
       "default": [],
       "type": "array",
@@ -61,6 +73,8 @@
     "sourceName",
     "sourceUrl",
     "sourceType",
+    "sourceClass",
+    "sourcePublishedDate",
     "publishDate"
   ]
 }
