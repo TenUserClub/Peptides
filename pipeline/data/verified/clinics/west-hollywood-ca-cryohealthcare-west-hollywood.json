@@ -1,0 +1,28 @@
+{
+  "clinicName": "Cryohealthcare West Hollywood",
+  "city": "West Hollywood",
+  "state": "CA",
+  "address": "",
+  "phone": "",
+  "website": "https://www.cryohealthcare.com/peptide-therapy-los-angeles",
+  "doctorName": "",
+  "services": [
+    "Physician-supervised peptide therapy",
+    "Weight loss",
+    "Skin rejuvenation",
+    "Hormone balance",
+    "Peak performance",
+    "7 Physician-Designed Peptide Protocols including CJC-1295 + Ipamorelin, MOTS-c, Kisspeptin"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.cryohealthcare.com/peptide-therapy-los-angeles"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

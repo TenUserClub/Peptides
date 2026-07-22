@@ -1,0 +1,23 @@
+{
+  "clinicName": "California Infusion Centers",
+  "city": "Los Angeles",
+  "state": "CA",
+  "address": "",
+  "phone": "(626) 538-4270",
+  "website": "https://cainfusioncenters.com/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Clinician-guided peptide therapy",
+    "Personalized wellness support"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://cainfusioncenters.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "clinicName": "Los Angeles Integrative Medicine",
+  "city": "Los Angeles",
+  "state": "CA",
+  "address": "",
+  "phone": "",
+  "website": "https://losangelesintegrativemedicine.com/peptide-therapy/",
+  "doctorName": "Dr. Allen Green",
+  "services": [
+    "Customized peptide therapy",
+    "Healthy aging peptides",
+    "Athletic performance peptides",
+    "Healing & recovery peptides",
+    "Weight loss peptides (Semaglutide, Tirzepatide)"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://losangelesintegrativemedicine.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1720108525"
+  ],
+  "npi": "1720108525",
+  "taxonomies": [
+    {
+      "desc": "Family Medicine",
+      "state": "CA"
+    },
+    {
+      "desc": "Allergy & Immunology, Allergy",
+      "state": "CA"
+    },
+    {
+      "desc": "Clinic/Center",
+      "state": "CA"
+    }
+  ]
+}

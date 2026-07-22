@@ -1,0 +1,24 @@
+{
+  "clinicName": "MedPodLA",
+  "city": "Beverly Hills",
+  "state": "CA",
+  "address": "",
+  "phone": "",
+  "website": "https://medpodla.com/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "Physician Designed Peptide Therapy",
+    "Precision Peptide Protocols"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://medpodla.com/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}

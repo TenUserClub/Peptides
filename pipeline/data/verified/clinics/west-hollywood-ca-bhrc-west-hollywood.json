@@ -1,0 +1,28 @@
+{
+  "clinicName": "BHRC West Hollywood",
+  "city": "West Hollywood",
+  "state": "CA",
+  "address": "",
+  "phone": "(323) 859-1257",
+  "website": "https://www.bhrcenter.com/location/west-hollywood-ca/peptide-therapy/",
+  "doctorName": "",
+  "services": [
+    "50+ physician-prescribed peptides",
+    "Weight management & metabolic peptides",
+    "Anti-aging",
+    "Recovery",
+    "Cognitive",
+    "Sexual health",
+    "Immune"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://www.bhrcenter.com/location/west-hollywood-ca/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

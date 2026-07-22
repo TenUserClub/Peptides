@@ -1,0 +1,27 @@
+{
+  "clinicName": "Skin Works Medical Spa",
+  "city": "Torrance, Los Angeles",
+  "state": "CA",
+  "address": "",
+  "phone": "(844) 759-6757",
+  "website": "https://skinworksmed.com/skin_works_peptide_therapy.html",
+  "doctorName": "",
+  "services": [
+    "Physician-supervised pharmacy-grade peptide protocols",
+    "Recovery",
+    "Longevity",
+    "Body composition",
+    "Sexual wellness",
+    "Immune health"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://skinworksmed.com/skin_works_peptide_therapy.html"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services"
+  ]
+}

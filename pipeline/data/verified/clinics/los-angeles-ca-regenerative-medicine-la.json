@@ -1,0 +1,32 @@
+{
+  "clinicName": "Regenerative Medicine LA",
+  "city": "Los Angeles",
+  "state": "CA",
+  "address": "",
+  "phone": "",
+  "website": "https://regenerativemedicinela.com/treatments/peptide-therapy/",
+  "doctorName": "Dr. Mark Ghalili",
+  "services": [
+    "Advanced peptide therapy",
+    "Physician-supervised peptide therapy",
+    "Customized peptide protocols"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://regenerativemedicinela.com/treatments/peptide-therapy/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI verified: 1053672006"
+  ],
+  "npi": "1053672006",
+  "taxonomies": [
+    {
+      "desc": "Internal Medicine",
+      "state": "NV"
+    }
+  ]
+}

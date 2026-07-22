@@ -1,0 +1,26 @@
+{
+  "clinicName": "Ortali Wellness",
+  "city": "Los Angeles",
+  "state": "CA",
+  "address": "",
+  "phone": "",
+  "website": "https://ortaliwellness.com/services/peptide-therapy-los-angeles/",
+  "doctorName": "",
+  "services": [
+    "Concierge peptide therapy programs",
+    "NAD+ Therapy",
+    "BPC-157",
+    "GHK-Cu"
+  ],
+  "ratingValue": null,
+  "ratingCount": null,
+  "ratingSource": "",
+  "sourceUrls": [
+    "https://ortaliwellness.com/services/peptide-therapy-los-angeles/"
+  ],
+  "verified": true,
+  "verificationNotes": [
+    "Website confirms peptide-related services",
+    "NPI not found"
+  ]
+}
