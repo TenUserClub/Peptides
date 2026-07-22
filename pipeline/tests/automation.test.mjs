@@ -106,6 +106,26 @@ test('external API calls have explicit per-run budgets and timeouts', () => {
   }
 });
 
+test('news discovery broadens coverage without exceeding the Exa request budget', () => {
+  const sources = read('pipeline/lib/news-sources.mjs');
+  const exa = read('pipeline/scripts/exa-fetch.mjs');
+  assert.match(sources, /us-regulation-safety/);
+  assert.match(sources, /us-enforcement-courts/);
+  assert.match(sources, /clinical-research/);
+  assert.match(sources, /international-regulators/);
+  assert.match(sources, /official-industry-disclosures/);
+  assert.match(exa, /NEWS_DISCOVERY_LANES/);
+  assert.match(exa, /includeDomains/);
+  const orchestrator = read('pipeline/orchestrator.mjs');
+  assert.match(orchestrator, /countPendingToday\('news'\) \+ countPendingToday\('legal'\)/);
+  assert.match(orchestrator, /requiredCollectionForStory/);
+});
+
+test('final build validation does not require unscoped Supabase secrets', () => {
+  const workflow = read('.github/workflows/pipeline.yml');
+  assert.match(workflow, /Validate generated publication across all five sites[\s\S]*?REQUIRE_SUPABASE: "false"/);
+});
+
 test('zero-publication runs checkpoint verification and queue progress', () => {
   const orchestrator = read('pipeline/orchestrator.mjs');
   assert.match(orchestrator, /publish: committed verification and queue checkpoint/);

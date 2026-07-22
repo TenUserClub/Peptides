@@ -28,6 +28,15 @@ import {
 import { fetchSearchQueries, isConfigured as isSearchConsoleConfigured } from './lib/search-console.mjs';
 import { syncPublicationIntegrity } from './lib/integrity.mjs';
 import { safeFetchText } from './lib/safe-fetch.mjs';
+import {
+  canonicalSourceUrl,
+  isUsablePrimaryText,
+  peptideRelevanceScore,
+  primaryDocumentFetchUrl,
+  primarySourceProfile,
+  requiredCollectionForStory,
+  sourcePublishedDateFromText,
+} from './lib/news-sources.mjs';
 
 loadEnv();
 
@@ -157,6 +166,13 @@ function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 }
 
+function setFrontmatterField(text, field, value) {
+  const normalized = String(text || '').replace(/\r\n/g, '\n');
+  const fieldPattern = new RegExp(`^${field}:.*$`, 'm');
+  if (fieldPattern.test(normalized)) return normalized.replace(fieldPattern, `${field}: ${value}`);
+  return normalized.replace(/^---\s*\n/, `---\n${field}: ${value}\n`);
+}
+
 const HTML_ENTITY_TEXT = {
   '&nbsp;': ' ', '&#160;': ' ', '&amp;': '&', '&quot;': '"', '&#34;': '"',
   '&#39;': "'", '&apos;': "'", '&lt;': '<', '&gt;': '>',
@@ -250,6 +266,30 @@ function keywordOpportunityScore(topic, signals) {
   }, 0);
 }
 
+function countPendingToday(collection, date = null) {
+  const d = date || new Date().toISOString().slice(0, 10);
+  return [join(PIPELINE, 'drafts', collection), join(PIPELINE, 'humanised', collection)]
+    .flatMap((dir) => findFiles(dir, /\.md$/, /_sample|\.diff\.md/))
+    .filter((path) => extractDate(readText(path, '')) === d)
+    .length;
+}
+
+function allNewsSourceUrls() {
+  const directories = [
+    contentDirFor('news'),
+    contentDirFor('legal'),
+    join(PIPELINE, 'drafts', 'news'),
+    join(PIPELINE, 'drafts', 'legal'),
+    join(PIPELINE, 'humanised', 'news'),
+    join(PIPELINE, 'humanised', 'legal'),
+    join(PIPELINE, 'quarantine'),
+  ];
+  return directories.flatMap((dir) => findFiles(dir, /\.md$/, /_sample|\.diff\.md/))
+    .map((path) => parseFrontmatter(readText(path, ''))?.data?.sourceUrl)
+    .map(canonicalSourceUrl)
+    .filter(Boolean);
+}
+
 async function runSyncKeywords() {
   log('info', 'orchestrator: sync-keywords');
   if (DRY_RUN) {
@@ -314,7 +354,7 @@ async function runWriteNews() {
   log('info', 'orchestrator: write-news');
   const today = new Date().toISOString().slice(0, 10);
 
-  const todayCount = countToday('news') + countToday('legal');
+  const todayCount = countToday('news') + countToday('legal') + countPendingToday('news') + countPendingToday('legal');
   if (todayCount >= CONFIG.velocity.maxNewsPerDay) {
     log('info', `write-news: velocity cap reached (${todayCount}/${CONFIG.velocity.maxNewsPerDay})`);
     return 0;
@@ -335,7 +375,9 @@ async function runWriteNews() {
   }
 
   const processedPath = join(PIPELINE, 'data', '.processed-news.json');
-  const processed = readJson(processedPath, { files: [] });
+  const processed = readJson(processedPath, { files: [], sourceUrls: [] });
+  processed.files = Array.isArray(processed.files) ? processed.files : [];
+  processed.sourceUrls = Array.isArray(processed.sourceUrls) ? processed.sourceUrls : [];
   const fileName = basename(latestFile);
   if (processed.files.includes(fileName)) {
     log('info', `write-news: already processed ${fileName}`);
@@ -348,21 +390,70 @@ async function runWriteNews() {
     return 0;
   }
 
-  const candidateStories = exaData.sets.flatMap((s) => s.results || []);
+  const discoveredStories = exaData.sets.flatMap((set) =>
+    (set.results || []).map((story) => ({
+      ...story,
+      discoveryLane: set.lane || 'legacy-news-search',
+      preferredCollection: set.preferredCollection || 'news',
+      relevanceScore: peptideRelevanceScore(story),
+    }))
+  ).filter((story) => story.relevanceScore > 0);
+  const laneOrder = [...new Set(discoveredStories.map((story) => story.discoveryLane))];
+  const storiesByLane = new Map(laneOrder.map((lane) => [
+    lane,
+    discoveredStories.filter((story) => story.discoveryLane === lane)
+      .sort((a, b) => b.relevanceScore - a.relevanceScore || String(b.publishedDate || '').localeCompare(String(a.publishedDate || ''))),
+  ]));
+  const candidateStories = [];
+  while (candidateStories.length < 20 && [...storiesByLane.values()].some((stories) => stories.length)) {
+    for (const lane of laneOrder) {
+      const story = storiesByLane.get(lane)?.shift();
+      if (story) candidateStories.push(story);
+      if (candidateStories.length >= 20) break;
+    }
+  }
   if (candidateStories.length === 0) {
-    log('info', 'write-news: no stories in exa data');
+    log('info', 'write-news: no peptide-relevant stories in primary-source data');
     return 0;
   }
 
+  const alreadyUsedSources = new Set([
+    ...processed.sourceUrls.map(canonicalSourceUrl),
+    ...allNewsSourceUrls(),
+  ].filter(Boolean));
+  const candidateUrls = new Set();
   const allStories = [];
   for (const story of candidateStories) {
-    if (!story.url || !isAuthoritativeUrl(story.url)) continue;
+    const profile = primarySourceProfile(story.url);
+    if (!profile.primary || alreadyUsedSources.has(profile.canonicalUrl) || candidateUrls.has(profile.canonicalUrl)) continue;
+    candidateUrls.add(profile.canonicalUrl);
+    let primaryText = '';
+    let retrieval = 'direct';
     try {
-      const primaryText = await webFetch(story.url, { maxRetries: 1, timeout: 12000 });
-      allStories.push({ ...story, primaryText: readableText(primaryText).slice(0, 6000) });
+      const fetchUrl = primaryDocumentFetchUrl(profile.canonicalUrl);
+      primaryText = readableText(await webFetch(fetchUrl, { maxRetries: 1, timeout: 12000 })).slice(0, 8000);
+      if (!isUsablePrimaryText(primaryText)) throw new Error('Primary response was a landing, access-control, or non-substantive page');
     } catch (e) {
-      log('warn', `write-news: primary source unavailable ${story.url}: ${e.message}`);
+      const indexedText = readableText(story.text || '').slice(0, 8000);
+      if (isUsablePrimaryText(indexedText)) {
+        primaryText = indexedText;
+        retrieval = 'exa-indexed-primary-document';
+        log('warn', `write-news: direct fetch unavailable for ${profile.canonicalUrl}; using Exa-indexed text from the approved primary URL (${e.message})`);
+      } else {
+        log('warn', `write-news: primary source unavailable ${profile.canonicalUrl}: ${e.message}`);
+      }
     }
+    if (!isUsablePrimaryText(primaryText)) continue;
+    allStories.push({
+      ...story,
+      url: profile.canonicalUrl,
+      primaryText,
+      retrieval,
+      sourceClass: profile.sourceClass,
+      eligibleCollections: profile.collections,
+      requiredCollection: requiredCollectionForStory(story, profile),
+      sourcePublishedDate: sourcePublishedDateFromText(primaryText, story.publishedDate),
+    });
     if (allStories.length >= 12) break;
   }
   if (allStories.length === 0) {
@@ -373,6 +464,19 @@ async function runWriteNews() {
   }
 
   const existingTitles = [...allTitles('news'), ...allTitles('legal')];
+  const publicationCandidates = [];
+  const rankedCandidates = [...allStories].sort((a, b) => b.relevanceScore - a.relevanceScore);
+  const firstLegal = rankedCandidates.find((story) => story.requiredCollection === 'legal');
+  if (firstLegal) publicationCandidates.push(firstLegal);
+  const usedLanes = new Set(publicationCandidates.map((story) => story.discoveryLane));
+  while (publicationCandidates.length < available) {
+    const remaining = rankedCandidates.filter((story) => !publicationCandidates.includes(story));
+    if (!remaining.length) break;
+    const distinctLane = remaining.find((story) => !usedLanes.has(story.discoveryLane));
+    const selected = distinctLane || remaining[0];
+    publicationCandidates.push(selected);
+    usedLanes.add(selected.discoveryLane);
+  }
   const claudeRules = readText(join(ROOT, 'CLAUDE.md')) || '';
   const writerPrompt = readText(join(PIPELINE, 'prompts', 'write-news.md')) || '';
   const samplePost = readText(join(ROOT, 'sites', 'news', 'src', 'content', 'news', '_sample-fda-reclassification.md')) || '';
@@ -389,18 +493,24 @@ ${existingTitles.map((t) => `- ${t}`).join('\n') || '(none yet)'}
 
 EXA NEWS RESULTS (fetched at ${exaData.fetchedAt}):
 ${JSON.stringify(
-    allStories.map((r) => ({
+    publicationCandidates.map((r) => ({
       title: r.title,
       url: r.url,
       text: r.primaryText,
       publishedDate: r.publishedDate,
+      sourcePublishedDate: r.sourcePublishedDate,
+      sourceClass: r.sourceClass,
+      eligibleCollections: r.eligibleCollections,
+      requiredCollection: r.requiredCollection,
+      discoveryLane: r.discoveryLane,
+      retrieval: r.retrieval,
     })),
     null,
     2
   )}
 
 INSTRUCTIONS:
-1. Select up to ${available} most substantive stories from the Exa results above
+1. Write exactly one post for every supplied result (${publicationCandidates.length} total). Do not omit or substitute a result.
 2. For each story, write a markdown post with YAML frontmatter matching this schema. Output RAW markdown — do NOT wrap in \`\`\`markdown code blocks:
    ---
    title: "..."
@@ -408,6 +518,8 @@ INSTRUCTIONS:
    sourceName: "..."
    sourceUrl: "..."
    sourceType: primary
+   sourceClass: government
+   sourcePublishedDate: YYYY-MM-DD
    author: "Peptide Atlas Editorial Team"
    tags: ["tag1", "tag2"]
    publishDate: YYYY-MM-DD
@@ -415,8 +527,9 @@ INSTRUCTIONS:
 3. Separate each post with: <!-- POST SEPARATOR -->
 4. 400-700 words per post
 5. Report, never advise. No treatment claims.
-6. Every claim attributed to a named source.
-7. If a story is primarily about laws/regulation, use the legal schema instead:
+6. Every claim attributed to a named source. Company disclosures must be identified as company-reported and cannot be presented as independent confirmation.
+7. Copy sourceUrl and sourceClass exactly from one supplied result. Copy the source's publishedDate date into sourcePublishedDate. Set publishDate to today's date (${today}). Do not invent, replace, or generalise a source URL.
+8. Route every result to its requiredCollection exactly. If requiredCollection is legal, use this legal schema:
    ---
    title: "..."
    description: "..."
@@ -424,15 +537,20 @@ INSTRUCTIONS:
    sourceName: "..."
    sourceUrl: "..."
    sourceType: primary
+   sourceClass: government
+   sourcePublishedDate: YYYY-MM-DD
    author: "Peptide Atlas Editorial Team"
    tags: ["tag1", "tag2"]
    publishDate: YYYY-MM-DD
    ---`;
 
   if (DRY_RUN) {
-    log('info', 'DRY RUN: would call OpenAI to write news posts');
+    log('info', `DRY RUN: would draft ${publicationCandidates.length} posts from ${allStories.length} verified primary documents across ${new Set(allStories.map((story) => story.discoveryLane)).size} source lanes`);
     return 0;
   }
+
+  const eligibleBySource = new Map(publicationCandidates.map((story) => [story.url, story]));
+  const draftedSources = new Set();
 
   try {
     const response = await chat({
@@ -461,7 +579,35 @@ INSTRUCTIONS:
         continue;
       }
 
+      const sourceUrl = canonicalSourceUrl(fm.data.sourceUrl);
+      const selectedStory = sourceUrl ? eligibleBySource.get(sourceUrl) : null;
+      if (!selectedStory) {
+        log('warn', `write-news: rejected ${fm.data.title}; sourceUrl was not one of the verified primary documents supplied to the writer`);
+        continue;
+      }
+      if (draftedSources.has(sourceUrl)) {
+        log('warn', `write-news: rejected duplicate use of primary source ${sourceUrl}`);
+        continue;
+      }
+      if (fm.data.sourceClass !== selectedStory.sourceClass) {
+        log('warn', `write-news: rejected ${fm.data.title}; sourceClass did not match ${selectedStory.sourceClass}`);
+        continue;
+      }
+      const sourcePublishedDate = selectedStory.sourcePublishedDate;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(sourcePublishedDate)) {
+        log('warn', `write-news: rejected ${fm.data.title}; discovered primary document had no usable publication date`);
+        continue;
+      }
+
       const collection = fm.data.jurisdiction ? 'legal' : 'news';
+      if (collection !== selectedStory.requiredCollection) {
+        log('warn', `write-news: rejected ${fm.data.title}; expected ${selectedStory.requiredCollection} routing, received ${collection}`);
+        continue;
+      }
+      if (!selectedStory.eligibleCollections.includes(collection)) {
+        log('warn', `write-news: rejected ${fm.data.title}; ${selectedStory.sourceClass} sources cannot support ${collection}`);
+        continue;
+      }
       const slug = `${today}-${slugify(fm.data.title)}`;
       const outPath = join(PIPELINE, 'drafts', collection, `${slug}.md`);
       const imagePath = await generateImage(collection, {
@@ -470,9 +616,10 @@ INSTRUCTIONS:
         tags: fm.data.tags || [],
       }, slug);
 
-      let postWithImage = post;
+      let postWithImage = setFrontmatterField(post, 'sourcePublishedDate', sourcePublishedDate);
+      postWithImage = setFrontmatterField(postWithImage, 'publishDate', today);
       if (imagePath) {
-        postWithImage = post.replace(
+        postWithImage = postWithImage.replace(
           /^(---\n[\s\S]*?publishDate:\s*\d{4}-\d{2}-\d{2}\n)/m,
           `$1image: "${imagePath}"\n`
         );
@@ -480,10 +627,13 @@ INSTRUCTIONS:
 
       writeText(outPath, postWithImage);
       log('info', `write-news: drafted ${slug}${imagePath ? ' with image' : ''}`);
+      draftedSources.add(sourceUrl);
       written++;
     }
 
-    processed.files.push(fileName);
+    if (written === publicationCandidates.length) processed.files.push(fileName);
+    else log('warn', `write-news: drafted ${written}/${publicationCandidates.length}; leaving ${fileName} unprocessed for a later retry`);
+    processed.sourceUrls = [...new Set(processed.sourceUrls.map(canonicalSourceUrl).filter(Boolean))];
     writeJson(processedPath, processed);
     return written;
   } catch (e) {

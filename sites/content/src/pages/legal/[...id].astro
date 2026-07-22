@@ -9,6 +9,11 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await render(post);
 const d = post.data;
+const sourceClassLabel = {
+  government: 'Government document',
+  'international-regulator': 'International regulator',
+  court: 'Court record',
+}[d.sourceClass];
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') || '';
 const jsonLd = {
@@ -29,7 +34,7 @@ const jsonLd = {
     )}
     <h1>{d.title}</h1>
     <p class="meta">
-      By {d.author} · {d.publishDate.toISOString().slice(0, 10)} · {d.jurisdiction} jurisdiction · Primary source: <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
+      By {d.author} · Published {d.publishDate.toISOString().slice(0, 10)} · Source dated {d.sourcePublishedDate.toISOString().slice(0, 10)} · {d.jurisdiction} jurisdiction · {sourceClassLabel} · Primary source: <a href={d.sourceUrl} rel="nofollow">{d.sourceName}</a>
       {d.updatedDate && ` · Updated ${d.updatedDate.toISOString().slice(0, 10)}`}
     </p>
     <Content />

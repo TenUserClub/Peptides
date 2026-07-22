@@ -102,5 +102,9 @@ jobs:
           GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SERVICE_ACCOUNT_B64 }}
       - name: Validate generated publication across all five sites
         run: npm run check
+        env:
+          # Supabase was already validated with scoped credentials above. This
+          # structural/build pass must not require secrets it intentionally lacks.
+          REQUIRE_SUPABASE: "false"
       - name: Push validated publication commit
         run: git push origin HEAD:${{ github.event.repository.default_branch }}

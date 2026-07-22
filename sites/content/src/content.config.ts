@@ -10,6 +10,8 @@ const legal = defineCollection({
     sourceName: z.string(),
     sourceUrl: z.string().url(),
     sourceType: z.literal('primary'),
+    sourceClass: z.enum(['government', 'international-regulator', 'court']),
+    sourcePublishedDate: z.coerce.date(),
     tags: z.array(z.string()).default([]),
     author: z.string().default('Peptide Atlas Editorial Team'),
     reviewedBy: z.string().optional(),

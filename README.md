@@ -59,7 +59,7 @@ node pipeline/orchestrator.mjs all
 1. Sync seed keywords or free Google Search Console query metrics into Supabase.
 2. Fetch news, clinics, and doctors.
 3. Verify clinic websites and doctor NPI records and mirror them into Supabase.
-4. Select the next evergreen brief from `pipeline/queue/blog-topics.json`, boosted by matching Search Console opportunities; news remains driven by current authoritative sources.
+4. Select the next evergreen brief from `pipeline/queue/blog-topics.json`, boosted by matching Search Console opportunities. News searches five primary-source lanes covering US regulation, enforcement and courts, clinical research, international regulators, and official company disclosures.
 5. Draft clinic, doctor, news, legal, and blog content from allowed sources.
 6. Humanise every draft, including blog posts, without changing facts, citations, or frontmatter.
 7. Apply deterministic frontmatter, source, claim, length, writing-pattern, and record-matching checks.
@@ -75,7 +75,7 @@ Clinic discovery begins with one representative metro in every US state. The que
 
 Doctor discovery also begins with one focused query in every US state before any state repeats. Its current California in-flight batch and queue pointer are preserved while the remaining states complete the first nationwide pass.
 
-The seed editorial map contains at least 30 source-led topics, ordered by priority. It is a topic and intent plan, not a claim of measured search volume. The pipeline publishes at most one evergreen guide per day, skips briefs already present in drafts or published content, and refuses to write when fewer than two approved authoritative sources are reachable.
+The seed editorial map contains at least 30 source-led topics, ordered by priority. It is a topic and intent plan, not a claim of measured search volume. The pipeline publishes at most one evergreen guide per day, skips briefs already present in drafts or published content, and refuses to write when fewer than two approved authoritative sources are reachable. News and legal candidates are independently deduplicated by exact primary-source URL. The source class is stored in frontmatter and checked against the URL, and research or company material cannot be misrouted as legal authority.
 
 ## Repository map
 

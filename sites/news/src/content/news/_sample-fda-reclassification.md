@@ -4,6 +4,8 @@ description: "SAMPLE POST: format reference for the news writer agent. Delete be
 sourceName: "Example Wire"
 sourceUrl: "https://example.com/story"
 sourceType: primary
+sourceClass: government
+sourcePublishedDate: 2026-07-06
 author: "Peptide Atlas Editorial Team"
 tags: ["FDA", "regulation", "compounding"]
 publishDate: 2026-07-07

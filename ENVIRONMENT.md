@@ -91,7 +91,7 @@ The publication control mirror stores every queued item with its source context,
 
 Migration 004 was designed to be rollout-safe, but the production rollout is now complete. Scheduled and strict local runs require both publication control tables; a missing or inaccessible table is a hard preflight failure.
 
-Default API safety budgets are 30 OpenAI calls and 60,000 requested output tokens per run, 10 Gemini image calls per run, and 5 Exa searches per run. Each API also has a request timeout. Override the corresponding `*_MAX_*_PER_RUN` or `*_TIMEOUT_MS` variables only after reviewing provider quotas and the pipeline's daily publication caps.
+Default API safety budgets are 30 OpenAI calls and 60,000 requested output tokens per run, 10 Gemini image calls per run, and 5 Exa searches per run. The five Exa requests map one-to-one to the bounded primary-source news lanes, so the broader coverage does not increase the existing per-run search budget. Each API also has a request timeout. Override the corresponding `*_MAX_*_PER_RUN` or `*_TIMEOUT_MS` variables only after reviewing provider quotas and the pipeline's daily publication caps.
 
 Do not use an anon or `sb_publishable_...` key here. The automation needs a server-side `sb_secret_...` or legacy service-role key. The migrations keep operational tables private because none of the public sites query Supabase directly.
 

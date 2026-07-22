@@ -11,6 +11,7 @@
 // skipped with a warning so one bad city can't stall the belt.
 import { join } from 'node:path';
 import { loadEnv, requireEnv, readJson, writeJson, log, stamp, PIPELINE } from './lib.mjs';
+import { NEWS_DISCOVERY_LANES } from '../lib/news-sources.mjs';
 
 loadEnv();
 const EXA_KEY = requireEnv('EXA_API_KEY');
@@ -31,6 +32,7 @@ async function exaSearch(query, opts = {}) {
       contents: { text: { maxCharacters: 4000 }, highlights: true },
       ...(opts.startPublishedDate ? { startPublishedDate: opts.startPublishedDate } : {}),
       ...(opts.category ? { category: opts.category } : {}),
+      ...(opts.includeDomains?.length ? { includeDomains: opts.includeDomains } : {}),
     }),
     signal: AbortSignal.timeout(EXA_TIMEOUT_MS),
   });
@@ -87,20 +89,26 @@ function recordFetch(queue, qPath, resultCount, outFile, label) {
 
 async function main() {
   if (mode === 'news') {
-    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-    const queries = [
-      'peptide therapy FDA regulation news',
-      'GLP-1 compounding pharmacy news',
-      'peptide clinical trial results news',
-    ];
     const results = [];
-    for (const q of queries) {
-      const r = await exaSearch(q, { numResults: 8, startPublishedDate: since, category: 'news' });
-      results.push({ query: q, results: r.results ?? [] });
+    for (const lane of NEWS_DISCOVERY_LANES) {
+      const since = new Date(Date.now() - lane.lookbackDays * 24 * 3600 * 1000).toISOString();
+      const r = await exaSearch(lane.query, {
+        numResults: 10,
+        startPublishedDate: since,
+        includeDomains: lane.includeDomains,
+      });
+      results.push({
+        lane: lane.id,
+        preferredCollection: lane.preferredCollection,
+        lookbackDays: lane.lookbackDays,
+        query: lane.query,
+        includeDomains: lane.includeDomains,
+        results: r.results ?? [],
+      });
       await sleep(EXA_DELAY_MS); // rate limit spacing
     }
     const out = join(PIPELINE, 'data', 'exa', 'news', `${stamp()}.json`);
-    writeJson(out, { fetchedAt: new Date().toISOString(), sets: results });
+    writeJson(out, { fetchedAt: new Date().toISOString(), strategy: 'primary-source-lanes-v2', sets: results });
     log('info', `exa news: ${results.reduce((n, s) => n + s.results.length, 0)} results → ${out}`);
   } else if (mode === 'clinics') {
     const qPath = join(PIPELINE, 'queue', 'cities.json');

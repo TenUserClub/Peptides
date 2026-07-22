@@ -5,6 +5,8 @@ jurisdiction: "Federal"
 sourceName: "FDA"
 sourceUrl: "https://example.com/fda-notice"
 sourceType: primary
+sourceClass: government
+sourcePublishedDate: 2026-07-06
 author: "Peptide Atlas Editorial Team"
 tags: ["FDA", "compounding", "regulation"]
 publishDate: 2026-07-07

@@ -8,6 +8,13 @@ const ALLOWED_CONTENT_TYPES = [
   'text/html', 'text/plain', 'application/xhtml+xml', 'application/xml', 'text/xml', 'application/json',
 ];
 
+export function pinnedLookup(selected) {
+  return (_hostname, options, callback) => {
+    if (options?.all) callback(null, [selected]);
+    else callback(null, selected.address, selected.family);
+  };
+}
+
 async function vettedAddress(hostname) {
   if (isIP(hostname)) {
     if (!isPublicIpAddress(hostname)) throw new Error('Blocked non-public destination');
@@ -31,7 +38,7 @@ function requestOnce(url, { timeout, maxBytes, headers }) {
       const request = transport.request(parsed, {
         method: 'GET',
         headers,
-        lookup: (_hostname, _options, callback) => callback(null, selected.address, selected.family),
+        lookup: pinnedLookup(selected),
       }, (response) => {
         const status = response.statusCode || 0;
         if (status >= 300 && status < 400 && response.headers.location) {

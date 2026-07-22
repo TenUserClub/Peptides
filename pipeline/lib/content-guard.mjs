@@ -1,5 +1,6 @@
 import { basename, join } from 'node:path';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { isAuthoritativeSourceUrl, primarySourceProfile } from './news-sources.mjs';
 
 export const WORD_LIMITS = {
   clinics: [200, 900],
@@ -13,17 +14,11 @@ export const WORD_LIMITS = {
 const REQUIRED = {
   clinics: ['title', 'description', 'clinicName', 'city', 'state', 'sources', 'verified', 'publishDate', 'author'],
   doctors: ['title', 'description', 'kind', 'state', 'specialty', 'sources', 'verified', 'publishDate', 'author'],
-  news: ['title', 'description', 'sourceName', 'sourceUrl', 'sourceType', 'publishDate', 'author'],
-  legal: ['title', 'description', 'jurisdiction', 'sourceName', 'sourceUrl', 'sourceType', 'publishDate', 'author'],
+  news: ['title', 'description', 'sourceName', 'sourceUrl', 'sourceType', 'sourceClass', 'sourcePublishedDate', 'publishDate', 'author'],
+  legal: ['title', 'description', 'jurisdiction', 'sourceName', 'sourceUrl', 'sourceType', 'sourceClass', 'sourcePublishedDate', 'publishDate', 'author'],
   blog: ['title', 'description', 'category', 'sources', 'publishDate', 'author'],
   updates: ['title', 'description', 'weekOf', 'publishDate', 'author'],
 };
-
-const AUTHORITATIVE_HOSTS = [
-  '.gov', '.edu', 'who.int', 'clinicaltrials.gov', 'pubmed.ncbi.nlm.nih.gov',
-  'ncbi.nlm.nih.gov', 'jamanetwork.com', 'nejm.org', 'thelancet.com',
-  'nature.com', 'science.org', 'bmj.com', 'courtlistener.com',
-];
 
 export function parseFrontmatter(text) {
   const normalized = String(text || '').replace(/\r\n/g, '\n').trim();
@@ -58,12 +53,7 @@ export function wordCount(body) {
 }
 
 export function isAuthoritativeUrl(value) {
-  try {
-    const host = new URL(value).hostname.toLowerCase();
-    return AUTHORITATIVE_HOSTS.some((allowed) => host === allowed || host.endsWith(allowed));
-  } catch {
-    return false;
-  }
+  return isAuthoritativeSourceUrl(value);
 }
 
 function isDiscoveryOnlyUrl(value) {
@@ -240,7 +230,14 @@ export function validateContent({ text, collection, filename, verifiedRoot }) {
 
   if ((collection === 'news' || collection === 'legal')) {
     if (data.sourceType !== 'primary') errors.push('News and legal posts require sourceType: primary');
-    if (!isAuthoritativeUrl(data.sourceUrl)) errors.push('News and legal sourceUrl must be an authoritative primary source');
+    const profile = primarySourceProfile(data.sourceUrl);
+    if (!profile.primary) errors.push('News and legal sourceUrl must be a specific authoritative primary document');
+    if (profile.primary && !profile.collections.includes(collection)) {
+      errors.push(`${data.sourceClass || profile.sourceClass || 'This'} source class cannot support the ${collection} collection`);
+    }
+    if (profile.primary && data.sourceClass !== profile.sourceClass) {
+      errors.push(`sourceClass must match the primary source (${profile.sourceClass})`);
+    }
   }
 
   if (collection === 'blog') {

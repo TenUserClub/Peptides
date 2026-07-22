@@ -21,10 +21,28 @@ test('does not count literature and trial search pages as specific blog evidence
 });
 
 test('blocks unsupported outcomes and weak news sources', () => {
-  const text = `---\ntitle: "Claim"\ndescription: "Claim"\nsourceName: "Blog"\nsourceUrl: "https://example.com/story"\nsourceType: primary\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-17\n---\nPeptides offer significant benefits. ${words(420)}`;
+  const text = `---\ntitle: "Claim"\ndescription: "Claim"\nsourceName: "Blog"\nsourceUrl: "https://example.com/story"\nsourceType: primary\nsourceClass: company\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-17\n---\nPeptides offer significant benefits. ${words(420)}`;
   const result = validateContent({ text, collection: 'news', filename: 'claim.md' });
   assert.equal(result.ok, false);
   assert.match(result.errors.join(' '), /unsupported|authoritative|example/i);
+});
+
+test('accepts a primary FDA document with a matching source class', () => {
+  const text = `---\ntitle: "FDA compounding update"\ndescription: "A sourced regulatory report"\njurisdiction: "Federal"\nsourceName: "FDA"\nsourceUrl: "https://www.fda.gov/drugs/human-drug-compounding/drug-compounding-and-drug-shortages"\nsourceType: primary\nsourceClass: government\nsourcePublishedDate: 2026-07-21\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-22\n---\n${words(420)}`;
+  const result = validateContent({ text, collection: 'legal', filename: 'fda-compounding-update.md' });
+  assert.equal(result.ok, true, result.errors.join('; '));
+});
+
+test('prevents research and company sources from being routed as legal coverage', () => {
+  for (const [sourceUrl, sourceClass] of [
+    ['https://pubmed.ncbi.nlm.nih.gov/32622810/', 'research'],
+    ['https://www.lilly.com/news/stories/example-update', 'company'],
+  ]) {
+    const text = `---\ntitle: "Legal update"\ndescription: "A legal update"\njurisdiction: "Federal"\nsourceName: "Source"\nsourceUrl: "${sourceUrl}"\nsourceType: primary\nsourceClass: ${sourceClass}\nsourcePublishedDate: 2026-07-21\nauthor: "Peptide Atlas Editorial Team"\npublishDate: 2026-07-22\n---\n${words(420)}`;
+    const result = validateContent({ text, collection: 'legal', filename: 'legal-update.md' });
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join(' '), /cannot support the legal collection/i);
+  }
 });
 
 test('allows neutral discussion of research chemicals and approved treatment indications', () => {
